@@ -1,0 +1,968 @@
+/**
+ * 单据中心页面样式
+ * 与订单列表页面保持一致的布局风格
+ */
+
+/* 单据生成页面 */
+.selection-bar {
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 12px;
+  border: 1px solid #e9ecef;
+}
+
+.selection-bar label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #495057;
+}
+
+.preview-container {
+  background: white;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+  padding: 16px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+#documentPreview {
+  width: 210mm;
+  min-height: 297mm;
+  margin: 0 auto;
+  padding: 10mm;
+  background: white;
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+  transform-origin: top center;
+  overflow: auto;
+  position: relative;
+  border: 1px solid #e5e7eb;
+  /* 确保内容可选择和复制 */
+  user-select: text;
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+}
+
+/* 确保预览窗口内容可选择和复制 */
+#documentPreviewPage1,
+#documentPreviewPage2,
+.preview-paper {
+  user-select: text !important;
+  -webkit-user-select: text !important;
+  -moz-user-select: text !important;
+  -ms-user-select: text !important;
+  /* 确保预览窗口尺寸与模板编辑器画布一致（A4尺寸） */
+  width: 210mm !important;
+  min-height: 297mm !important;
+  box-sizing: border-box !important;
+  position: relative !important;
+  background: #fff !important;
+}
+
+/* 确保公司信息区块内的文本换行行为一致 */
+#documentPreviewPage1 .company-header-block > div > div,
+#documentPreviewPage2 .company-header-block > div > div,
+.preview-paper .company-header-block > div > div {
+  white-space: normal !important;
+  word-wrap: break-word !important;
+  word-break: break-word !important;
+  overflow-wrap: break-word !important;
+}
+
+/* 重要：确保预览窗口完全保留模板中的所有内联样式 */
+/* 不设置任何会覆盖模板内联样式的全局CSS规则 */
+/* 模板中的所有样式都应该通过内联样式定义，确保所见即所得 */
+
+/* 确保预览窗口中的表格 tfoot 中的 br 标签能正确换行 */
+/* 这是唯一需要强制应用的样式，用于确保 br 标签正确换行 */
+/* 使用最具体的选择器，确保优先级最高 */
+#documentPreview table tfoot td,
+#documentPreviewPage1 table tfoot td,
+#documentPreviewPage2 table tfoot td,
+#documentPreview table tfoot tr td,
+#documentPreviewPage1 table tfoot tr td,
+#documentPreviewPage2 table tfoot tr td,
+#documentPreview .preview-paper table tfoot td,
+#documentPreviewPage1 .preview-paper table tfoot td,
+#documentPreviewPage2 .preview-paper table tfoot td,
+#documentPreview .preview-paper table tfoot tr td,
+#documentPreviewPage1 .preview-paper table tfoot tr td,
+#documentPreviewPage2 .preview-paper table tfoot tr td {
+  white-space: normal !important;
+  word-wrap: break-word !important;
+  overflow-wrap: break-word !important;
+  line-height: 1.5 !important;
+  /* 强制覆盖任何可能的nowrap */
+  white-space: normal !important;
+}
+
+/* 确保预览窗口中的表格 tfoot 中的 br 标签能正确换行 */
+/* 使用最具体的选择器，确保 br 标签被正确渲染为块级元素 */
+#documentPreview table tfoot td br,
+#documentPreviewPage1 table tfoot td br,
+#documentPreviewPage2 table tfoot td br,
+#documentPreview table tfoot tr td br,
+#documentPreviewPage1 table tfoot tr td br,
+#documentPreviewPage2 table tfoot tr td br,
+#documentPreview .preview-paper table tfoot td br,
+#documentPreviewPage1 .preview-paper table tfoot td br,
+#documentPreviewPage2 .preview-paper table tfoot td br,
+#documentPreview .preview-paper table tfoot tr td br,
+#documentPreviewPage1 .preview-paper table tfoot tr td br,
+#documentPreviewPage2 .preview-paper table tfoot tr td br {
+  display: block !important;
+  content: "" !important;
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+  line-height: 1.2 !important;
+  height: 0 !important;
+  width: 100% !important;
+  /* 确保br标签强制换行 */
+  display: block !important;
+}
+
+/* 更具体的选择器，确保所有 tfoot 中的第二个 td（通常包含总计信息）样式正确 */
+#documentPreview table tfoot tr td:nth-child(2),
+#documentPreviewPage1 table tfoot tr td:nth-child(2),
+#documentPreviewPage2 table tfoot tr td:nth-child(2),
+#documentPreview .preview-paper table tfoot tr td:nth-child(2),
+#documentPreviewPage1 .preview-paper table tfoot tr td:nth-child(2),
+#documentPreviewPage2 .preview-paper table tfoot tr td:nth-child(2) {
+  white-space: normal !important;
+  word-wrap: break-word !important;
+  overflow-wrap: break-word !important;
+  line-height: 1.5 !important;
+  /* 强制覆盖任何可能的nowrap */
+  white-space: normal !important;
+}
+
+/* 确保所有内联样式优先级最高 - 内联样式自动具有最高优先级 */
+/* 模板中的所有样式都应该通过内联样式定义，确保所见即所得 */
+/* 注意：内联样式自动具有最高优先级，不需要额外设置CSS规则 */
+
+#documentPreview iframe {
+  width: 100%;
+  min-height: 297mm;
+  border: none;
+  background: white;
+  display: block;
+}
+
+/* 单据模板页面 */
+/* 快速筛选标签样式 */
+.quick-filters {
+  margin-bottom: 12px;
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.filter-tag {
+  padding: 6px 14px;
+  border-radius: 20px;
+  border: 1px solid #cbd5e1;
+  background: white;
+  color: #64748b;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-weight: 500;
+}
+
+.filter-tag:hover {
+  background: #f1f5f9;
+  border-color: #94a3b8;
+}
+
+.filter-tag.active {
+  border: 1px solid #3b82f6;
+  background: #3b82f6;
+  color: white;
+}
+
+/* 高级筛选区域 */
+.filter-section {
+  background-color: white;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  margin-bottom: 12px;
+}
+
+.filter-section .filter-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background: #f8fafc;
+  cursor: pointer;
+  user-select: none;
+}
+
+.filter-section .filter-body {
+  padding: 12px;
+  border-top: 1px solid #e5e7eb;
+  transition: max-height 0.3s ease, opacity 0.3s ease;
+  overflow: hidden;
+}
+
+.filter-section .filter-body.collapsed {
+  max-height: 0;
+  padding: 0 12px;
+  opacity: 0;
+  overflow: hidden;
+}
+
+.filter-section .filter-body:not(.collapsed) {
+  max-height: 500px;
+  opacity: 1;
+}
+
+.filter-toggle-icon {
+  font-size: 16px;
+  transition: transform 0.3s ease;
+  color: #4A90E2;
+  font-weight: 700;
+}
+
+.filter-toggle-icon.rotated {
+  transform: rotate(180deg);
+}
+
+#activeFiltersCount.has-filters {
+  background: #3b82f6;
+  color: white;
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+
+.filter-section .filter-header h4 {
+  margin: 0;
+  color: #1e293b;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.filter-section .filter-header h4 span {
+  margin-right: 6px;
+}
+
+.filter-section .filter-header .btn {
+  padding: 4px 12px;
+  font-size: 12px;
+}
+
+.filter-section .form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+}
+
+.filter-section .form-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.filter-section .form-item label {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #475569;
+  margin-bottom: 4px;
+}
+
+.filter-section .form-item .input,
+.filter-section .form-item .select {
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 13px;
+  height: 32px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.template-list-container {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  overflow-x: auto !important;
+  overflow-y: visible !important;
+  -webkit-overflow-scrolling: touch;
+  position: relative;
+  width: 100%;
+}
+
+/* 确保表格操作列在所有情况下都可见 */
+/* 覆盖全局表格样式，使用固定布局以便操作列有足够空间 */
+/* 字体大小与订单列表页面保持一致 */
+#view-document-center-templates #templateListTable {
+  table-layout: fixed !important;
+  width: 100%;
+  border-collapse: collapse;
+}
+
+/* 表格头部样式 - 与订单列表页面一致 */
+#view-document-center-templates #templateListTable th {
+  font-weight: 600;
+  color: #1e293b;
+  font-size: 12px;
+  padding: 14px 12px !important;
+  border-bottom: 2px solid #cbd5e1;
+  white-space: nowrap;
+  text-align: center !important;
+  background-color: #f8f9fa;
+}
+
+/* 表格数据单元格样式 - 与订单列表页面一致 */
+#view-document-center-templates #templateListTable td {
+  padding: 12px !important;
+  vertical-align: middle !important;
+  color: #333;
+  font-size: 13px;
+  text-align: center !important;
+}
+
+/* 表格行样式 */
+#view-document-center-templates #templateListTable tbody tr {
+  border-bottom: 1px solid #e5e7eb;
+  transition: background-color 0.2s;
+}
+
+#view-document-center-templates #templateListTable tbody tr:hover {
+  background-color: #f8fafc;
+}
+
+/* 操作列样式 - 确保有足够空间 */
+#view-document-center-templates #templateListTable th:last-child,
+#view-document-center-templates #templateListTable td:last-child {
+  overflow: visible !important;
+  white-space: normal !important;
+  position: relative;
+  z-index: 10;
+  width: 31% !important;
+  min-width: 280px !important;
+  padding: 6px 4px !important;
+}
+
+/* 操作按钮容器 */
+#view-document-center-templates #templateListTable td:last-child > div {
+  overflow: visible !important;
+  display: flex;
+  gap: 4px;
+  flex-wrap: nowrap;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  position: relative;
+  z-index: 11;
+}
+
+/* 操作按钮样式 - 紧凑设计 */
+#view-document-center-templates #templateListTable td:last-child .btn {
+  flex-shrink: 0;
+  overflow: visible;
+  position: relative;
+  z-index: 12;
+  white-space: nowrap;
+  min-width: 32px;
+  padding: 4px 8px;
+  font-size: 13px;
+  line-height: 1.2;
+  margin: 0;
+}
+
+/* 按钮组 */
+.btn-group {
+  display: flex;
+  gap: 4px;
+}
+
+.btn-group .btn {
+  flex: 1;
+  padding: 6px 12px;
+  font-size: 12px;
+  border: 1px solid #e2e8f0;
+  background: white;
+  color: #64748b;
+  transition: all 0.2s ease;
+}
+
+.btn-group .btn:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+}
+
+.btn-group .btn.active {
+  background: #3b82f6;
+  color: white;
+  border-color: #3b82f6;
+  font-weight: 500;
+}
+
+/* 确保 panel-header 样式与订单列表页面一致 */
+#view-document-center-generate .panel-header,
+#view-document-center-templates .panel-header,
+#view-document-center-template-editor .panel-header {
+  padding: 16px 20px !important;
+  border-bottom: 1px solid #e9ecef;
+  background: #ffffff !important;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  min-height: 56px;
+  height: auto;
+  box-sizing: border-box;
+  position: relative;
+  z-index: 10;
+  overflow: visible;
+  flex-wrap: wrap;
+}
+
+/* 确保 panel 本身不会裁剪 header */
+#view-document-center-templates.panel {
+  overflow: visible !important;
+  position: relative;
+}
+
+#view-document-center-templates.panel .panel-body {
+  overflow-y: auto !important;
+  overflow-x: visible !important;
+  position: relative;
+}
+
+/* 模板编辑页面 */
+#view-document-center-template-editor .panel {
+  border-top: none !important;
+  border-radius: 0 !important;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+#view-document-center-template-editor .panel-header {
+  display: none !important;
+}
+
+#view-document-center-template-editor .panel-body {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  padding: 0 !important;
+}
+
+/* 模板编辑器顶部工具栏 */
+#view-document-center-template-editor .filter-bar {
+  flex-shrink: 0;
+  background: #fff;
+  border-bottom: 1px solid #e9ecef;
+}
+
+/* 模板编辑器容器 */
+#view-document-center-template-editor .template-editor-main {
+  height: calc(100vh - 64px - 56px);
+  display: flex;
+  flex-direction: column;
+  background: #f5f5f5;
+  overflow: hidden;
+}
+
+/* 模板编辑器容器（保留兼容性） */
+#view-document-center-template-editor .template-editor-container {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  height: calc(100vh - 64px - 48px) !important; /* 减去顶部导航和工具栏高度 */
+}
+
+
+#view-document-center-generate .panel-title,
+#view-document-center-templates .panel-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0;
+  padding: 0;
+  line-height: 24px;
+  display: block;
+  height: 24px;
+  box-sizing: border-box;
+}
+
+#view-document-center-generate .panel-actions,
+#view-document-center-templates .panel-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 11;
+}
+
+/* 模板编辑器Modal样式 */
+#templateEditorModal {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  background: rgba(0, 0, 0, 0.5) !important;
+  background-color: rgba(0, 0, 0, 0.5) !important;
+  z-index: 99999 !important;
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: center !important;
+  backdrop-filter: blur(6px) !important;
+  -webkit-backdrop-filter: blur(6px) !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: none !important;
+  overflow: auto !important;
+}
+
+#templateEditorModal[style*="display: none"] {
+  display: none !important;
+}
+
+#templateEditorModal .modal-content {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+#templateEditorModal .modal-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+#templateEditorModal .modal-header h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+#templateEditorModal .modal-close {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #6b7280;
+  cursor: pointer;
+  padding: 4px 8px;
+  line-height: 1;
+  transition: all 0.2s ease;
+}
+
+#templateEditorModal .modal-close:hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: #374151;
+  border-radius: 4px;
+}
+
+#templateEditorModal .modal-body {
+  padding: 0;
+  overflow: hidden;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+#templateEditorModal .editor-toolbar {
+  padding: 12px 16px;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #f8f9fa;
+  flex-shrink: 0;
+}
+
+
+/* 针对1920x1080分辨率优化 */
+@media (min-width: 1025px) and (max-width: 1920px) {
+  /* 确保操作列有足够空间 */
+  #view-document-center-templates #templateListTable th:last-child,
+  #view-document-center-templates #templateListTable td:last-child {
+    min-width: 350px !important; /* 增大操作列宽度 */
+    width: auto !important;
+    padding: 12px 20px !important; /* 增加内边距 */
+    overflow: visible !important;
+  }
+  
+  #view-document-center-templates #templateListTable td:last-child > div {
+    justify-content: center;
+    padding: 0 4px;
+    min-width: 320px; /* 增大按钮容器最小宽度 */
+    gap: 6px; /* 增加按钮间距 */
+    overflow: visible !important;
+  }
+  
+  /* 确保表格容器可以横向滚动 */
+  #view-document-center-templates .template-list-container {
+    overflow-x: auto !important;
+    overflow-y: visible !important;
+  }
+}
+
+/* 可点击的验证状态样式 */
+.validation-status-clickable {
+  transition: all 0.2s ease;
+}
+
+.validation-status-clickable:hover {
+  opacity: 0.8;
+  text-decoration: underline !important;
+  text-decoration-style: solid !important;
+}
+
+.validation-status-clickable:active {
+  opacity: 0.6;
+}
+
+/* 响应式设计 */
+@media (max-width: 1024px) {
+  /* 笔记本屏幕优化 */
+  #view-document-center-templates .panel-header {
+    flex-wrap: wrap;
+    min-height: auto;
+    height: auto;
+    padding: 12px 16px !important;
+    align-items: flex-start;
+  }
+  
+  #view-document-center-templates .panel-title {
+    font-size: 16px;
+    margin-bottom: 8px;
+    width: 100%;
+    flex: 0 0 100%;
+  }
+  
+  #view-document-center-templates .panel-actions {
+    width: 100%;
+    justify-content: flex-start;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-top: 0;
+    flex: 0 0 100%;
+  }
+  
+  #view-document-center-templates .panel-actions .btn {
+    font-size: 12px;
+    padding: 6px 10px;
+    flex: 0 0 auto;
+    white-space: nowrap;
+    min-width: auto;
+  }
+  
+  /* 筛选区域优化 */
+  #view-document-center-templates .filter-section {
+    padding: 12px;
+  }
+  
+  #view-document-center-templates .filter-header {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  
+  #view-document-center-templates .form-grid {
+    grid-template-columns: 1fr !important;
+    gap: 10px;
+  }
+  
+  /* 表格优化 - 隐藏部分列 */
+  #view-document-center-templates #templateListTable {
+    font-size: 12px;
+    width: 100%;
+    table-layout: auto;
+    min-width: 100%;
+  }
+  
+  #view-document-center-templates #templateListTable th,
+  #view-document-center-templates #templateListTable td {
+    padding: 8px 6px;
+    white-space: nowrap;
+    overflow: visible;
+    text-overflow: clip;
+  }
+  
+  /* 设置各列宽度 */
+  #view-document-center-templates #templateListTable th:nth-child(1),
+  #view-document-center-templates #templateListTable td:nth-child(1) {
+    width: 25%;
+    min-width: 150px;
+  }
+  
+  #view-document-center-templates #templateListTable th:nth-child(2),
+  #view-document-center-templates #templateListTable td:nth-child(2) {
+    width: 15%;
+    min-width: 100px;
+  }
+  
+  #view-document-center-templates #templateListTable th:nth-child(3),
+  #view-document-center-templates #templateListTable td:nth-child(3) {
+    width: 20%;
+    min-width: 140px;
+  }
+  
+  /* 隐藏创建人和最后修改列 */
+  #view-document-center-templates #templateListTable th:nth-child(4),
+  #view-document-center-templates #templateListTable td:nth-child(4),
+  #view-document-center-templates #templateListTable th:nth-child(5),
+  #view-document-center-templates #templateListTable td:nth-child(5) {
+    display: none;
+  }
+  
+  /* 操作按钮优化 - 确保有足够空间 */
+  #view-document-center-templates #templateListTable th:last-child,
+  #view-document-center-templates #templateListTable td:last-child {
+    width: auto !important;
+    min-width: 320px !important; /* 增大操作列宽度 */
+    max-width: none !important;
+    white-space: normal !important;
+    overflow: visible !important;
+    position: relative;
+    z-index: 5;
+    padding: 12px 20px !important; /* 增加内边距 */
+  }
+  
+  #view-document-center-templates #templateListTable td:last-child > div {
+    display: flex;
+    gap: 6px; /* 增加按钮间距 */
+    flex-wrap: nowrap;
+    justify-content: center;
+    align-items: center;
+    overflow: visible !important;
+    width: 100%;
+    min-width: 300px; /* 增大按钮容器最小宽度 */
+    padding: 0 4px;
+  }
+  
+  #view-document-center-templates #templateListTable td:last-child .btn {
+    padding: 6px 10px; /* 增加按钮内边距 */
+    font-size: 12px;
+    min-width: 40px; /* 增加按钮最小宽度 */
+    flex-shrink: 0;
+    position: relative;
+    z-index: 6;
+    white-space: nowrap;
+    overflow: visible;
+    margin: 0 2px; /* 增加按钮左右外边距 */
+  }
+  
+  /* 确保表格容器可以横向滚动（如果需要） */
+  #view-document-center-templates .template-list-container {
+    overflow-x: auto !important;
+    overflow-y: visible !important;
+    -webkit-overflow-scrolling: touch;
+    position: relative;
+  }
+  
+  /* 确保表格本身不会被遮挡 */
+  #view-document-center-templates #templateListTable {
+    position: relative;
+    z-index: 1;
+    border-collapse: separate;
+    border-spacing: 0;
+  }
+}
+
+@media (max-width: 768px) {
+  .selection-bar > div {
+    grid-template-columns: 1fr !important;
+  }
+  
+  #documentPreview {
+    width: 100%;
+    transform: scale(0.5);
+    transform-origin: top left;
+  }
+  
+  .btn-group {
+    flex-wrap: wrap;
+  }
+  
+  .btn-group .btn {
+    flex: 1 1 calc(50% - 2px);
+    min-width: calc(50% - 2px);
+  }
+  
+  #view-document-center-generate .panel-actions,
+  #view-document-center-templates .panel-actions {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  
+  /* 平板/手机屏幕 - 表格转为卡片布局 */
+  #view-document-center-templates .template-list-container {
+    overflow: visible;
+    background: transparent;
+    box-shadow: none;
+    border: none;
+  }
+  
+  #view-document-center-templates #templateListTable {
+    display: none !important;
+  }
+  
+  /* 卡片布局容器 */
+  #view-document-center-templates .template-cards-container {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+    padding: 0;
+  }
+  
+  /* 模板卡片样式 */
+  #view-document-center-templates .template-card {
+    background: white;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 16px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    transition: all 0.2s ease;
+  }
+  
+  #view-document-center-templates .template-card:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    transform: translateY(-2px);
+  }
+  
+  /* 卡片头部 */
+  #view-document-center-templates .template-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #f1f5f9;
+    gap: 12px;
+  }
+  
+  #view-document-center-templates .template-card-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #1e293b;
+    margin: 0;
+    flex: 1;
+    word-break: break-word;
+    line-height: 1.4;
+  }
+  
+  #view-document-center-templates .template-card-actions {
+    display: flex;
+    gap: 4px;
+    flex-shrink: 0;
+    align-items: flex-start;
+  }
+  
+  #view-document-center-templates .template-card-actions .btn {
+    padding: 6px 8px;
+    font-size: 12px;
+    min-width: 32px;
+    height: 32px;
+  }
+  
+  #view-document-center-templates .template-card-actions span {
+    display: inline-block;
+    font-size: 18px;
+    line-height: 32px;
+    padding: 0 4px;
+  }
+  
+  /* 卡片内容 */
+  #view-document-center-templates .template-card-content {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+  
+  #view-document-center-templates .template-card-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  
+  #view-document-center-templates .template-card-label {
+    font-size: 11px;
+    color: #64748b;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    line-height: 1.4;
+  }
+  
+  #view-document-center-templates .template-card-value {
+    font-size: 13px;
+    color: #1e293b;
+    font-weight: 500;
+    line-height: 1.5;
+    word-break: break-word;
+  }
+  
+  /* 卡片底部操作栏 */
+  #view-document-center-templates .template-card-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 6px;
+    padding-top: 12px;
+    border-top: 1px solid #f1f5f9;
+    flex-wrap: wrap;
+  }
+  
+  #view-document-center-templates .template-card-footer .btn {
+    flex: 1;
+    min-width: 60px;
+    padding: 8px 12px;
+    font-size: 12px;
+    white-space: nowrap;
+  }
+  
+  #templateEditorModal .modal-content {
+    width: 100vw !important;
+    height: 100vh !important;
+    max-width: 100vw !important;
+    border-radius: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  /* 超小屏幕进一步优化 */
+  #view-document-center-templates .template-card-content {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  
+  #view-document-center-templates .template-card-footer {
+    flex-direction: column;
+  }
+  
+  #view-document-center-templates .template-card-footer .btn {
+    width: 100%;
+  }
+}
+

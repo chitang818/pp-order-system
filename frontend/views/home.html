@@ -1,0 +1,177 @@
+<section id="view-home" class="panel" data-view>
+  <div class="panel-header">
+    <div class="panel-title">首页</div>
+    <div class="panel-actions">
+      <button class="btn secondary" id="btnLayoutSettings" style="padding: 6px 12px; font-size: 13px; margin-right: 8px;">
+        <span>⚙️</span> 布局设置
+      </button>
+      <button class="btn secondary" id="btnSyncLayoutToDefaults" style="padding: 6px 12px; font-size: 13px; margin-right: 8px;">
+        <span>💾</span> 同步到默认布局
+      </button>
+      <button class="btn refresh-btn" id="btnRefreshDashboard" style="padding: 6px 12px; font-size: 13px;">
+        <span>🔄</span> 刷新
+      </button>
+    </div>
+  </div>
+  <div class="panel-body dashboard-container">
+    <!-- 加载状态 -->
+    <div class="dashboard-loading" id="dashboardLoading" style="display: none; text-align: center; padding: 40px;">
+      <div class="loading-spinner" style="display: inline-block; width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid #667eea; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 15px;"></div>
+      <div class="loading-progress-text" style="color: #6c757d; margin-bottom: 15px; font-size: 14px;">初始化...</div>
+      <div style="width: 300px; height: 6px; background: #e5e7eb; border-radius: 3px; margin: 0 auto; overflow: hidden;">
+        <div class="loading-progress-bar" style="width: 0%; height: 100%; background: linear-gradient(90deg, #667eea, #764ba2); border-radius: 3px; transition: width 0.3s ease;"></div>
+      </div>
+    </div>
+
+    <!-- 错误状态 -->
+    <div class="dashboard-error" id="dashboardError" style="display: none; text-align: center; padding: 40px; color: #dc2626;">
+      <div style="font-size: 48px; margin-bottom: 10px;">⚠️</div>
+      <div id="dashboardErrorMessage" style="margin-bottom: 20px;">加载失败，请刷新重试</div>
+      <button class="btn primary" id="btnRetryLoadDashboard" style="margin-top: 15px; padding: 8px 16px;">
+        🔄 重试
+      </button>
+    </div>
+
+    <!-- 所有卡片直接作为dashboard-container的子元素，使用CSS Grid布局 -->
+    
+    <!-- 欢迎卡片 -->
+    <div class="welcome-card" id="welcomeCard">
+      <div class="welcome-content">
+        <div class="welcome-left">
+          <div class="welcome-greeting">
+            <span class="welcome-text">欢迎回来</span>
+            <span class="welcome-username" id="welcomeUsername">用户</span>
+          </div>
+          <div class="welcome-info">
+            <div class="welcome-weather" id="welcomeWeather">
+              <span class="weather-icon">🌤️</span>
+              <span class="weather-text">加载中...</span>
+            </div>
+            <div class="welcome-blessing">
+              <span>快乐每一天，记得多喝水哦！</span>
+            </div>
+          </div>
+        </div>
+        <div class="welcome-right">
+          <div class="welcome-avatar-wrapper" id="welcomeAvatarWrapper">
+            <img src="" alt="用户头像" class="welcome-avatar" id="welcomeAvatar" style="display: none;">
+            <div class="welcome-avatar-default" id="welcomeAvatarDefault">
+              <span id="welcomeAvatarText">U</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 待办提醒卡片 -->
+    <div class="reminder-card stat-card-chart" id="todoReminderCard"></div>
+
+    <!-- AI秘书卡片 -->
+    <div class="reminder-card stat-card-chart" id="aiSecretaryCard"></div>
+
+    <!-- 目的港城市分布卡片 -->
+    <div class="reminder-card stat-card-chart" id="destinationDistributionCard"></div>
+
+    <!-- 产品数量排名卡片 -->
+    <div class="reminder-card stat-card-chart" id="productRankingCard"></div>
+
+    <!-- 箱型统计卡片 -->
+    <div class="reminder-card stat-card-chart" id="boxTypeStatsCard"></div>
+
+    <!-- 订单状态分布图表 -->
+    <div class="chart-card chart-card-compact" id="statusDistributionChart">
+      <div class="chart-title">订单状态分布</div>
+      <div class="chart-container"></div>
+    </div>
+
+    <!-- 每日话题卡片 -->
+    <div class="topic-card" id="dailyTopicCard">
+      <div class="topic-card-header">
+        <div class="topic-card-title">每日话题</div>
+      </div>
+      <div class="topic-card-content">
+        <div class="topic-card-placeholder">功能开发中...</div>
+      </div>
+    </div>
+
+    <!-- 发货提醒卡片 -->
+    <div class="reminder-card" id="shipmentReminderCard">
+      <div class="reminder-card-header">
+        <div class="reminder-card-title">
+          <span class="reminder-icon">🚚</span>
+          <span>发货提醒</span>
+        </div>
+        <div class="reminder-header-right">
+          <div class="reminder-scroll-message" id="shipmentScrollMessage"></div>
+          <button class="reminder-settings-btn" id="btnShipmentSettings" title="设置提前天数">
+            ⚙️
+          </button>
+        </div>
+      </div>
+      <div class="reminder-list" id="shipmentReminderList"></div>
+      <div class="reminder-empty" id="shipmentReminderEmpty" style="display: none;">
+        暂无发货提醒
+      </div>
+    </div>
+
+    <!-- 收款提醒卡片 -->
+    <div class="reminder-card" id="paymentReminderCard">
+      <div class="reminder-card-header">
+        <div class="reminder-card-title">
+          <span class="reminder-icon">💰</span>
+          <span>收款提醒</span>
+        </div>
+        <div class="reminder-header-right">
+          <div class="reminder-scroll-message" id="paymentScrollMessage"></div>
+          <button class="reminder-settings-btn" id="btnPaymentSettings" title="设置滚动消息内容">
+            ⚙️
+          </button>
+        </div>
+      </div>
+      <div class="reminder-list" id="paymentReminderList"></div>
+      <div class="reminder-empty" id="paymentReminderEmpty" style="display: none;">
+        暂无收款提醒
+      </div>
+    </div>
+
+    <!-- 统计卡片区域（由JS动态生成） -->
+    <div class="stats-grid" id="statsGrid"></div>
+    
+    <!-- 订单趋势图表 -->
+    <div class="chart-card" id="orderTrendChart">
+      <div class="chart-title">订单趋势</div>
+      <div class="chart-container"></div>
+    </div>
+
+    <!-- 客户交易排行图表 -->
+    <div class="chart-card" id="customerRankingChart">
+      <div class="chart-title">客户交易排行</div>
+      <div class="chart-container"></div>
+    </div>
+
+    <!-- 月度对比图表 -->
+    <div class="chart-card" id="monthlyComparisonChart">
+      <div class="chart-title">月度对比</div>
+      <div class="chart-container"></div>
+    </div>
+
+    <!-- 年度对比图表 -->
+    <div class="chart-card" id="yearlyComparisonChart">
+      <div class="chart-title">年度对比</div>
+      <div class="chart-container"></div>
+    </div>
+    
+    <!-- 快速操作卡片 -->
+    <div class="quick-actions-card" id="quickActions">
+      <div class="card-title">快速操作</div>
+      <div class="quick-actions-list" id="quickActionsList"></div>
+    </div>
+
+    <!-- 最近操作记录卡片 -->
+    <div class="recent-activities-card" id="recentActivities">
+      <div class="card-title">最近操作记录</div>
+      <div class="recent-activities-content" id="recentActivitiesContent"></div>
+    </div>
+  </div>
+</section>
+

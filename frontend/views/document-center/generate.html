@@ -1,0 +1,1270 @@
+<section id="view-document-center-generate" class="panel" data-view>
+  <div class="document-generate-wrapper">
+    <!-- 顶部工具栏 -->
+    <div class="generate-toolbar-top">
+      <div class="toolbar-left">
+        <h1 class="generate-title">单据生成</h1>
+        <div class="document-type-group" id="documentTypeGroup">
+          <button class="type-btn" data-type="sales" title="销售确认书">📋 销售确认书（S/C）</button>
+          <button class="type-btn" data-type="production" title="生产通知单">🏭 生产通知单</button>
+          <button class="type-btn active" data-type="invoice" title="商业发票">📄 发票（IV）</button>
+          <button class="type-btn" data-type="packing" title="装箱单">📦 装箱单（PL）</button>
+          <button class="type-btn" data-type="pickup" title="拉货通知">🚚 拉货通知</button>
+        </div>
+      </div>
+      <div class="toolbar-right">
+        <div class="export-group">
+          <button class="action-btn primary" id="btnExportPDF" title="导出PDF">
+            <span class="icon">📄</span>PDF
+          </button>
+          <button class="action-btn primary" id="btnExportWord" title="导出Word">
+            <span class="icon">📝</span>Word
+          </button>
+          <button class="action-btn success" id="btnExportExcel" title="导出Excel">
+            <span class="icon">📊</span>Excel
+          </button>
+        </div>
+      </div>
+    </div>
+    
+    <!-- 主工作区域 -->
+    <div class="generate-main-area">
+      <!-- 左侧：订单信息面板 -->
+      <div class="order-info-panel" id="orderInfoPanel">
+        <div class="panel-header">
+          <h3 class="panel-title">订单信息</h3>
+          <button class="panel-toggle" id="toggleOrderPanel" title="折叠/展开">
+            <span class="icon">◀</span>
+          </button>
+        </div>
+        <div class="panel-content" id="orderInfoContent">
+          <!-- 订单和模板选择区域 -->
+          <div class="selection-controls-panel">
+            <div class="selection-control-item">
+              <label class="selection-label">选择订单</label>
+              <select id="orderSelect" class="order-info-select">
+                <option value="">请选择订单</option>
+              </select>
+            </div>
+            <div class="selection-control-item">
+              <label class="selection-label">选择模板</label>
+              <select id="templateSelect" class="order-info-select">
+                <option value="">请选择模板</option>
+              </select>
+            </div>
+          </div>
+          <!-- 订单详细信息 -->
+          <div id="orderInfoDetails" style="display: none;">
+            <!-- 订单详细信息将在这里动态生成 -->
+          </div>
+          <!-- 空状态 -->
+          <div class="info-empty" id="orderInfoEmpty">
+            <div class="empty-icon">📋</div>
+            <p class="empty-text">请选择订单</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- 中间：预览区域 -->
+      <div class="preview-area">
+        <div class="preview-toolbar">
+          <div class="preview-title">
+            <span class="icon">👁️</span>
+            <span>预览</span>
+          </div>
+          <div class="zoom-controls" id="zoomControls">
+            <div class="zoom-group">
+              <button class="zoom-btn" id="btnZoomOut" title="缩小">
+                <span class="icon">−</span>
+            </button>
+              <span class="zoom-display" id="zoomLevel">100%</span>
+              <button class="zoom-btn" id="btnZoomIn" title="放大">
+                <span class="icon">+</span>
+            </button>
+              <button class="zoom-btn" id="btnFitPage" title="适应页面">
+                <span class="icon">⤢</span>
+            </button>
+            </div>
+          </div>
+        </div>
+        <div class="preview-container" id="previewContainer">
+          <div class="preview-zoom-wrapper" id="previewZoomWrapper">
+            <div class="preview-pages" id="previewPages">
+              <!-- 第一页 -->
+              <div class="preview-paper" id="documentPreviewPage1">
+                <!-- WPS风格页边距L型标记 -->
+                <div class="margin-mark margin-mark-top-left"></div>
+                <div class="margin-mark margin-mark-top-right"></div>
+                <div class="margin-mark margin-mark-bottom-left"></div>
+                <div class="margin-mark margin-mark-bottom-right"></div>
+                <div class="preview-empty-state">
+                  <div class="empty-icon">📄</div>
+                  <p class="empty-text">请选择订单和模板以生成单据</p>
+                </div>
+              </div>
+              <!-- 第二页（如果需要） -->
+              <div class="preview-paper preview-paper-page2" id="documentPreviewPage2" style="display: none;">
+                <!-- WPS风格页边距L型标记 -->
+                <div class="margin-mark margin-mark-top-left"></div>
+                <div class="margin-mark margin-mark-top-right"></div>
+                <div class="margin-mark margin-mark-bottom-left"></div>
+                <div class="margin-mark margin-mark-bottom-right"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 右侧：操作面板 -->
+      <div class="actions-panel" id="actionsPanel">
+        <div class="panel-header">
+          <h3 class="panel-title">操作</h3>
+          <button class="panel-toggle" id="toggleActionsPanel" title="折叠/展开">
+            <span class="icon">▶</span>
+          </button>
+        </div>
+        <div class="panel-content" id="actionsContent">
+          <div class="action-section">
+            <h4 class="section-title">模板信息</h4>
+            <div class="template-info" id="templateInfo">
+              <div class="info-empty-small">
+                <p>未选择模板</p>
+              </div>
+            </div>
+            <!-- 模板验证状态指示器 -->
+            <div class="template-status" id="templateStatus" style="display: none; margin-top: 12px; padding: 8px; background: #f8fafc; border-radius: 6px; border: 1px solid #e2e8f0;">
+              <div class="status-item" id="templateValidationStatus" style="display: flex; align-items: center; gap: 6px; font-size: 12px;">
+                <span class="status-icon">✓</span>
+                <span class="status-text">验证中...</span>
+              </div>
+            </div>
+          </div>
+          <div class="action-section">
+            <h4 class="section-title">快速导出</h4>
+            <div class="quick-export">
+              <button class="quick-export-btn" data-format="pdf" title="导出PDF">
+                <span class="icon">📄</span>
+                <span>PDF</span>
+              </button>
+              <button class="quick-export-btn" data-format="word" title="导出Word">
+                <span class="icon">📝</span>
+                <span>Word</span>
+              </button>
+              <button class="quick-export-btn" data-format="excel" title="导出Excel">
+                <span class="icon">📊</span>
+                <span>Excel</span>
+              </button>
+            </div>
+          </div>
+          <div class="action-section">
+            <h4 class="section-title">预览设置</h4>
+            <div class="preview-settings">
+              <div class="setting-item">
+                <label class="setting-label">自动适配</label>
+                <label class="switch">
+                  <input type="checkbox" id="autoFitToggle">
+                  <span class="slider"></span>
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<style>
+    * {
+      box-sizing: border-box;
+    }
+
+    .document-generate-wrapper {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      background: #f5f5f7;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+    }
+
+    /* ========== 顶部工具栏 ========== */
+    .generate-toolbar-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      height: 64px;
+      background: #fff;
+      border-bottom: 1px solid #e5e7eb;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+      flex-shrink: 0;
+    }
+
+    .toolbar-left {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      flex: 1;
+    }
+
+    .generate-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #111827;
+      margin: 0;
+      white-space: nowrap;
+      margin-right: 20px;
+    }
+
+    .document-type-group {
+      display: flex;
+      gap: 6px;
+      background: #e5e7eb;
+      padding: 4px;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      margin-left: 420px;
+    }
+
+    .type-btn {
+      padding: 8px 16px;
+      border: 2px solid transparent;
+      background: transparent;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 13px;
+      color: #6b7280;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      white-space: nowrap;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      font-weight: 500;
+      position: relative;
+    }
+
+    .type-btn:hover:not(.active) {
+      background: #e5e7eb;
+      color: #111827;
+      border-color: #d1d5db;
+    }
+
+    .type-btn.active {
+      background: linear-gradient(135deg, #93c5fd 0%, #60a5fa 100%);
+      color: #fff;
+      box-shadow: 
+        0 6px 16px rgba(96, 165, 250, 0.35),
+        0 2px 6px rgba(96, 165, 250, 0.25),
+        0 0 0 2px rgba(147, 197, 253, 0.25);
+      font-weight: 700;
+      font-size: 14px;
+      border: 2px solid #60a5fa;
+      transform: translateY(-2px);
+      z-index: 10;
+    }
+
+    .type-btn.active::after {
+      content: '';
+      position: absolute;
+      bottom: -4px;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, #93c5fd 0%, #60a5fa 100%);
+      border-radius: 0 0 4px 4px;
+    }
+
+    .type-btn.active:hover {
+      background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
+      border-color: #3b82f6;
+      box-shadow: 
+        0 8px 20px rgba(59, 130, 246, 0.45),
+        0 4px 10px rgba(59, 130, 246, 0.35),
+        0 0 0 3px rgba(96, 165, 250, 0.3);
+      transform: translateY(-3px) scale(1.03);
+    }
+
+
+    .type-btn {
+      padding: 8px 16px;
+      border: 2px solid transparent;
+      background: transparent;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 13px;
+      color: #6b7280;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      white-space: nowrap;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      font-weight: 500;
+      position: relative;
+    }
+
+    .type-btn:hover:not(.active) {
+      background: #e5e7eb;
+      color: #111827;
+      border-color: #d1d5db;
+    }
+
+    .type-btn.active {
+      background: linear-gradient(135deg, #93c5fd 0%, #60a5fa 100%);
+      color: #fff;
+      box-shadow: 
+        0 6px 16px rgba(96, 165, 250, 0.3),
+        0 2px 6px rgba(96, 165, 250, 0.2),
+        0 0 0 2px rgba(147, 197, 253, 0.25);
+      font-weight: 700;
+      font-size: 14px;
+      border: 2px solid #60a5fa;
+      transform: translateY(-2px);
+      z-index: 10;
+    }
+
+    .type-btn.active::after {
+      content: '';
+      position: absolute;
+      bottom: -4px;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, #93c5fd 0%, #60a5fa 100%);
+      border-radius: 0 0 4px 4px;
+    }
+
+    .type-btn.active:hover {
+      background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
+      border-color: #3b82f6;
+      box-shadow: 
+        0 8px 20px rgba(96, 165, 250, 0.4),
+        0 4px 8px rgba(96, 165, 250, 0.3),
+        0 0 0 2px rgba(147, 197, 253, 0.35);
+      transform: translateY(-3px);
+    }
+
+    .toolbar-right {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .action-btn {
+      height: 32px;
+      padding: 0 16px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+
+    .action-btn .icon {
+      font-size: 14px;
+    }
+
+    .action-btn.secondary {
+      background: #f3f4f6;
+      color: #374151;
+    }
+
+    .action-btn.secondary:hover {
+      background: #e5e7eb;
+    }
+
+    .action-btn.primary {
+      background: #3b82f6;
+      color: #fff;
+    }
+
+    .action-btn.primary:hover {
+      background: #2563eb;
+    }
+
+    .action-btn.success {
+      background: #10b981;
+      color: #fff;
+    }
+
+    .action-btn.success:hover {
+      background: #059669;
+    }
+
+    .action-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .export-group {
+      display: flex;
+      gap: 4px;
+      padding: 2px;
+      background: #f9fafb;
+    border-radius: 6px;
+  }
+  
+    .export-group .action-btn {
+      padding: 0 12px;
+      height: 28px;
+      font-size: 12px;
+    }
+
+    /* ========== 主工作区域 ========== */
+    .generate-main-area {
+      flex: 1;
+      display: flex;
+      overflow: hidden;
+      min-height: 0;
+    }
+
+    /* ========== 左侧订单信息面板 ========== */
+    .order-info-panel {
+      flex: 1; /* 自动填充剩余空间 */
+      min-width: 320px; /* 最小宽度 */
+      background: #fff;
+      border-right: 1px solid #e5e7eb;
+      display: flex;
+      flex-direction: column;
+      transition: width 0.3s;
+      position: relative;
+    }
+
+    .order-info-panel.collapsed {
+      flex: 0 0 0; /* 折叠时不占用空间 */
+      min-width: 0;
+      border-right: none;
+      overflow: visible;
+    }
+
+    .order-info-panel.collapsed .panel-content {
+      display: none;
+    }
+
+    .order-info-panel.collapsed .panel-header {
+      width: 40px;
+      padding: 12px 8px;
+      position: absolute;
+      left: 0;
+      top: 0;
+      z-index: 10;
+      background: #fff;
+      border-right: 1px solid #e5e7eb;
+      box-shadow: 2px 0 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .order-info-panel.collapsed .panel-title {
+      display: none;
+    }
+
+    .order-info-panel.collapsed .panel-toggle {
+      width: 100%;
+      height: 100%;
+    }
+
+    .order-info-panel.collapsed .panel-toggle .icon {
+      transform: rotate(180deg);
+    }
+
+    /* ========== 中间预览区域 ========== */
+    .preview-area {
+      flex: 0 0 900px; /* 固定宽度900px，不扩展不收缩 */
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      background: #f5f5f7;
+    }
+
+    .preview-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 16px;
+      background: #fff;
+      border-bottom: 1px solid #e5e7eb;
+      flex-shrink: 0;
+      gap: 16px;
+    }
+
+    .preview-title {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #111827;
+    }
+
+    .preview-title .icon {
+      font-size: 14px;
+    }
+
+    /* ========== 订单信息面板中的选择控件 ========== */
+    .selection-controls-panel {
+      margin-bottom: 20px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid #e5e7eb;
+    }
+
+    .selection-control-item {
+      margin-bottom: 16px;
+    }
+
+    .selection-control-item:last-child {
+      margin-bottom: 0;
+    }
+
+    .selection-label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: #374151;
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .order-info-select {
+      width: 100%;
+      height: 36px;
+      padding: 0 12px;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      font-size: 13px;
+      background: #fff;
+      transition: all 0.2s;
+      cursor: pointer;
+      box-sizing: border-box;
+    }
+
+    .order-info-select:focus {
+      outline: none;
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    .order-info-select:hover {
+      border-color: #9ca3af;
+    }
+
+    .zoom-controls {
+      display: flex;
+      align-items: center;
+    }
+
+    .zoom-group {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px;
+      background: #f9fafb;
+    border-radius: 6px;
+    }
+
+    .zoom-btn {
+      width: 28px;
+      height: 28px;
+      border: none;
+      background: transparent;
+      border-radius: 4px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #6b7280;
+      transition: all 0.2s;
+      font-size: 16px;
+    }
+
+    .zoom-btn:hover {
+    background: #e5e7eb;
+    color: #111827;
+  }
+  
+    .zoom-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+    .zoom-display {
+      min-width: 50px;
+      text-align: center;
+      font-size: 12px;
+      font-weight: 500;
+      color: #374151;
+      padding: 0 8px;
+    }
+
+    .preview-container {
+      flex: 1;
+      overflow: auto; /* 显示滚动条 */
+      padding: 15px !important; /* 上下左右都是15px，确保间距一致 */
+      display: flex;
+      justify-content: center;
+      align-items: center; /* 改为center，使内容在预览窗口中垂直居中 */
+      min-height: 0;
+      position: relative;
+      background: #d4d4d4; /* WPS预览背景灰色 */
+      box-sizing: border-box; /* 确保padding包含在宽度计算中 */
+    }
+    
+    /* 当内容高度超过容器时，从顶部开始显示以确保滚动正常 */
+    .preview-container.content-overflow {
+      align-items: flex-start;
+    }
+
+    .preview-zoom-wrapper {
+      transform-origin: top center; /* 改为从顶部中心缩放，确保顶部对齐 */
+      transition: transform 0.2s ease-out;
+      margin: 0 auto !important; /* 强制水平居中 */
+      margin-top: 0 !important; /* 强制顶部margin为0 */
+      margin-bottom: 0;
+      width: fit-content;
+      height: fit-content;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px; /* 页面之间的间距 */
+      padding: 0; /* 移除padding，间距由容器padding提供 */
+      /* 确保缩放后内容有足够空间 */
+      min-width: 0;
+      min-height: 0;
+      box-sizing: content-box;
+    }
+
+    .preview-pages {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px; /* 页面之间的间距 */
+      margin: 0; /* 移除所有margin */
+      padding: 0 0 15px 0; /* 底部padding 15px，与顶部间距一致 */
+    }
+
+    .preview-paper {
+      /* A4标准尺寸：210mm x 297mm */
+      width: 210mm;
+      height: 297mm;
+      background: #fff;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.05);
+      border: 2px solid #3b82f6; /* 蓝色边框 */
+      position: relative;
+      padding: 20mm; /* 默认页边距，将通过JavaScript动态更新 */
+      box-sizing: border-box;
+      /* 纸张内容溢出时隐藏，确保每页都是A4尺寸 */
+      overflow: visible; /* 改为visible以显示页边距标记 */
+      flex-shrink: 0;
+      /* 确保A4尺寸固定 */
+      display: block;
+      /* 页面分隔效果 */
+      page-break-after: always;
+      margin: 0; /* 移除所有margin，确保第一页紧贴顶部 */
+    }
+
+    /* WPS风格页边距灰色直角标记 - 从外部指向文档四个角 */
+    .preview-paper .margin-mark {
+      position: absolute;
+      z-index: 10;
+      pointer-events: none;
+    }
+
+    /* L型标记基础样式 - 使用边框创建灰色直角 */
+    .preview-paper .margin-mark::before,
+    .preview-paper .margin-mark::after {
+      content: '';
+      position: absolute;
+      background: #9ca3af; /* 灰色，类似WPS风格 */
+    }
+
+    /* 左上角L型标记 - 位于页边距位置，开口向内（向右向下） */
+    .preview-paper .margin-mark-top-left {
+      top: 20mm; /* 默认值，将通过JavaScript动态更新 */
+      left: 20mm; /* 默认值，将通过JavaScript动态更新 */
+    }
+    .preview-paper .margin-mark-top-left::before {
+      top: 0;
+      left: 0;
+      width: 12px;
+      height: 1.5px;
+    }
+    .preview-paper .margin-mark-top-left::after {
+      top: 0;
+      left: 0;
+      width: 1.5px;
+      height: 12px;
+    }
+
+    /* 右上角L型标记 - 位于页边距位置，开口向内（向左向下） */
+    .preview-paper .margin-mark-top-right {
+      top: 20mm; /* 默认值，将通过JavaScript动态更新 */
+      right: 20mm; /* 默认值，将通过JavaScript动态更新 */
+    }
+    .preview-paper .margin-mark-top-right::before {
+      top: 0;
+      right: 0;
+      width: 12px;
+      height: 1.5px;
+    }
+    .preview-paper .margin-mark-top-right::after {
+      top: 0;
+      right: 0;
+      width: 1.5px;
+      height: 12px;
+    }
+
+    /* 左下角L型标记 - 位于页边距位置，开口向内（向右向上） */
+    .preview-paper .margin-mark-bottom-left {
+      bottom: 20mm; /* 默认值，将通过JavaScript动态更新 */
+      left: 20mm; /* 默认值，将通过JavaScript动态更新 */
+    }
+    .preview-paper .margin-mark-bottom-left::before {
+      bottom: 0;
+      left: 0;
+      width: 12px;
+      height: 1.5px;
+    }
+    .preview-paper .margin-mark-bottom-left::after {
+      bottom: 0;
+      left: 0;
+      width: 1.5px;
+      height: 12px;
+    }
+
+    /* 右下角L型标记 - 位于页边距位置，开口向内（向左向上） */
+    .preview-paper .margin-mark-bottom-right {
+      bottom: 20mm; /* 默认值，将通过JavaScript动态更新 */
+      right: 20mm; /* 默认值，将通过JavaScript动态更新 */
+    }
+    .preview-paper .margin-mark-bottom-right::before {
+      bottom: 0;
+      right: 0;
+      width: 12px;
+      height: 1.5px;
+    }
+    .preview-paper .margin-mark-bottom-right::after {
+      bottom: 0;
+      right: 0;
+      width: 1.5px;
+      height: 12px;
+    }
+
+    .preview-paper-page2 {
+      margin-top: 20px; /* 第二页与第一页的间距 */
+    }
+
+    .preview-empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      min-height: 400px;
+      color: #9ca3af;
+      pointer-events: none;
+      user-select: none;
+    }
+
+    .preview-empty-state .empty-icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+      opacity: 0.5;
+    }
+
+    .preview-empty-state .empty-text {
+      font-size: 14px;
+      margin: 0;
+    }
+
+    /* ========== 右侧操作面板 ========== */
+    .actions-panel {
+      flex: 1; /* 自动填充剩余空间 */
+      min-width: 320px; /* 最小宽度 */
+      background: #fff;
+      border-left: 1px solid #e5e7eb;
+      display: flex;
+      flex-direction: column;
+      transition: width 0.3s;
+      position: relative;
+    }
+
+    .actions-panel.collapsed {
+      flex: 0 0 0; /* 折叠时不占用空间 */
+      min-width: 0;
+      border-left: none;
+      overflow: visible;
+    }
+
+    .actions-panel.collapsed .panel-content {
+      display: none;
+    }
+
+    .actions-panel.collapsed .panel-header {
+      width: 40px;
+      padding: 12px 8px;
+      position: absolute;
+      right: 0;
+      top: 0;
+      z-index: 10;
+      background: #fff;
+      border-left: 1px solid #e5e7eb;
+      box-shadow: -2px 0 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .actions-panel.collapsed .panel-title {
+      display: none;
+    }
+
+    .actions-panel.collapsed .panel-toggle {
+      width: 100%;
+      height: 100%;
+    }
+
+    .actions-panel.collapsed .panel-toggle .icon {
+      transform: rotate(180deg);
+    }
+
+    /* ========== 通用面板样式 ========== */
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      border-bottom: 1px solid #e5e7eb;
+      background: #f9fafb;
+    }
+
+    .panel-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: #111827;
+      margin: 0;
+    }
+
+    .panel-toggle {
+      width: 24px;
+      height: 24px;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #6b7280;
+      border-radius: 4px;
+      transition: all 0.2s;
+      flex-shrink: 0;
+    }
+
+    .panel-toggle:hover {
+      background: #e5e7eb;
+      color: #111827;
+    }
+
+    .panel-toggle .icon {
+      transition: transform 0.3s;
+      font-size: 14px;
+    }
+
+    .panel-content {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding: 16px;
+    }
+
+    .info-empty,
+    .info-empty-small {
+      padding: 40px 20px;
+      text-align: center;
+      color: #9ca3af;
+      font-size: 13px;
+    }
+
+    .info-empty-small {
+      padding: 20px;
+    }
+
+    .info-empty .empty-icon {
+      font-size: 32px;
+      margin-bottom: 8px;
+      opacity: 0.5;
+    }
+
+    .action-section {
+      margin-bottom: 24px;
+    }
+
+    .action-section:last-child {
+      margin-bottom: 0;
+    }
+
+    .section-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: #374151;
+      margin: 0 0 12px 0;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .template-info {
+      background: #f9fafb;
+      border-radius: 6px;
+      padding: 12px;
+      font-size: 13px;
+      color: #6b7280;
+    }
+
+    .template-info-item {
+      margin-bottom: 8px;
+    }
+
+    .template-info-item:last-child {
+      margin-bottom: 0;
+    }
+
+    .template-info-label {
+      font-weight: 500;
+      color: #374151;
+      margin-right: 8px;
+    }
+
+    .quick-export {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .quick-export-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      padding: 12px 8px;
+      border: 1px solid #e5e7eb;
+      border-radius: 6px;
+      background: #fff;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 12px;
+      color: #374151;
+    }
+
+    .quick-export-btn:hover {
+      background: #f3f4f6;
+      border-color: #3b82f6;
+      color: #3b82f6;
+    }
+
+    .quick-export-btn .icon {
+      font-size: 20px;
+    }
+
+    .preview-settings {
+      background: #f9fafb;
+      border-radius: 6px;
+      padding: 12px;
+    }
+
+    .setting-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .setting-label {
+      font-size: 13px;
+      color: #374151;
+    }
+
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 40px;
+      height: 20px;
+    }
+
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #d1d5db;
+      transition: 0.3s;
+      border-radius: 20px;
+    }
+
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 16px;
+      width: 16px;
+      left: 2px;
+      bottom: 2px;
+      background-color: white;
+      transition: 0.3s;
+      border-radius: 50%;
+    }
+
+    input:checked + .slider {
+      background-color: #3b82f6;
+    }
+
+    input:checked + .slider:before {
+      transform: translateX(20px);
+    }
+
+    /* ========== 订单信息样式 ========== */
+    .order-info-content {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .info-card {
+      background: #f9fafb;
+      border-radius: 6px;
+      padding: 12px;
+    }
+
+    .info-card-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: #374151;
+      margin: 0 0 8px 0;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 6px 0;
+      font-size: 13px;
+      border-bottom: 1px solid #e5e7eb;
+    }
+
+    .info-row:last-child {
+      border-bottom: none;
+    }
+
+    .info-label {
+      color: #6b7280;
+      font-weight: 500;
+    }
+
+    .info-value {
+      color: #111827;
+      text-align: right;
+      flex: 1;
+      margin-left: 12px;
+    }
+
+    /* ========== 滚动条样式 ========== */
+    .panel-content::-webkit-scrollbar,
+    .preview-container::-webkit-scrollbar {
+      width: 14px;
+      height: 14px;
+    }
+
+    .panel-content::-webkit-scrollbar-track,
+    .preview-container::-webkit-scrollbar-track {
+      background: rgba(0, 0, 0, 0.05);
+      border-radius: 7px;
+    }
+
+    .panel-content::-webkit-scrollbar-thumb,
+    .preview-container::-webkit-scrollbar-thumb {
+      background: rgba(0, 0, 0, 0.25);
+      border-radius: 7px;
+      border: 2px solid transparent;
+      background-clip: padding-box;
+      transition: background 0.2s;
+    }
+
+    .panel-content::-webkit-scrollbar-thumb:hover,
+    .preview-container::-webkit-scrollbar-thumb:hover {
+      background: rgba(0, 0, 0, 0.4);
+      background-clip: padding-box;
+    }
+
+    /* 滚动条角落 */
+    .preview-container::-webkit-scrollbar-corner {
+      background: rgba(0, 0, 0, 0.05);
+    }
+
+
+    /* ========== 响应式设计 ========== */
+    @media (max-width: 1600px) {
+      .order-info-panel {
+        min-width: 280px;
+      }
+
+      .actions-panel {
+        min-width: 280px;
+      }
+
+      .control-select {
+        min-width: 140px;
+      }
+    }
+
+    @media (max-width: 1400px) {
+      .order-info-panel {
+        min-width: 260px;
+      }
+
+      .actions-panel {
+        min-width: 260px;
+      }
+
+      .generate-toolbar-top {
+        padding: 0 12px;
+        height: 60px;
+      }
+
+      .selection-controls {
+        gap: 12px;
+      }
+
+      .control-select {
+        min-width: 120px;
+        font-size: 12px;
+      }
+
+      .type-btn {
+        padding: 6px 12px;
+        font-size: 12px;
+        height: 32px;
+      }
+    }
+
+    @media (max-width: 1280px) {
+      .order-info-panel {
+        min-width: 240px;
+      }
+
+      .actions-panel {
+        min-width: 240px;
+      }
+
+      .generate-title {
+        font-size: 15px;
+      }
+
+      .selection-controls {
+        gap: 8px;
+      }
+
+      .control-select {
+        min-width: 100px;
+      }
+
+      .action-btn {
+        padding: 0 12px;
+        font-size: 12px;
+      }
+    }
+
+    @media (max-width: 1024px) {
+      .generate-main-area {
+        flex-direction: column;
+      }
+
+      .order-info-panel {
+        width: 100%;
+        height: 200px;
+        border-right: none;
+        border-bottom: 1px solid #e5e7eb;
+      }
+
+      .actions-panel {
+        width: 100%;
+        height: 200px;
+        border-left: none;
+        border-top: 1px solid #e5e7eb;
+      }
+
+      .generate-toolbar-top {
+        flex-wrap: wrap;
+        height: auto;
+        min-height: 60px;
+        padding: 8px 12px;
+      }
+
+      .toolbar-left {
+        width: 100%;
+        margin-bottom: 8px;
+      }
+
+      .selection-controls {
+        flex-wrap: wrap;
+        gap: 12px;
+      }
+
+      .control-item {
+        flex: 1;
+        min-width: 150px;
+      }
+
+      .toolbar-right {
+        width: 100%;
+        justify-content: flex-end;
+        margin-top: 8px;
+      }
+
+      .preview-container {
+        padding: 20px;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .generate-toolbar-top {
+        padding: 8px;
+      }
+
+      .selection-controls {
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .control-item {
+        width: 100%;
+      }
+
+      .control-select {
+        width: 100%;
+      }
+
+      .document-type-group {
+        width: 100%;
+      }
+
+      .type-btn {
+        flex: 1;
+      }
+
+      .toolbar-right {
+        flex-wrap: wrap;
+      }
+
+      .action-btn {
+        flex: 1;
+      }
+    }
+  </style>
+</section>

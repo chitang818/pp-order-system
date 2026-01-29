@@ -1,0 +1,111 @@
+<section id="view-document-center-templates" class="panel" data-view>
+  <div class="panel-header">
+    <div class="panel-title">单据模板</div>
+    <div class="panel-actions">
+      <button class="btn primary" id="btnNewTemplate">
+        <span style="margin-right: 4px;">➕</span>新建模板
+      </button>
+      <button class="btn secondary" id="btnImportTemplate">
+        <span style="margin-right: 4px;">📥</span>导入模板
+      </button>
+      <button class="btn danger" id="btnDeleteAllTemplates" style="background: #ef4444; border-color: #ef4444;">
+        <span style="margin-right: 4px;">🗑️</span>清空所有模板
+      </button>
+    </div>
+  </div>
+  <div class="panel-body">
+    <!-- 快速筛选标签 -->
+    <div class="quick-filters" style="margin-bottom: 12px; display: flex; gap: 6px; flex-wrap: wrap; align-items: center;">
+      <span style="font-size: 13px; font-weight: 600; color: #495057; margin-right: 4px;">快速筛选：</span>
+      <button class="filter-tag active" data-filter="all" style="padding: 6px 14px; border-radius: 20px; border: 1px solid #3b82f6; background: #3b82f6; color: white; font-size: 13px; cursor: pointer; transition: all 0.2s ease; font-weight: 500;">
+        全部模板
+      </button>
+      <button class="filter-tag" data-filter="invoice" style="padding: 6px 14px; border-radius: 20px; border: 1px solid #cbd5e1; background: white; color: #64748b; font-size: 13px; cursor: pointer; transition: all 0.2s ease; font-weight: 500;">
+        发票（IV）
+      </button>
+      <button class="filter-tag" data-filter="packing" style="padding: 6px 14px; border-radius: 20px; border: 1px solid #cbd5e1; background: white; color: #64748b; font-size: 13px; cursor: pointer; transition: all 0.2s ease; font-weight: 500;">
+        装箱单（PL）
+      </button>
+      <button class="filter-tag" data-filter="sales" style="padding: 6px 14px; border-radius: 20px; border: 1px solid #cbd5e1; background: white; color: #64748b; font-size: 13px; cursor: pointer; transition: all 0.2s ease; font-weight: 500;">
+        销售确认书（S/C）
+      </button>
+      <button class="filter-tag" data-filter="production" style="padding: 6px 14px; border-radius: 20px; border: 1px solid #cbd5e1; background: white; color: #64748b; font-size: 13px; cursor: pointer; transition: all 0.2s ease; font-weight: 500;">
+        生产通知单
+      </button>
+      <button class="filter-tag" data-filter="pickup" style="padding: 6px 14px; border-radius: 20px; border: 1px solid #cbd5e1; background: white; color: #64748b; font-size: 13px; cursor: pointer; transition: all 0.2s ease; font-weight: 500;">
+        拉货通知
+      </button>
+      <button class="filter-tag" data-filter="custom" style="padding: 6px 14px; border-radius: 20px; border: 1px solid #cbd5e1; background: white; color: #64748b; font-size: 13px; cursor: pointer; transition: all 0.2s ease; font-weight: 500;">
+        自定义
+      </button>
+    </div>
+
+    <!-- 高级筛选区域（可折叠） -->
+    <div class="filter-section" style="margin-bottom: 12px; background-color: white; border-radius: 8px; border: 1px solid #e5e7eb; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+      <div class="filter-header" style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: #f8fafc; cursor: pointer; user-select: none;" id="filterToggleHeader">
+        <div style="display: flex; align-items: center; gap: 6px;">
+          <span style="font-size: 16px;">🔍</span>
+          <h4 style="margin: 0; color: #1e293b; font-size: 14px; font-weight: 600;">高级筛选</h4>
+          <span style="font-size: 12px; color: #4A90E2; font-weight: 600; background: #EFF6FF; padding: 2px 8px; border-radius: 10px;" id="activeFiltersCount">(0个条件)</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <button class="btn small" id="btnClearTemplateFilters" style="padding: 4px 12px; font-size: 12px; background: #FEF2F2; color: #DC2626; border: 1px solid #FCA5A5; font-weight: 600;">
+            清空筛选
+          </button>
+          <span style="font-size: 16px; transition: transform 0.3s ease; color: #4A90E2; font-weight: 700;" id="filterToggleIcon">▼</span>
+        </div>
+      </div>
+      <div class="filter-body" id="filterBody" style="padding: 12px; border-top: 1px solid #e5e7eb;">
+        <div class="form-grid" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px;">
+          <div class="form-item">
+            <label style="display: flex; align-items: center; gap: 3px; font-size: 12px; font-weight: 600; color: #475569; margin-bottom: 4px;">
+              <span>🔎</span> 模板名称
+            </label>
+            <input type="text" id="templateSearch" placeholder="搜索模板名称..." class="input" style="border: 1px solid #e2e8f0; border-radius: 6px; padding: 6px 10px; font-size: 13px; height: 32px;" />
+          </div>
+          <div class="form-item">
+            <label style="display: flex; align-items: center; gap: 3px; font-size: 12px; font-weight: 600; color: #475569; margin-bottom: 4px;">
+              <span>📑</span> 单据类型
+            </label>
+            <select id="templateTypeFilter" class="select" style="border: 1px solid #e2e8f0; border-radius: 6px; padding: 6px 10px; font-size: 13px; height: 32px;">
+              <option value="">全部类型</option>
+              <option value="invoice">发票（IV）</option>
+              <option value="packing">装箱单（PL）</option>
+              <option value="sales">销售确认书（S/C）</option>
+              <option value="production">生产通知单</option>
+              <option value="pickup">拉货通知</option>
+              <option value="custom">自定义</option>
+            </select>
+          </div>
+          <div class="form-item">
+            <label style="display: flex; align-items: center; gap: 3px; font-size: 12px; font-weight: 600; color: #475569; margin-bottom: 4px;">
+              <span>👤</span> 创建人
+            </label>
+            <input type="text" id="templateCreatorFilter" placeholder="按创建人筛选" class="input" style="border: 1px solid #e2e8f0; border-radius: 6px; padding: 6px 10px; font-size: 13px; height: 32px;" />
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- 模板列表 -->
+    <div class="template-list-container">
+      <table class="table" id="templateListTable" style="margin: 0;">
+        <thead>
+          <tr>
+            <th style="text-align: center; padding: 8px 10px; width: 15%;">📄 模板名称</th>
+            <th style="text-align: center; padding: 8px 6px; width: 10%;">📑 类型</th>
+            <th style="text-align: center; padding: 8px 6px; width: 12%;">✓ 验证状态</th>
+            <th style="text-align: center; padding: 8px 6px; width: 12%;">📅 创建时间</th>
+            <th style="text-align: center; padding: 8px 6px; width: 12%;">🔄 最后修改</th>
+            <th style="text-align: center; padding: 8px 6px; width: 8%;">👤 创建人</th>
+            <th style="text-align: center; padding: 8px 6px; width: 31%; min-width: 280px;">⚙️ 操作</th>
+          </tr>
+        </thead>
+        <tbody id="templateListBody">
+          <!-- 动态加载 -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+

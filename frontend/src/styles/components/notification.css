@@ -1,0 +1,619 @@
+/**
+ * 通知系统样式 - 现代化的Toast和模态框设计
+ */
+
+/* Toast容器 */
+.toast-container {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 10001;
+  pointer-events: none;
+}
+
+/* Toast基础样式 - 优化为使用GPU加速 */
+.toast {
+  min-width: 280px;
+  max-width: 400px;
+  padding: 0;
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  pointer-events: auto;
+  cursor: pointer;
+  /* 优化transition，只针对transform和opacity */
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), 
+              opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+              box-shadow 0.2s ease;
+  overflow: hidden;
+  position: relative;
+  /* 使用GPU加速优化动画性能 */
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+.toast.toast-enter {
+  opacity: 0;
+  transform: translateX(100%) scale(0.9) translateZ(0);
+  /* 减少动画时间，提高响应速度 */
+  animation: toastSlideIn 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+
+.toast.toast-show {
+  opacity: 1;
+  transform: translateX(0) scale(1) translateZ(0);
+  /* 动画完成后移除will-change */
+  will-change: auto;
+}
+
+.toast.toast-exit {
+  opacity: 0;
+  transform: translateX(100%) scale(0.9) translateZ(0);
+  /* 减少动画时间，提高响应速度 */
+  animation: toastSlideOut 0.2s cubic-bezier(0.55, 0.06, 0.68, 0.19) forwards;
+}
+
+/* 优化后的流畅滑入动画 - 使用GPU加速 */
+@keyframes toastSlideIn {
+  0% {
+    opacity: 0;
+    transform: translateX(100%) scale(0.9) translateZ(0);
+  }
+  60% {
+    opacity: 0.9;
+    transform: translateX(-3%) scale(1.01) translateZ(0);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0) scale(1) translateZ(0);
+  }
+}
+
+/* 优化后的流畅滑出动画 - 使用GPU加速 */
+@keyframes toastSlideOut {
+  0% {
+    opacity: 1;
+    transform: translateX(0) scale(1) translateZ(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(100%) scale(0.9) translateZ(0);
+  }
+}
+
+.toast:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+  transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+/* Toast内容 */
+.toast-content {
+  display: flex;
+  align-items: center;
+  padding: 16px;
+  gap: 12px;
+  position: relative;
+}
+
+.toast-icon {
+  font-size: 20px;
+  flex-shrink: 0;
+  animation: iconPulse 0.6s ease-out;
+}
+
+@keyframes iconPulse {
+  0% { 
+    transform: scale(0.6); 
+    opacity: 0.3; 
+  }
+  30% { 
+    transform: scale(1.15); 
+    opacity: 0.7; 
+  }
+  60% { 
+    transform: scale(0.95); 
+    opacity: 0.9; 
+  }
+  100% { 
+    transform: scale(1); 
+    opacity: 1; 
+  }
+}
+
+.toast-message {
+  flex: 1;
+  font-size: 14px;
+  line-height: 1.4;
+  color: #374151;
+  font-weight: 500;
+  overflow-wrap: break-word;
+  word-break: break-all;
+  white-space: pre-wrap; /* 保持换行 */
+}
+
+.toast-close {
+  background: none;
+  border: none;
+  font-size: 18px;
+  color: #9ca3af;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+  opacity: 0.7;
+}
+
+.toast-close:hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: #6b7280;
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+/* Toast进度条 */
+.toast-progress {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+}
+
+.toast-progress-bar {
+  height: 100%;
+  width: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.8), transparent);
+  transform: translateX(-100%) translateZ(0);
+  /* 使用GPU加速 */
+  will-change: transform;
+  animation: progressSlide linear forwards;
+}
+
+@keyframes progressSlide {
+  0% { 
+    transform: translateX(-100%) translateZ(0); 
+  }
+  100% { 
+    transform: translateX(0) translateZ(0); 
+  }
+}
+
+/* 暂停状态 */
+.toast-progress-bar[style*="paused"] {
+  animation-play-state: paused;
+}
+
+/* Toast类型样式 */
+.toast.success {
+  border-left: 4px solid #10b981;
+  background: linear-gradient(135deg, #ecfdf5, #f0fdf4);
+}
+
+.toast.success .toast-content::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: linear-gradient(135deg, #10b981, #059669);
+}
+
+.toast.success .toast-progress-bar {
+  background: linear-gradient(90deg, #10b981, #059669);
+}
+
+.toast.success .toast-message {
+  color: #065f46;
+}
+
+.toast.error {
+  border-left: 4px solid #ef4444;
+  background: linear-gradient(135deg, #fef2f2, #fef2f2);
+}
+
+.toast.error .toast-content::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+}
+
+.toast.error .toast-progress-bar {
+  background: linear-gradient(90deg, #ef4444, #dc2626);
+}
+
+.toast.error .toast-message {
+  color: #991b1b;
+}
+
+.toast.warning {
+  border-left: 4px solid #f59e0b;
+  background: linear-gradient(135deg, #fffbeb, #fefce8);
+}
+
+.toast.warning .toast-content::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+}
+
+.toast.warning .toast-progress-bar {
+  background: linear-gradient(90deg, #f59e0b, #d97706);
+}
+
+.toast.warning .toast-message {
+  color: #92400e;
+}
+
+.toast.info {
+  border-left: 4px solid #3b82f6;
+  background: linear-gradient(135deg, #eff6ff, #f0f9ff);
+}
+
+.toast.info .toast-content::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+}
+
+.toast.info .toast-progress-bar {
+  background: linear-gradient(90deg, #3b82f6, #2563eb);
+}
+
+.toast.info .toast-message {
+  color: #1e40af;
+}
+
+/* 响应式设计 */
+@media (max-width: 480px) {
+  .toast-container {
+    right: 8px;
+    bottom: 8px;
+    left: 8px;
+  }
+  
+  .toast {
+    min-width: auto;
+    max-width: none;
+  }
+}
+
+/* 模态框容器 */
+/* 注意：容器本身不应该有背景样式，避免与弹窗的背景样式叠加 */
+/* ModalDialog 模块现在使用 modal-dialog.css 中的定义，这里保留仅用于向后兼容 */
+.modal-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 10000;
+  pointer-events: none;
+  /* 确保容器本身没有背景样式，避免双重效果 */
+  background: transparent !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* 模态框遮罩 - 使用统一的背景模糊和变暗方案（使用CSS变量） */
+/* 注意：ModalDialog 现在只使用 .modal-dialog-overlay 类，这里保留 .modal-overlay 仅用于向后兼容 */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  /* 使用 ModalDialog 模块定义的统一背景样式变量 */
+  background: var(--modal-overlay-bg-color, rgba(0, 0, 0, 0.4));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: auto;
+  backdrop-filter: blur(var(--modal-overlay-blur, 6px));
+  -webkit-backdrop-filter: blur(var(--modal-overlay-blur, 6px));
+}
+
+.modal-overlay.show {
+  opacity: 1;
+}
+
+/* 模态框对话框 */
+.modal-dialog {
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  max-width: 500px;
+  width: 90%;
+  max-height: 80vh;
+  overflow: hidden;
+  transform: scale(0.8) translateY(20px);
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.modal-overlay.show .modal-dialog {
+  transform: scale(1) translateY(0);
+}
+
+/* 模态框头部 */
+.modal-header {
+  padding: 24px 24px 16px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.modal-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #111827;
+}
+
+/* 模态框主体 */
+.modal-body {
+  padding: 24px;
+}
+
+/* 模态框底部 */
+.modal-footer {
+  padding: 16px 24px 24px;
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+/* 确认对话框样式 */
+.confirm-dialog .modal-body {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  text-align: left;
+}
+
+.confirm-icon {
+  font-size: 48px;
+  flex-shrink: 0;
+}
+
+.confirm-message {
+  flex: 1;
+  font-size: 16px;
+  line-height: 1.5;
+  color: #374151;
+  overflow-wrap: break-word;
+  word-break: break-all;
+}
+
+/* 输入对话框样式 */
+.prompt-dialog .modal-body {
+  text-align: left;
+}
+
+.prompt-message {
+  margin-bottom: 16px;
+  font-size: 16px;
+  color: #374151;
+  line-height: 1.5;
+  overflow-wrap: break-word;
+  word-break: break-all;
+}
+
+.prompt-input {
+  width: 100%;
+  padding: 12px 16px;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 16px;
+  transition: border-color 0.2s ease;
+}
+
+.prompt-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* 加载对话框样式 - 使用统一的背景模糊和变暗方案（使用CSS变量） */
+.loading-modal {
+  /* 使用 ModalDialog 模块定义的统一背景样式变量 */
+  background: var(--modal-overlay-bg-color, rgba(0, 0, 0, 0.4));
+  backdrop-filter: blur(var(--modal-overlay-blur, 6px));
+  -webkit-backdrop-filter: blur(var(--modal-overlay-blur, 6px));
+}
+
+.loading-dialog {
+  background: transparent;
+  box-shadow: none;
+  max-width: 300px;
+}
+
+.loading-content {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 32px;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.loading-spinner {
+  width: 48px;
+  height: 48px;
+  margin: 0 auto 16px;
+  border: 4px solid #e5e7eb;
+  border-top: 4px solid #3b82f6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loading-message {
+  font-size: 16px;
+  color: #374151;
+  font-weight: 500;
+  overflow-wrap: break-word;
+  word-break: break-all;
+}
+
+/* 按钮样式 */
+.btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-width: 80px;
+}
+
+.btn-primary {
+  background: #3b82f6;
+  color: #ffffff;
+}
+
+.btn-primary:hover {
+  background: #2563eb;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.btn-secondary {
+  background: #f3f4f6;
+  color: #374151;
+  border: 1px solid #d1d5db;
+}
+
+.btn-secondary:hover {
+  background: #e5e7eb;
+  border-color: #9ca3af;
+}
+
+.btn:active {
+  transform: translateY(0);
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .toast-container {
+    right: 12px;
+    bottom: 12px;
+    left: 12px;
+  }
+  
+  .toast {
+    min-width: auto;
+    max-width: none;
+  }
+  
+  .modal-dialog {
+    width: 95%;
+    margin: 20px;
+  }
+  
+  .modal-header,
+  .modal-body,
+  .modal-footer {
+    padding: 16px;
+  }
+  
+  .modal-footer {
+    flex-direction: column;
+  }
+  
+  .btn {
+    width: 100%;
+  }
+}
+
+/* 深色模式支持 */
+@media (prefers-color-scheme: dark) {
+  .toast {
+    background: #1f2937;
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+  
+  .toast-message {
+    color: #f9fafb;
+  }
+  
+  .toast-close {
+    color: #9ca3af;
+  }
+  
+  .toast-close:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #d1d5db;
+  }
+  
+  .modal-dialog {
+    background: #1f2937;
+  }
+  
+  .modal-header {
+    border-bottom-color: #374151;
+  }
+  
+  .modal-title {
+    color: #f9fafb;
+  }
+  
+  .confirm-message,
+  .prompt-message,
+  .loading-message {
+    color: #f3f4f6;
+  }
+  
+  .prompt-input {
+    background: #374151;
+    border-color: #4b5563;
+    color: #f9fafb;
+  }
+  
+  .prompt-input:focus {
+    border-color: #60a5fa;
+  }
+  
+  .loading-content {
+    background: #1f2937;
+  }
+  
+  .btn-secondary {
+    background: #374151;
+    color: #f9fafb;
+    border-color: #4b5563;
+  }
+  
+  .btn-secondary:hover {
+    background: #4b5563;
+    border-color: #6b7280;
+  }
+}

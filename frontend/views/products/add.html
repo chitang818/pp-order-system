@@ -1,0 +1,423 @@
+<section id="productAddPage" data-view class="panel" style="height: 100%;">
+  <div class="panel-header">
+    <div class="panel-title">新增产品</div>
+    <div class="panel-actions">
+      <!-- 新增产品页面的操作按钮在表单中 -->
+    </div>
+  </div>
+  <style>
+    #productAddPage {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      /* 预设最小高度，避免切换时的布局重排 */
+      min-height: calc(100vh - 100px);
+      /* 使用 will-change 优化渲染性能 */
+      will-change: opacity, transform;
+    }
+    
+    #productAddPage .panel-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 24px;
+      min-height: 0;
+      /* 使用 will-change 优化滚动性能 */
+      will-change: scroll-position;
+    }
+    
+    #productAddPage .page-header {
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    
+    #productAddPage .page-header h2 {
+      margin: 0;
+      font-size: 20px;
+      font-weight: 600;
+      color: #1f2937;
+    }
+    
+    #productAddPage .page-header p {
+      margin: 8px 0 0 0;
+      color: #6b7280;
+      font-size: 14px;
+    }
+    
+    #productAddPage .product-form-container {
+      max-width: 800px;
+      background: white;
+      border-radius: 8px;
+      padding: 24px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+    
+    #productAddPage .product-type-selector {
+      margin-bottom: 24px;
+      padding: 16px;
+      background: #f9fafb;
+      border-radius: 6px;
+      border: 1px solid #e5e7eb;
+    }
+    
+    #productAddPage .product-type-selector label {
+      display: block;
+      margin-bottom: 12px;
+      font-weight: 600;
+      color: #374151;
+      font-size: 14px;
+    }
+    
+    #productAddPage .product-type-buttons {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    
+    #productAddPage .product-type-btn {
+      padding: 10px 20px;
+      border: 2px solid #d1d5db;
+      background: white;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+    
+    #productAddPage .product-type-btn:hover {
+      border-color: #9ca3af;
+      background: #f9fafb;
+    }
+    
+    #productAddPage .product-type-btn.active {
+      border-color: #3b82f6;
+      background: #eff6ff;
+      color: #1e40af;
+    }
+    
+    #productAddPage .product-type-btn.active[data-type="1"] {
+      border-color: #3b82f6;
+      background: #eff6ff;
+      color: #1e40af;
+    }
+    
+    #productAddPage .product-type-btn.active[data-type="2"] {
+      border-color: #f59e0b;
+      background: #fffbeb;
+      color: #92400e;
+    }
+    
+    #productAddPage .product-type-btn.active[data-type="3"] {
+      border-color: #f9a8d4;
+      background: #fdf2f8;
+      color: #9f1239;
+    }
+    
+    #productAddPage .form-section {
+      display: none;
+    }
+    
+    #productAddPage .form-section.active {
+      display: block;
+    }
+    
+    #productAddPage .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+    }
+    
+    #productAddPage .form-item {
+      display: flex;
+      flex-direction: column;
+    }
+    
+    #productAddPage .form-item.full-width {
+      grid-column: 1 / -1;
+    }
+    
+    #productAddPage .form-item label {
+      margin-bottom: 6px;
+      font-weight: 500;
+      color: #374151;
+      font-size: 14px;
+    }
+    
+    #productAddPage .form-item label .required {
+      color: #ef4444;
+      margin-left: 4px;
+    }
+    
+    #productAddPage .form-item input,
+    #productAddPage .form-item select,
+    #productAddPage .form-item textarea {
+      padding: 8px 12px;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      font-size: 14px;
+      transition: border-color 0.2s;
+    }
+    
+    #productAddPage .form-item input:focus,
+    #productAddPage .form-item select:focus,
+    #productAddPage .form-item textarea:focus {
+      outline: none;
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+    
+    #productAddPage .form-item textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+    
+    #productAddPage .form-actions {
+      margin-top: 24px;
+      padding-top: 24px;
+      border-top: 1px solid #e5e7eb;
+      display: flex;
+      gap: 12px;
+      justify-content: flex-end;
+    }
+    
+    #productAddPage .btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    #productAddPage .btn-primary {
+      background: #3b82f6;
+      color: white;
+    }
+    
+    #productAddPage .btn-primary:hover {
+      background: #2563eb;
+    }
+    
+    #productAddPage .btn-secondary {
+      background: #f3f4f6;
+      color: #374151;
+    }
+    
+    #productAddPage .btn-secondary:hover {
+      background: #e5e7eb;
+    }
+    
+    #productAddPage .alert {
+      padding: 12px 16px;
+      border-radius: 6px;
+      margin-bottom: 16px;
+    }
+    
+    #productAddPage .alert-success {
+      background: #dcfce7;
+      color: #166534;
+      border: 1px solid #bbf7d0;
+    }
+    
+    #productAddPage .alert-error {
+      background: #fef2f2;
+      color: #dc2626;
+      border: 1px solid #fecaca;
+    }
+  </style>
+  
+  <div class="panel-body">
+    <div class="page-header">
+      <h2>新增产品</h2>
+      <p>选择产品类别并填写相关信息</p>
+    </div>
+    
+    <div class="product-form-container">
+    <!-- 产品类别选择 -->
+    <div class="product-type-selector">
+      <label>产品类别 <span class="required">*</span></label>
+      <div class="product-type-buttons">
+        <button type="button" class="product-type-btn active" data-type="1">A类品</button>
+        <button type="button" class="product-type-btn" data-type="2">B类品</button>
+        <button type="button" class="product-type-btn" data-type="3">C类品</button>
+      </div>
+    </div>
+    
+    <!-- 消息提示 -->
+    <div id="messageContainer"></div>
+    
+    <!-- A类品表单 -->
+    <form id="productFormType1" class="form-section active">
+      <div class="form-grid">
+        <div class="form-item full-width">
+          <label>产品型号 <span class="required">*</span></label>
+          <input type="text" id="modelType1" name="model" required placeholder="请输入产品型号" />
+        </div>
+        
+        <div class="form-item">
+          <label>件数单位</label>
+          <select id="unitType1" name="unit">
+            <option value="">请选择</option>
+            <option value="件">件</option>
+            <option value="托盘">托盘</option>
+            <option value="捆包">捆包</option>
+          </select>
+        </div>
+        
+        <div class="form-item">
+          <label>预估重量(kg)</label>
+          <input type="number" id="estimatedWeightType1" name="estimatedWeight" step="0.01" min="0" placeholder="0.00" />
+        </div>
+        
+        <div class="form-item">
+          <label>标签重量(kg)</label>
+          <input type="number" id="labelWeightType1" name="labelWeight" step="1" min="0" placeholder="1000" value="1000" />
+        </div>
+        
+        <div class="form-item">
+          <label>安全系数</label>
+          <select id="safetyFactorType1" name="safetyFactor">
+            <option value="">请选择</option>
+            <option value="不写">不写</option>
+            <option value="5:1">5:1</option>
+            <option value="6:1">6:1</option>
+          </select>
+        </div>
+        
+        <div class="form-item">
+          <label>清洁度</label>
+          <select id="cleanlinessType1" name="cleanliness">
+            <option value="">请选择</option>
+            <option value="A">A</option>
+            <option value="B">B</option>
+            <option value="B+">B+</option>
+          </select>
+        </div>
+        
+        <div class="form-item full-width">
+          <label>产品描述</label>
+          <textarea id="descriptionType1" name="description" placeholder="请输入产品描述"></textarea>
+        </div>
+      </div>
+      
+      <div class="form-actions">
+        <button type="button" class="btn btn-secondary" id="btnCancelType1">取消</button>
+        <button type="submit" class="btn btn-primary" id="btnSaveType1">保存</button>
+      </div>
+    </form>
+    
+    <!-- B类品表单 -->
+    <form id="productFormType2" class="form-section">
+      <div class="form-grid">
+        <div class="form-item full-width">
+          <label>产品型号 <span class="required">*</span></label>
+          <input type="text" id="modelType2" name="model" required placeholder="请输入产品型号" />
+        </div>
+        
+        <div class="form-item">
+          <label>件数单位</label>
+          <select id="unitType2" name="unit">
+            <option value="">请选择</option>
+            <option value="件">件</option>
+            <option value="托盘">托盘</option>
+            <option value="捆包">捆包</option>
+          </select>
+        </div>
+        
+        <div class="form-item">
+          <label>预估重量(kg)</label>
+          <input type="number" id="estimatedWeightType2" name="estimatedWeight" step="0.01" min="0" placeholder="0.00" />
+        </div>
+        
+        <div class="form-item">
+          <label>标签批号</label>
+          <input type="text" id="labelBatchNoType2" name="labelBatchNo" placeholder="请输入标签批号" />
+        </div>
+        
+        <div class="form-item">
+          <label>标签说明</label>
+          <input type="text" id="labelType2" name="label" placeholder="请输入标签说明" />
+        </div>
+        
+        <div class="form-item">
+          <label>清洁度</label>
+          <select id="cleanlinessType2" name="cleanliness">
+            <option value="">请选择</option>
+            <option value="A">A</option>
+            <option value="B">B</option>
+            <option value="B+">B+</option>
+          </select>
+        </div>
+        
+        <div class="form-item full-width">
+          <label>产品描述</label>
+          <textarea id="descriptionType2" name="description" placeholder="请输入产品描述"></textarea>
+        </div>
+      </div>
+      
+      <div class="form-actions">
+        <button type="button" class="btn btn-secondary" id="btnCancelType2">取消</button>
+        <button type="submit" class="btn btn-primary" id="btnSaveType2">保存</button>
+      </div>
+    </form>
+    
+    <!-- C类品表单 -->
+    <form id="productFormType3" class="form-section">
+      <div class="form-grid">
+        <div class="form-item full-width">
+          <label>产品型号 <span class="required">*</span></label>
+          <input type="text" id="modelType3" name="model" required placeholder="请输入产品型号" />
+        </div>
+        
+        <div class="form-item">
+          <label>件数单位</label>
+          <select id="unitType3" name="unit">
+            <option value="">请选择</option>
+            <option value="件">件</option>
+            <option value="托盘">托盘</option>
+            <option value="捆包">捆包</option>
+          </select>
+        </div>
+        
+        <div class="form-item">
+          <label>预估重量(kg)</label>
+          <input type="number" id="estimatedWeightType3" name="estimatedWeight" step="0.01" min="0" placeholder="0.00" />
+        </div>
+        
+        <div class="form-item">
+          <label>唛头</label>
+          <input type="text" id="marksType3" name="marks" placeholder="请输入唛头" />
+        </div>
+        
+        <div class="form-item">
+          <label>标签说明</label>
+          <input type="text" id="labelType3" name="label" placeholder="请输入标签说明" />
+        </div>
+        
+        <div class="form-item">
+          <label>清洁度</label>
+          <select id="cleanlinessType3" name="cleanliness">
+            <option value="">请选择</option>
+            <option value="A">A</option>
+            <option value="B">B</option>
+            <option value="B+">B+</option>
+          </select>
+        </div>
+        
+        <div class="form-item full-width">
+          <label>产品描述</label>
+          <textarea id="descriptionType3" name="description" placeholder="请输入产品描述"></textarea>
+        </div>
+      </div>
+      
+      <div class="form-actions">
+        <button type="button" class="btn btn-secondary" id="btnCancelType3">取消</button>
+        <button type="submit" class="btn btn-primary" id="btnSaveType3">保存</button>
+      </div>
+    </form>
+    </div>
+  </div>
+</section>
+

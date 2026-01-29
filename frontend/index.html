@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PP外贸订单管理系统</title>
+  <link rel="icon"
+    href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><defs><linearGradient id='bg' x1='0%' y1='0%' x2='100%' y2='100%'><stop offset='0%' style='stop-color:%233b82f6'/><stop offset='100%' style='stop-color:%232563eb'/></linearGradient></defs><rect width='100' height='100' rx='12' fill='url(%23bg)'/><text x='50' y='70' font-size='60' font-weight='700' font-family='Arial, sans-serif' text-anchor='middle' fill='white'>PP</text></svg>">
+  <link rel="stylesheet" href="./src/styles/pages/erp.css" />
+  <link rel="stylesheet" href="./src/styles/base/styles.css" />
+  <link rel="stylesheet" href="./src/styles/components/notification.css" />
+  <link rel="stylesheet" href="./src/styles/components/modal.css" />
+  <link rel="stylesheet" href="./src/styles/pages/contract.css" />
+  <link rel="stylesheet" href="./src/styles/pages/order.css" />
+  <link rel="stylesheet" href="./src/styles/pages/payment-status.css" />
+  <link rel="stylesheet" href="./src/styles/pages/settings.css" />
+  <link rel="stylesheet" href="./src/styles/pages/product.css" />
+  <link rel="stylesheet" href="./src/styles/pages/dashboard.css" />
+  <link rel="stylesheet" href="./src/styles/loader.css" />
+  <!-- 连接优化：预连接后端，提高接口初次建立速度 -->
+  <link rel="preconnect" href="http://127.0.0.1:3000" />
+</head>
+
+<body>
+  <div class="app-shell">
+    <div class="toast-container" id="toastContainer"></div>
+    <!-- 顶部导航栏和左侧功能模块将由 layout.js 动态生成 -->
+    <div class="content">
+      <main class="main">
+        <!-- 视图容器 - 动态加载内容 -->
+        <div id="view-container">
+          <!-- 初始加载骨架屏 -->
+          <div class="loading-skeleton">
+            <div class="loading-spinner">
+            </div>
+            <div>加载中...</div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+  <!-- 在最早时机拦截废弃警告 -->
+  <script>
+    // 在页面加载前就拦截废弃警告（必须在所有脚本加载前执行）
+    (function () {
+      // 拦截 console.warn 和 console.error
+      const originalWarn = console.warn;
+      const originalError = console.error;
+
+      // 过滤 DOMNodeInsertedIntoDocument 相关的废弃警告
+      const deprecatedEventMessages = [
+        'DOMNodeInsertedIntoDocument',
+        'DOMNodeInserted',
+        'DOMNodeRemoved',
+        'DOMNodeRemovedFromDocument',
+        'Mutation Event',
+        'deprecated',
+        'Listener added for a synchronous'
+      ];
+
+      const shouldFilter = (message) => {
+        return deprecatedEventMessages.some(keyword =>
+          message.toLowerCase().includes(keyword.toLowerCase())
+        );
+      };
+
+      console.warn = function (...args) {
+        const message = args.join(' ');
+        if (shouldFilter(message)) {
+          return; // 静默忽略废弃警告
+        }
+        originalWarn.apply(console, args);
+      };
+
+      console.error = function (...args) {
+        const message = args.join(' ');
+        if (shouldFilter(message)) {
+          return; // 静默忽略废弃错误
+        }
+        originalError.apply(console, args);
+      };
+
+      // 尝试拦截浏览器的 Performance API 警告（如果可能）
+      if (window.PerformanceObserver) {
+        try {
+          const observer = new PerformanceObserver((list) => {
+            // 这个可以捕获一些性能相关的警告，但 MutationEvent 警告通常无法通过这种方式拦截
+          });
+          // 注意：PerformanceObserver 无法直接拦截 MutationEvent 警告
+        } catch (e) {
+          // 忽略
+        }
+      }
+    })();
+
+    // 说明：DOMNodeInsertedIntoDocument 警告来自第三方库（如 GrapesJS），
+    // 是浏览器直接输出的废弃警告，无法完全过滤。
+    // 这个警告不影响功能，可以安全忽略。
+  </script>
+  <!-- Tauri API Global Initialization (must load before app code) -->
+  <script type="module" src="/src/tauri-init.js"></script>
+  <!-- Vite 模块化入口 -->
+  <script type="module" src="/src/entries/main.js"></script>
+  <script>
+
+    // 初始化全局布局（SPA模式）
+    document.addEventListener('DOMContentLoaded', function () {
+      // 获取当前路由
+      const hash = location.hash.replace('#/', '') || 'home';
+      const routeParts = hash.split('/');
+      const currentRoute = routeParts[0] || 'home';
+      const currentTab = routeParts[1] || '';
+
+      // 初始化布局组件
+      if (window.LayoutComponent) {
+        window.LayoutComponent.init({
+          pageTitle: 'PP外贸订单管理系统',
+          currentRoute: currentRoute,
+          currentTab: currentTab,
+          isSPA: true
+        });
+      }
+    });
+  </script>
+</body>
+
+</html>

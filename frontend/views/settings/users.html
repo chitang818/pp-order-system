@@ -1,0 +1,32 @@
+<section id="settingsUsersPage" data-view class="panel">
+  <div class="settings-single-column full-width">
+    <!-- 用户列表卡片 -->
+    <div class="settings-card">
+      <div class="settings-card-header">
+        <div class="settings-card-icon primary">👥</div>
+        <div class="settings-card-title-group">
+          <h3 class="settings-card-title">用户管理</h3>
+          <p class="settings-card-subtitle">管理系统用户账户</p>
+        </div>
+      </div>
+      <div class="settings-card-body">
+        <div style="margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <span style="color: #6b7280; font-size: 14px;">共 <strong id="usersTotalCount">0</strong> 个用户</span>
+          </div>
+          <button class="settings-btn primary" id="btnAddUser">
+            <span class="settings-btn-icon">➕</span>
+            添加用户
+          </button>
+        </div>
+        
+        <div id="usersTableContainer">
+          <div class="loading-state" style="text-align: center; padding: 40px;">
+            <div style="font-size: 16px; color: #9ca3af;">加载中...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+

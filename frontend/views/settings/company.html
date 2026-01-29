@@ -1,0 +1,155 @@
+<section id="settingsCompanyPage" data-view class="panel">
+  <!-- 主要内容区 -->
+  <div class="settings-single-column">
+
+    <!-- 公司名称卡片 -->
+    <div class="settings-card">
+      <div class="settings-card-header">
+        <div class="settings-card-icon primary">🏛️</div>
+        <div class="settings-card-title-group">
+          <h3 class="settings-card-title">公司名称</h3>
+          <p class="settings-card-subtitle">设置中英文公司名称，用于单据抬头显示</p>
+        </div>
+      </div>
+      <div class="settings-card-body">
+        <div class="settings-form-group">
+          <label class="settings-label">
+            <span class="settings-label-icon">🇨🇳</span>
+            公司名称(中文)
+            <span class="settings-label-required">*</span>
+          </label>
+          <input type="text" class="settings-input" id="sysCompanyNameCN" placeholder="例如：盛驰包装有限公司" />
+          <span class="settings-input-help">用于生成中文商务单据</span>
+        </div>
+
+        <div class="settings-form-group">
+          <label class="settings-label">
+            <span class="settings-label-icon">🇬🇧</span>
+            公司名称(英文)
+            <span class="settings-label-required">*</span>
+          </label>
+          <input type="text" class="settings-input" id="sysCompanyNameEN"
+            placeholder="例如：SHENGCHI PACKAGING CO., LTD." />
+          <span class="settings-input-help">用于生成英文商务单据</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 公司地址卡片 -->
+    <div class="settings-card">
+      <div class="settings-card-header">
+        <div class="settings-card-icon success">📍</div>
+        <div class="settings-card-title-group">
+          <h3 class="settings-card-title">公司地址</h3>
+          <p class="settings-card-subtitle">设置中英文公司地址，用于单据联系信息</p>
+        </div>
+      </div>
+      <div class="settings-card-body">
+        <div class="settings-form-group">
+          <label class="settings-label">
+            <span class="settings-label-icon">🇨🇳</span>
+            公司地址(中文)
+          </label>
+          <input type="text" class="settings-input" id="sysCompanyAddressCN" placeholder="例如：山东省青岛市xxxx路xx号" />
+        </div>
+
+        <div class="settings-form-group">
+          <label class="settings-label">
+            <span class="settings-label-icon">🇬🇧</span>
+            公司地址(英文)
+          </label>
+          <textarea class="settings-textarea" id="sysCompanyAddressEN"
+            placeholder="例如：XX ROAD, QINGDAO, SHANDONG, CHINA" rows="3"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- 联系方式卡片 -->
+    <div class="settings-card">
+      <div class="settings-card-header">
+        <div class="settings-card-icon warning">📞</div>
+        <div class="settings-card-title-group">
+          <h3 class="settings-card-title">联系方式</h3>
+          <p class="settings-card-subtitle">设置公司电话和传真号码</p>
+        </div>
+      </div>
+      <div class="settings-card-body">
+        <div class="settings-row">
+          <div class="settings-form-group">
+            <label class="settings-label">
+              <span class="settings-label-icon">☎️</span>
+              电话 (TEL)
+            </label>
+            <input type="text" class="settings-input" id="sysCompanyTel" placeholder="例如：+86-21-12345678" />
+          </div>
+
+          <div class="settings-form-group">
+            <label class="settings-label">
+              <span class="settings-label-icon">📠</span>
+              传真 (FAX)
+            </label>
+            <input type="text" class="settings-input" id="sysCompanyFax" placeholder="例如：+86-21-87654321" />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 其他信息卡片 -->
+    <div class="settings-card">
+      <div class="settings-card-header">
+        <div class="settings-card-icon info">✍️</div>
+        <div class="settings-card-title-group">
+          <h3 class="settings-card-title">其他信息</h3>
+          <p class="settings-card-subtitle">设置签署地点等补充信息</p>
+        </div>
+      </div>
+      <div class="settings-card-body">
+        <div class="settings-form-group">
+          <label class="settings-label">
+            <span class="settings-label-icon">🌍</span>
+            签署地点 (SIGN AT)
+          </label>
+          <input type="text" class="settings-input" id="sysCompanySignAt" placeholder="例如：QINGDAO, CHINA" />
+          <span class="settings-input-help">用于合同和单据的签署地点显示</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 操作按钮区 -->
+    <div class="settings-actions center">
+      <button class="settings-btn secondary" id="btnQuickFillCompany" style="margin-right: 10px;">
+        <span class="settings-btn-icon">⚡</span>
+        一键填充
+      </button>
+      <button class="settings-btn secondary" id="btnResetCompany">
+        <span class="settings-btn-icon">🔄</span>
+        重置
+      </button>
+      <button class="settings-btn primary" id="btnSaveCompany">
+        <span class="settings-btn-icon">💾</span>
+        保存设置
+      </button>
+    </div>
+  </div>
+
+  <!-- 帮助信息卡片 - 全宽显示 -->
+  <div class="settings-card" style="grid-column: 1 / -1;">
+    <div class="settings-card-header">
+      <div class="settings-card-icon info">💡</div>
+      <div class="settings-card-title-group">
+        <h3 class="settings-card-title">使用说明</h3>
+        <p class="settings-card-subtitle">系统设置使用指南</p>
+      </div>
+    </div>
+    <div class="settings-card-body">
+      <div class="settings-info-box">
+        <span class="settings-info-icon">💡</span>
+        <div class="settings-info-content">
+          <p class="settings-info-text">
+            该信息将用于单据页面联动显示，同时支持数据备份恢复。请确保信息准确完整，以便生成专业的商务单据。建议定期检查和更新公司信息，确保与实际情况一致。
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

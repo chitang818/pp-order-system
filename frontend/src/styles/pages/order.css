@@ -1,0 +1,857 @@
+@charset "UTF-8";
+
+/* 订单管理界面专用样式优化 */
+
+/* ==================== 统计卡片样式（单行版本） ==================== */
+.stats-overview .stat-card {
+  position: relative;
+  overflow: hidden;
+  min-height: 42px; /* 单行布局的紧凑高度 */
+  height: 42px; /* 固定高度保持一致性 */
+}
+
+/* 背景光晕效果 - 优化为左侧光晕 */
+.stats-overview .stat-card::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: -30%;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.15) 0%, transparent 60%);
+  opacity: 0;
+  transition: opacity 0.3s ease, left 0.3s ease;
+  transform: translateY(-50%);
+}
+
+.stats-overview .stat-card:hover::before {
+  opacity: 1;
+  left: -10%;
+}
+
+/* 卡片悬停效果 - 清新优化 */
+.stats-overview .stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2) !important;
+}
+
+.stats-overview .stat-card:active {
+  transform: translateY(0);
+}
+
+/* 图标脉动效果（单行布局：图标在第一个div） */
+.stats-overview .stat-card:hover > div:first-child {
+  animation: iconPulse 1s ease-in-out infinite;
+}
+
+@keyframes iconPulse {
+  0%, 100% {
+    opacity: 0.4;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.6;
+    transform: scale(1.15);
+  }
+}
+
+/* 统计数字动画 */
+@keyframes countUp {
+  from {
+    opacity: 0;
+    transform: translateY(4px); /* 减小动画距离 */
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.stats-overview .stat-card > div:last-child span:last-child {
+  animation: countUp 0.4s ease-out; /* 数字动画 */
+}
+
+/* ==================== 快速筛选标签样式 ==================== */
+.quick-filters {
+  position: relative;
+}
+
+.filter-tag {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 非激活状态的标签 */
+.filter-tag:not(.active) {
+  background: #ffffff !important;
+  border: 1.5px solid #cbd5e1 !important;
+  color: #64748b !important;
+}
+
+/* 激活状态的增强效果 - 根据筛选类型使用对应卡片颜色 */
+
+/* 全部订单 - 对应总订单数卡片（柔和蓝色） */
+.filter-tag[data-filter="all"].active {
+  background: linear-gradient(135deg, #7C9DFF 0%, #5B8FE8 100%) !important;
+  border: 1.5px solid #5B8FE8 !important;
+  color: white !important;
+  box-shadow: 0 4px 12px rgba(124, 157, 255, 0.3), 
+              0 0 0 3px rgba(124, 157, 255, 0.12);
+  transform: translateY(-1px) scale(1.05);
+  font-weight: 600 !important;
+}
+
+/* 已创建 - 使用柔和蓝色 */
+.filter-tag[data-filter="已创建"].active {
+  background: linear-gradient(135deg, #7C9DFF 0%, #5B8FE8 100%) !important;
+  border: 1.5px solid #5B8FE8 !important;
+  color: white !important;
+  box-shadow: 0 4px 12px rgba(124, 157, 255, 0.3), 
+              0 0 0 3px rgba(124, 157, 255, 0.12);
+  transform: translateY(-1px) scale(1.05);
+  font-weight: 600 !important;
+}
+
+/* 已排产 - 对应已排产待发货订单卡片（柔和紫色） */
+.filter-tag[data-filter="已排产"].active {
+  background: linear-gradient(135deg, #A78BFA 0%, #8B5CF6 100%) !important;
+  border: 1.5px solid #8B5CF6 !important;
+  color: white !important;
+  box-shadow: 0 4px 12px rgba(167, 139, 250, 0.3), 
+              0 0 0 3px rgba(167, 139, 250, 0.12);
+  transform: translateY(-1px) scale(1.05);
+  font-weight: 600 !important;
+}
+
+/* 已发货 - 对应已发货订单卡片（靛蓝色） */
+.filter-tag[data-filter="已发货"].active {
+  background: linear-gradient(135deg, #818CF8 0%, #6366F1 100%) !important;
+  border: 1.5px solid #6366F1 !important;
+  color: white !important;
+  box-shadow: 0 4px 12px rgba(129, 140, 248, 0.3), 
+              0 0 0 3px rgba(129, 140, 248, 0.12);
+  transform: translateY(-1px) scale(1.05);
+  font-weight: 600 !important;
+}
+
+/* 已完成 - 对应已完成订单卡片（柔和绿色） */
+.filter-tag[data-filter="已完成"].active {
+  background: linear-gradient(135deg, #6EE7B7 0%, #34D399 100%) !important;
+  border: 1.5px solid #34D399 !important;
+  color: white !important;
+  box-shadow: 0 4px 12px rgba(110, 231, 183, 0.3), 
+              0 0 0 3px rgba(110, 231, 183, 0.12);
+  transform: translateY(-1px) scale(1.05);
+  font-weight: 600 !important;
+}
+
+/* 激活状态的光晕效果 */
+.filter-tag.active::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0) 100%);
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+/* 激活状态的勾选图标 */
+.filter-tag.active::after {
+  content: '✓';
+  margin-left: 6px;
+  font-size: 13px;
+  font-weight: bold;
+  animation: checkMark 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes checkMark {
+  0% {
+    opacity: 0;
+    transform: scale(0);
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* 非激活标签悬停效果 */
+.filter-tag:not(.active):hover {
+  background: #f8fafc !important;
+  border-color: #94a3b8 !important;
+  color: #475569 !important;
+  transform: translateY(-2px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+/* 激活标签悬停增强 - 根据筛选类型使用对应颜色 */
+
+/* 全部订单悬停 */
+.filter-tag[data-filter="all"].active:hover {
+  box-shadow: 0 5px 16px rgba(74, 144, 226, 0.5),
+              0 0 0 4px rgba(74, 144, 226, 0.15);
+  transform: translateY(-2px) scale(1.05);
+}
+
+/* 已创建悬停 */
+.filter-tag[data-filter="已创建"].active:hover {
+  box-shadow: 0 5px 16px rgba(100, 116, 139, 0.5),
+              0 0 0 4px rgba(100, 116, 139, 0.15);
+  transform: translateY(-2px) scale(1.05);
+}
+
+/* 已排产悬停 */
+.filter-tag[data-filter="已排产"].active:hover {
+  box-shadow: 0 5px 16px rgba(240, 147, 251, 0.5),
+              0 0 0 4px rgba(240, 147, 251, 0.15);
+  transform: translateY(-2px) scale(1.05);
+}
+
+/* 已发货悬停 */
+.filter-tag[data-filter="已发货"].active:hover {
+  box-shadow: 0 5px 16px rgba(129, 140, 248, 0.5),
+              0 0 0 4px rgba(129, 140, 248, 0.15);
+  transform: translateY(-2px) scale(1.05);
+}
+
+/* 已完成悬停 */
+.filter-tag[data-filter="已完成"].active:hover {
+  box-shadow: 0 5px 16px rgba(16, 185, 129, 0.5),
+              0 0 0 4px rgba(16, 185, 129, 0.15);
+  transform: translateY(-2px) scale(1.05);
+}
+
+/* ==================== 高级筛选折叠效果 ==================== */
+.filter-section {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.filter-section .filter-header {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.filter-section .filter-header:hover {
+  background: #f1f5f9 !important;
+}
+
+/* 折叠动画优化 - 使用 grid-template-rows 实现流畅折叠 */
+.filter-body {
+  display: grid;
+  grid-template-rows: 1fr;
+  transition: grid-template-rows 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+              opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+              padding 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+  opacity: 1;
+}
+
+.filter-body > * {
+  min-height: 0;
+}
+
+/* 折叠状态 */
+.filter-body.collapsed {
+  grid-template-rows: 0fr;
+  opacity: 0;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  border-top: none !important;
+}
+
+/* 图标旋转动画优化 */
+#filterToggleIcon {
+  display: inline-block;
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+#filterToggleIcon.rotated {
+  transform: rotate(180deg);
+}
+
+/* 筛选条件计数动画 */
+#activeFiltersCount {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 筛选条件计数徽章 */
+#activeFiltersCount {
+  display: inline-block;
+  transition: all 0.3s ease;
+}
+
+#activeFiltersCount.has-filters {
+  background: #3b82f6;
+  color: white;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-weight: 600;
+}
+
+/* ==================== 订单表格优化 ==================== */
+/* 订单管理页面布局：只让订单表格区域滚动 */
+/* 使用 .view-active 类来控制显示和布局，比内联样式更可靠 */
+#view-orders-list.panel.view-active,
+#view-orders-list.panel {
+  display: flex !important;
+  flex-direction: column !important;
+  height: 100% !important;
+  flex: 1 !important;
+  margin: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+#view-orders-list.panel.view-active .panel-body,
+#view-orders-list.panel .panel-body,
+#view-analytics-export.panel.view-active .panel-body,
+#view-analytics-export.panel .panel-body,
+#view-analytics-order-analysis.panel.view-active .panel-body,
+#view-analytics-order-analysis.panel .panel-body {
+  display: flex !important;
+  flex-direction: column !important;
+  flex: 1 !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
+  padding: 24px !important;
+  height: 100% !important;
+}
+
+/* 统计卡片和筛选器区域：固定不滚动 */
+#view-orders-list .stats-overview,
+#view-orders-list .quick-filters,
+#view-orders-list .filter-section,
+#view-analytics-export .stats-overview,
+#view-analytics-export .filter-section,
+#view-analytics-order-analysis .stats-overview,
+#view-analytics-order-analysis .filter-section {
+  flex-shrink: 0 !important;
+}
+
+/* 订单表格容器：可滚动 */
+/* 使用类选择器来确保样式应用 */
+#view-orders-list .orders-table-container,
+#view-analytics-export .export-table-container,
+#view-analytics-order-analysis .order-analysis-table-container {
+  flex: 1 !important;
+  min-height: 0 !important;
+  overflow-y: auto !important;
+  overflow-x: auto !important;
+  position: relative !important;
+  max-height: 100% !important;
+}
+
+/* 确保表格容器内的表格包装器可以滚动 */
+#view-orders-list .orders-table-container > div {
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  height: 100% !important;
+  max-height: 100% !important;
+}
+
+/* 兼容旧的 div:last-child 选择器 */
+#view-orders-list .panel-body > div:last-child.orders-table-container,
+#view-orders-list .panel-body > div:last-child:not(.stats-overview):not(.quick-filters):not(.filter-section),
+#view-analytics-export .panel-body > div:last-child.export-table-container,
+#view-analytics-export .panel-body > div:last-child:not(.stats-overview):not(.filter-section),
+#view-analytics-order-analysis .panel-body > div:last-child.order-analysis-table-container,
+#view-analytics-order-analysis .panel-body > div:last-child:not(.stats-overview):not(.filter-section) {
+  flex: 1 !important;
+  min-height: 0 !important;
+  overflow-y: auto !important;
+  overflow-x: auto !important;
+  position: relative !important;
+  max-height: 100% !important;
+}
+
+.orders-table,
+.export-table,
+.order-analysis-table {
+  position: relative;
+  width: 100% !important;
+  border-collapse: collapse;
+  table-layout: fixed !important; /* 使用固定布局，配合 colgroup 设置列宽 */
+  display: table !important; /* 确保表格显示为表格 */
+}
+
+.orders-table colgroup,
+.export-table colgroup,
+.order-analysis-table colgroup {
+  display: table-column-group !important;
+}
+
+.orders-table col,
+.export-table col,
+.order-analysis-table col {
+  display: table-column !important;
+}
+
+.orders-table thead,
+.export-table thead,
+.order-analysis-table thead {
+  display: table-header-group !important;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.orders-table tbody,
+.export-table tbody,
+.order-analysis-table tbody {
+  display: table-row-group !important;
+}
+
+.orders-table tr,
+.export-table tr,
+.order-analysis-table tr {
+  display: table-row !important;
+}
+
+.orders-table th,
+.orders-table td,
+.export-table th,
+.export-table td {
+  display: table-cell !important; /* 确保单元格显示为表格单元格 */
+}
+
+.orders-table th,
+.export-table th {
+  font-weight: 600;
+  color: #1e293b;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-size: 12px;
+  padding: 14px 12px !important;
+  border-bottom: 2px solid #cbd5e1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  /* 所有表头居中显示 */
+  text-align: center !important;
+  display: table-cell !important; /* 确保表头单元格显示为表格单元格 */
+  width: auto !important; /* 让 colgroup 控制宽度 */
+}
+
+.orders-table tbody tr {
+  transition: background-color 0.15s ease, box-shadow 0.15s ease;
+  border-bottom: 1px solid #f1f5f9;
+  will-change: background-color, box-shadow;
+  transform: translateZ(0); /* 启用硬件加速，减少重绘 */
+}
+
+.orders-table tbody tr:hover {
+  background: linear-gradient(90deg, rgba(59, 130, 246, 0.05) 0%, rgba(59, 130, 246, 0.02) 100%);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  /* 移除 transform: scale，避免快速滑动时的抖动 */
+}
+
+.orders-table tbody tr.selected {
+  background: linear-gradient(90deg, rgba(59, 130, 246, 0.15) 0%, rgba(59, 130, 246, 0.08) 100%);
+  box-shadow: inset 3px 0 0 #3b82f6;
+}
+
+.orders-table tbody tr.selected:hover {
+  background: linear-gradient(90deg, rgba(59, 130, 246, 0.2) 0%, rgba(59, 130, 246, 0.12) 100%);
+}
+
+.orders-table td {
+  padding: 12px !important;
+  vertical-align: middle !important;
+  color: #333;
+  font-size: 13px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  word-wrap: break-word;
+  /* 所有表格内容居中显示 */
+  text-align: center !important;
+  display: table-cell !important; /* 确保数据单元格显示为表格单元格 */
+  width: auto !important; /* 让 colgroup 控制宽度 */
+}
+
+/* 排序图标样式 */
+.orders-table th[data-sort] {
+  user-select: none;
+  transition: background-color 0.2s ease;
+}
+
+.orders-table th[data-sort]:hover {
+  background-color: #f1f5f9;
+}
+
+.orders-table th[data-sort] .sort-icon {
+  display: inline-block;
+  margin-left: 4px;
+  font-size: 12px;
+  color: #6c757d;
+  transition: color 0.2s ease;
+  vertical-align: middle;
+}
+
+/* 合同编号链接样式优化 */
+.orders-table .contract-no-link {
+  /* 显示为蓝色链接，突出可点击 */
+  color: #2563eb !important;
+  transition: color 0.15s ease, text-decoration 0.15s ease;
+  will-change: color, text-decoration;
+}
+
+.orders-table .contract-no-link:hover {
+  /* 悬停时加深蓝色 */
+  color: #1d4ed8 !important;
+  text-decoration: none !important;
+}
+
+/* 表格操作按钮样式 */
+.orders-table .btn {
+  font-size: 12px;
+  padding: 6px 12px;
+  margin: 0 2px;
+  border-radius: 6px;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  will-change: transform, box-shadow;
+}
+
+.orders-table .btn:hover {
+  transform: translateY(-1px); /* 减小移动距离，减少抖动 */
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.12);
+}
+
+/* ==================== 订单状态徽章优化 ==================== */
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.status-pill::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+  transition: left 0.5s ease;
+}
+
+.status-pill:hover::before {
+  left: 100%;
+}
+
+.status-created {
+  background: linear-gradient(135deg, #7C9DFF 0%, #5B8FE8 100%);
+  border: 1px solid #5B8FE8;
+  color: white;
+  box-shadow: 0 2px 4px rgba(124, 157, 255, 0.3);
+}
+
+.status-created::after {
+  content: '📝';
+  margin-left: 6px;
+}
+
+.status-scheduled {
+  background: linear-gradient(135deg, #A78BFA 0%, #8B5CF6 100%);
+  border: 1px solid #8B5CF6;
+  color: white;
+  box-shadow: 0 2px 4px rgba(167, 139, 250, 0.3);
+}
+
+.status-scheduled::after {
+  content: '⚙️';
+  margin-left: 6px;
+}
+
+.status-shipped {
+  background: linear-gradient(135deg, #818CF8 0%, #6366F1 100%);
+  border: 1px solid #6366F1;
+  color: white;
+  box-shadow: 0 2px 4px rgba(129, 140, 248, 0.3);
+}
+
+.status-shipped::after {
+  content: '🚚';
+  margin-left: 6px;
+}
+
+.status-completed {
+  background: linear-gradient(135deg, #6EE7B7 0%, #34D399 100%);
+  border: 1px solid #34D399;
+  color: white;
+  box-shadow: 0 2px 4px rgba(110, 231, 183, 0.3);
+}
+
+.status-completed::after {
+  content: '✅';
+  margin-left: 6px;
+}
+
+/* ==================== 复选框美化 ==================== */
+.orders-table input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: #3b82f6;
+  transition: transform 0.2s ease;
+}
+
+.orders-table input[type="checkbox"]:hover {
+  transform: scale(1.1);
+}
+
+.orders-table input[type="checkbox"]:checked {
+  animation: checkboxPop 0.3s ease;
+}
+
+@keyframes checkboxPop {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.2);
+  }
+}
+
+/* ==================== 筛选输入框美化 ==================== */
+.filter-body .input,
+.filter-body .select {
+  transition: all 0.3s ease;
+}
+
+.filter-body .input:focus,
+.filter-body .select:focus {
+  border-color: #3b82f6 !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
+  transform: translateY(-1px);
+}
+
+.filter-body .input:hover,
+.filter-body .select:hover {
+  border-color: #94a3b8;
+}
+
+/* ==================== 空状态样式 ==================== */
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: #64748b;
+}
+
+.empty-state-icon {
+  font-size: 64px;
+  margin-bottom: 16px;
+  opacity: 0.5;
+}
+
+.empty-state-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #334155;
+  margin-bottom: 8px;
+}
+
+.empty-state-description {
+  font-size: 14px;
+  color: #64748b;
+  margin-bottom: 24px;
+}
+
+/* ==================== 加载动画 ==================== */
+.loading-spinner {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 3px solid rgba(59, 130, 246, 0.1);
+  border-radius: 50%;
+  border-top-color: #3b82f6;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ==================== 响应式设计 ==================== */
+@media (max-width: 1200px) {
+  .stats-overview {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .stats-overview {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+  
+  .stat-card {
+    padding: 8px 10px !important;
+  }
+  
+  .stat-card > div:first-child > div:first-child {
+    font-size: 9px !important;
+  }
+  
+  .stat-card > div:first-child > div:last-child {
+    font-size: 18px !important;
+  }
+  
+  .quick-filters {
+    overflow-x: auto;
+    white-space: nowrap;
+    padding-bottom: 8px;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .quick-filters::-webkit-scrollbar {
+    height: 4px;
+  }
+  
+  .quick-filters::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 2px;
+  }
+  
+  .filter-tag {
+    display: inline-block;
+  }
+  
+  .orders-table {
+    font-size: 12px;
+  }
+  
+  .orders-table th,
+  .orders-table td {
+    padding: 8px 6px;
+  }
+}
+
+@media (max-width: 480px) {
+  .stats-overview {
+    grid-template-columns: 1fr !important;
+    gap: 6px;
+  }
+}
+
+/* ==================== 动画效果 ==================== */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.panel-body > * {
+  animation: fadeInUp 0.4s ease-out;
+}
+
+.panel-body > *:nth-child(2) {
+  animation-delay: 0.1s;
+}
+
+.panel-body > *:nth-child(3) {
+  animation-delay: 0.2s;
+}
+
+/* ==================== 工具提示 ==================== */
+[data-tooltip] {
+  position: relative;
+}
+
+[data-tooltip]::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%) translateY(-8px);
+  padding: 6px 12px;
+  background: #1e293b;
+  color: white;
+  font-size: 12px;
+  border-radius: 6px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  z-index: 1000;
+}
+
+[data-tooltip]::before {
+  content: '';
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-top-color: #1e293b;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+  z-index: 1000;
+}
+
+[data-tooltip]:hover::after,
+[data-tooltip]:hover::before {
+  opacity: 1;
+  transform: translateX(-50%) translateY(-4px);
+}
+
+/* ==================== 滚动条美化 ==================== */
+.orders-table::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.orders-table::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 4px;
+}
+
+.orders-table::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+  transition: background 0.3s ease;
+}
+
+.orders-table::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* ==================== 打印样式 ==================== */
+@media print {
+  .stats-overview,
+  .quick-filters,
+  .filter-section,
+  .panel-actions {
+    display: none !important;
+  }
+  
+  .orders-table {
+    box-shadow: none !important;
+  }
+  
+  .orders-table tbody tr:hover {
+    background: none !important;
+    transform: none !important;
+  }
+}
+

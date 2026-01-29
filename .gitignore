@@ -1,0 +1,105 @@
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+# package-lock.json 应该提交到版本控制，确保依赖版本一致性
+
+# 数据库文件
+data/*.sqlite
+data/*.sqlite-journal
+data/*.sqlite-wal
+data/*.sqlite-shm
+
+# 备份文件
+data/*_backup_*.sqlite
+data/erp_backup_*.sqlite
+data/backups/*.sqlite
+
+# 临时文件
+temp_conversions/
+*.tmp
+*.log
+temp_*.txt
+temp_*.js
+*.temp.*
+cleanup-project.js
+extract-*.js
+clean-*.js
+check-*.js
+debug-export-html.html
+temp_open_browser.bat
+temp_open_browser.vbs
+open_browser.bat
+
+# Tauri 临时文件
+src-tauri/*.log
+src-tauri/*.txt
+src-tauri/log.txt
+src-tauri/check_error.txt
+
+# 配置文件（包含敏感信息）
+.env
+.env.local
+.env.*.local
+# config/config.json 已废弃，不再使用
+
+# 系统文件（macOS）
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+
+# 系统文件（Windows）
+Thumbs.db
+desktop.ini
+ehthumbs.db
+
+# IDE 文件
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Cursor 编辑器临时文件
+assets/c__Users_*
+assets/*workspaceStorage*
+
+# 测试和调试文件
+*test*.bat
+*test*.js
+!vitest.config.js
+!tests/**/*.test.js
+!tests/**/*.spec.js
+*debug*.js
+*check*.js
+排查启动问题.bat
+诊断并修复.bat
+
+# 测试相关目录和文件
+test-results/
+playwright-report/
+coverage/
+.vitest/
+
+# 构建输出
+dist/
+build/
+
+# Tauri
+src-tauri/target/
+src-tauri/binaries/node-*.exe
+
+# 模板提取和进度跟踪
+# templates/*.json  # 注释掉，允许模板文件被版本控制
+.progress/
+!templates/.gitkeep
+
+# Puppeteer
+.puppeteer_cache/
+
+# 优化归档文件（已移动到docs/archive/）
+optimization-log.txt
+optimization-status.json

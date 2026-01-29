@@ -1,0 +1,107 @@
+<section id="view-customers" class="panel view-enter" data-view>
+  <div class="panel-header">
+    <div class="panel-title">客户管理</div>
+    <div class="panel-actions">
+      <button class="btn primary" id="btnNewCustomer">
+        <span style="margin-right: 4px;">➕</span>新建客户
+      </button>
+      <button class="btn success" id="btnExportCustomers" style="background: #10B981; border-color: #10B981;">
+        <span style="margin-right: 4px;">📊</span>导出CSV
+      </button>
+      <button class="btn danger" id="btnClearCustomers" style="display:none;">
+        <span style="margin-right: 4px;">🗑️</span>清空客户
+      </button>
+    </div>
+  </div>
+  <div class="panel-body">
+    
+    <!-- 统计卡片区域 -->
+    <div class="stats-overview" style="margin-bottom: 12px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;">
+      <!-- 总客户数 -->
+      <div class="stat-card" style="background: linear-gradient(135deg, #4A90E2 0%, #357ABD 100%); border-radius: 6px; padding: 8px 12px; color: white; box-shadow: 0 3px 10px rgba(74, 144, 226, 0.35); transition: transform 0.2s ease, box-shadow 0.2s ease; cursor: pointer; display: flex; align-items: center; justify-content: space-between; height: 58px; box-sizing: border-box;">
+        <div style="font-size: 20px; opacity: 0.4; line-height: 1; margin-right: 10px; flex-shrink: 0;">👥</div>
+        <div style="flex: 1; display: flex; align-items: baseline; gap: 8px; min-width: 0;">
+          <span style="font-size: 24px; font-weight: 700; line-height: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" id="totalCustomersCount">0</span>
+        </div>
+      </div>
+      
+      <!-- 活跃客户 -->
+      <div class="stat-card" style="background: linear-gradient(135deg, #F093FB 0%, #D946EF 100%); border-radius: 6px; padding: 8px 12px; color: white; box-shadow: 0 3px 10px rgba(240, 147, 251, 0.35); transition: transform 0.2s ease, box-shadow 0.2s ease; cursor: pointer; display: flex; align-items: center; justify-content: space-between; height: 58px; box-sizing: border-box;">
+        <div style="font-size: 20px; opacity: 0.4; line-height: 1; margin-right: 10px; flex-shrink: 0;">⭐</div>
+        <div style="flex: 1; display: flex; align-items: baseline; gap: 8px; min-width: 0;">
+          <span style="font-size: 13px; opacity: 0.95; font-weight: 500; white-space: nowrap;">活跃客户</span>
+          <span style="font-size: 24px; font-weight: 700; line-height: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" id="activeCustomersCount">0</span>
+        </div>
+      </div>
+      
+      <!-- 总交易额 -->
+      <div class="stat-card" style="background: linear-gradient(135deg, #06B6D4 0%, #0891B2 100%); border-radius: 6px; padding: 8px 12px; color: white; box-shadow: 0 3px 10px rgba(6, 182, 212, 0.35); transition: transform 0.2s ease, box-shadow 0.2s ease; cursor: pointer; display: flex; align-items: center; justify-content: space-between; height: 58px; box-sizing: border-box;">
+        <div style="font-size: 20px; opacity: 0.4; line-height: 1; margin-right: 10px; flex-shrink: 0;">💰</div>
+        <div style="flex: 1; display: flex; align-items: baseline; gap: 8px; min-width: 0;">
+          <span style="font-size: 13px; opacity: 0.95; font-weight: 500; white-space: nowrap;">总交易额</span>
+          <span style="font-size: 24px; font-weight: 700; line-height: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" id="totalTradeAmount">$0.00</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 增强的筛选区域 -->
+    <div class="filter-section" style="margin-bottom: 16px; padding: 16px; background-color: #f8f9fa; border-radius: 8px; border: 1px solid #e9ecef;">
+      <div class="filter-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+        <h4 style="margin: 0; color: #495057; font-size: 16px; font-weight: 600;">筛选条件</h4>
+        <button class="btn primary small" id="btnClearCustomerFilters">清空筛选</button>
+      </div>
+      <div class="form-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
+        <div class="form-item">
+          <label>客户名称</label>
+          <input class="input" id="fltCustomerName" placeholder="按客户名称筛选" />
+        </div>
+        <div class="form-item">
+          <label>联系电话</label>
+          <input class="input" id="fltCustomerTel" placeholder="按电话筛选" />
+        </div>
+        <div class="form-item">
+          <label>地址</label>
+          <input class="input" id="fltCustomerAddress" placeholder="按地址筛选" />
+        </div>
+        <div class="form-item">
+          <label>联系人</label>
+          <input class="input" id="fltCustomerContact" placeholder="按联系人筛选" />
+        </div>
+      </div>
+    </div>
+
+    <table class="table" id="customersTable">
+      <thead>
+        <tr>
+          <th style="width: 25%">客户名称</th>
+          <th style="width: 20%">联系方式</th>
+          <th style="width: 25%">地址</th>
+          <th style="width: 15%">交易额(USD)</th>
+          <th style="width: 15%">操作</th>
+        </tr>
+      </thead>
+      <tbody id="customersTbody"></tbody>
+    </table>
+    
+    <!-- 分页控件 -->
+    <div class="pagination-section" style="margin-top: 16px; display: flex; justify-content: space-between; align-items: center;">
+      <div class="pagination-info" style="color: #6c757d; font-size: 14px;">
+        显示第 <span id="pageStart">0</span> - <span id="pageEnd">0</span> 条，共 <span id="totalRecords">0</span> 条记录
+      </div>
+      <div class="pagination-controls" style="display: flex; gap: 8px; align-items: center;">
+        <button class="btn secondary small" id="btnFirstPage" disabled>首页</button>
+        <button class="btn secondary small" id="btnPrevPage" disabled>上一页</button>
+        <span style="margin: 0 12px; color: #495057;">第 <span id="currentPage">1</span> / <span id="totalPages">1</span> 页</span>
+        <button class="btn secondary small" id="btnNextPage" disabled>下一页</button>
+        <button class="btn secondary small" id="btnLastPage" disabled>末页</button>
+        <select class="select small" id="pageSizeSelect" style="margin-left: 12px; width: 80px;">
+          <option value="10">10条/页</option>
+          <option value="20" selected>20条/页</option>
+          <option value="50">50条/页</option>
+          <option value="100">100条/页</option>
+        </select>
+      </div>
+    </div>
+  </div>
+</section>
+

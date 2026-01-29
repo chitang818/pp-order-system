@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>首次运行向导 - PP订单管理系统</title>
+    <link rel="stylesheet" href="./src/styles/main.css">
+    <style>
+        body {
+            background-color: #f3f4f6;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            color: #1f2937;
+        }
+
+        .wizard-container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            width: 100%;
+            max-width: 500px;
+            padding: 2rem;
+            transition: all 0.3s ease;
+        }
+
+        .wizard-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .wizard-header h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #111827;
+        }
+
+        .wizard-header p {
+            color: #6b7280;
+            font-size: 0.875rem;
+        }
+
+        .step-content {
+            display: none;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        .step-content.active {
+            display: block;
+        }
+
+        .option-card {
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+        }
+
+        .option-card:hover {
+            border-color: #3b82f6;
+            background-color: #eff6ff;
+        }
+
+        .option-card.selected {
+            border-color: #2563eb;
+            background-color: #eff6ff;
+            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+        }
+
+        .option-icon {
+            font-size: 1.5rem;
+            margin-right: 1rem;
+            color: #6b7280;
+        }
+
+        .option-text h3 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin: 0 0 0.25rem 0;
+            color: #111827;
+        }
+
+        .option-text p {
+            font-size: 0.875rem;
+            color: #6b7280;
+            margin: 0;
+        }
+
+        .btn {
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 500;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+            outline: none;
+            width: 100%;
+        }
+
+        .btn-primary {
+            background-color: #2563eb;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #1d4ed8;
+        }
+
+        .btn-secondary {
+            background-color: white;
+            border: 1px solid #d1d5db;
+            color: #374151;
+            margin-bottom: 0.5rem;
+        }
+
+        .btn-secondary:hover {
+            background-color: #f9fafb;
+            border-color: #9ca3af;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .file-input-wrapper {
+            margin-bottom: 1.5rem;
+        }
+
+        .file-path-display {
+            background-color: #f3f4f6;
+            padding: 0.75rem;
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: #4b5563;
+            margin-bottom: 0.5rem;
+            word-break: break-all;
+            border: 1px solid #e5e7eb;
+        }
+
+        .error-message {
+            color: #dc2626;
+            font-size: 0.875rem;
+            margin-top: 0.5rem;
+            display: none;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(5px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 1.5rem;
+            height: 1.5rem;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 0.5rem;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* 新增样式以替代内联样式 */
+        .step-desc {
+            margin-bottom: 1.5rem;
+            color: #4b5563;
+        }
+
+        .step-desc-import {
+            margin-bottom: 1rem;
+            color: #4b5563;
+        }
+
+        .action-buttons {
+            margin-top: 2rem;
+        }
+
+        .btn-back-margin {
+            margin-top: 0.5rem;
+        }
+
+        /* 恢复模式专属样式 */
+        .restore-header {
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .restore-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.1); opacity: 0.7; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .restore-info {
+            background: #f9fafb;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            border: 1px solid #e5e7eb;
+        }
+
+        .restore-info p {
+            margin: 0 0 0.5rem 0;
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+
+        .restore-progress {
+            margin-top: 2rem;
+        }
+
+        .progress-bar {
+            height: 10px;
+            background: #e5e7eb;
+            border-radius: 5px;
+            overflow: hidden;
+            margin-bottom: 0.5rem;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #2563eb;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .progress-text {
+            text-align: center;
+            font-size: 0.875rem;
+            color: #6b7280;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="wizard-container">
+        <div class="wizard-header">
+            <h1>欢迎使用 PP订单管理系统</h1>
+            <p>首次运行配置向导</p>
+        </div>
+
+        <!-- 步骤 1: 选择模式 -->
+        <div id="step-1" class="step-content active">
+            <div class="option-card" id="opt-card-new">
+                <div class="option-icon">🆕</div>
+                <div class="option-text">
+                    <h3>创建新数据库</h3>
+                    <p>适用于全新安装，将创建一个空的数据库。</p>
+                </div>
+            </div>
+            <div class="option-card" id="opt-card-import">
+                <div class="option-icon">📂</div>
+                <div class="option-text">
+                    <h3>导入已有数据库</h3>
+                    <p>如果您有备份文件或旧版本的数据库文件。</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 步骤 2: 确认新建 -->
+        <div id="step-2-new" class="step-content">
+            <p class="step-desc">系统将在默认位置创建新的数据库文件。</p>
+            <div class="file-path-display" id="default-path-display">正在获取路径...</div>
+            <div class="error-message" id="new-error"></div>
+            <div class="action-buttons">
+                <button class="btn btn-primary" id="btn-create">
+                    <span id="btn-create-text">开始初始化</span>
+                </button>
+                <button class="btn btn-secondary btn-back btn-back-margin">返回</button>
+            </div>
+        </div>
+
+        <!-- 步骤 2: 导入文件 -->
+        <div id="step-2-import" class="step-content">
+            <p class="step-desc-import">请选择您的 .sqlite 数据库文件。</p>
+            <div class="file-path-display" id="import-path-display">未选择文件</div>
+            <button class="btn btn-secondary" id="btn-select-file">选择文件...</button>
+            <div class="error-message" id="import-error"></div>
+            <div class="action-buttons">
+                <button class="btn btn-primary" id="btn-import" disabled>
+                    <span id="btn-import-text">导入并开始使用</span>
+                </button>
+                <button class="btn btn-secondary btn-back btn-back-margin">返回</button>
+            </div>
+        </div>
+
+        <!-- 步骤: 恢复数据 (优化方案新增) -->
+        <div id="step-restore" class="step-content">
+            <div class="restore-header">
+                <div class="restore-icon">🔄</div>
+                <h2>正在恢复数据</h2>
+            </div>
+            
+            <div class="restore-info">
+                <p>正在从备份文件恢复数据库：</p>
+                <div class="file-path-display" id="restore-source-path">加载中...</div>
+            </div>
+            
+            <div class="restore-progress">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="restore-progress-fill"></div>
+                </div>
+                <p class="progress-text" id="restore-progress-text">准备中...</p>
+            </div>
+            
+            <div class="error-message" id="restore-error"></div>
+            
+            <div class="action-buttons" id="restore-retry-area" style="display: none; margin-top: 1.5rem;">
+                <button class="btn btn-primary" id="btn-restore-retry">重试</button>
+                <button class="btn btn-secondary" id="btn-restore-cancel">取消恢复并手动配置</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { invoke } from '@tauri-apps/api/core';
+        import { open } from '@tauri-apps/plugin-dialog';
+
+        console.log('Setup wizard loaded');
+
+        // State
+        let selectedFile = null;
+
+        // Exposed functions for internal use
+        const showStep = (step) => {
+            document.querySelectorAll('.step-content').forEach(el => el.classList.remove('active'));
+            if (step === 1) {
+                document.getElementById('step-1').classList.add('active');
+            } else if (step === 'new') {
+                document.getElementById('step-2-new').classList.add('active');
+                loadDefaultPath();
+            } else if (step === 'import') {
+                document.getElementById('step-2-import').classList.add('active');
+            } else if (step === 'restore') {
+                document.getElementById('step-restore').classList.add('active');
+            }
+        };
+
+        const selectOption = (type) => {
+            if (type === 'new') {
+                showStep('new');
+            } else {
+                showStep('import');
+            }
+        };
+
+        async function loadDefaultPath() {
+            try {
+                // We'll just show the app data dir mostly
+                const path = await invoke('app_paths');
+                document.getElementById('default-path-display').innerText = path.app_data_dir + '\\data\\erp.sqlite';
+            } catch (e) {
+                console.error(e);
+                document.getElementById('default-path-display').innerText = '默认路径 (AppData/data/erp.sqlite)';
+            }
+        }
+
+        const createNewDb = async () => {
+            const btn = document.getElementById('btn-create');
+            const btnText = document.getElementById('btn-create-text');
+            const errorDiv = document.getElementById('new-error');
+
+            btn.disabled = true;
+            btnText.innerText = '初始化中...';
+            errorDiv.style.display = 'none';
+
+            try {
+                await invoke('setup_database_new', { customPath: null });
+                // Success
+                // 重要：初始化完成后，强制回到登录页
+                // - 避免导入/初始化后沿用旧机器的 localStorage 登录态直接进入首页
+                // - 让用户按备份库内的账号体系重新登录
+                try {
+                    localStorage.removeItem('token');
+                    localStorage.removeItem('user');
+                    localStorage.removeItem('auth_token');
+                    localStorage.removeItem('authToken');
+                } catch (_) { }
+                try { await invoke('auth_logout'); } catch (_) { }
+                
+                // 显示成功提示
+                btnText.innerText = '初始化成功，正在跳转...';
+                
+                // 使用重试逻辑跳转，防止开发服务器暂时不可用
+                const redirectWithRetry = async (url, maxRetries = 5) => {
+                    for (let i = 0; i < maxRetries; i++) {
+                        try {
+                            const response = await fetch(url, { method: 'HEAD' });
+                            if (response.ok) {
+                                window.location.href = url;
+                                return;
+                            }
+                        } catch (e) {
+                            console.log(`[Setup Wizard] 跳转重试 ${i + 1}/${maxRetries}...`);
+                            await new Promise(r => setTimeout(r, 500));
+                        }
+                    }
+                    // 最后一次尝试直接跳转
+                    window.location.href = url;
+                };
+                
+                await redirectWithRetry('login.html');
+            } catch (e) {
+                console.error(e);
+                errorDiv.innerText = '初始化失败: ' + e;
+                errorDiv.style.display = 'block';
+                btn.disabled = false;
+                btnText.innerText = '重试';
+            }
+        };
+
+        const selectFile = async () => {
+            try {
+                const selected = await open({
+                    multiple: false,
+                    filters: [{
+                        name: 'SQLite Database',
+                        extensions: ['sqlite', 'db']
+                    }]
+                });
+
+                if (selected) {
+                    selectedFile = selected;
+                    document.getElementById('import-path-display').innerText = selected;
+                    document.getElementById('btn-import').disabled = false;
+                }
+            } catch (e) {
+                console.error(e);
+                alert('选择文件失败: ' + e);
+            }
+        };
+
+        const importDb = async () => {
+            if (!selectedFile) return;
+
+            const btn = document.getElementById('btn-import');
+            const btnText = document.getElementById('btn-import-text');
+            const errorDiv = document.getElementById('import-error');
+
+            btn.disabled = true;
+            btnText.innerText = '导入中...';
+            errorDiv.style.display = 'none';
+
+            try {
+                await invoke('setup_database_import', { sourcePath: selectedFile });
+                // Success
+                // 重要：导入完成后，强制回到登录页（同上，避免复用旧登录态）
+                try {
+                    localStorage.removeItem('token');
+                    localStorage.removeItem('user');
+                    localStorage.removeItem('auth_token');
+                    localStorage.removeItem('authToken');
+                } catch (_) { }
+                try { await invoke('auth_logout'); } catch (_) { }
+                
+                // 显示成功提示
+                btnText.innerText = '导入成功，正在跳转...';
+                
+                // 使用重试逻辑跳转，防止开发服务器暂时不可用
+                const redirectWithRetry = async (url, maxRetries = 5) => {
+                    for (let i = 0; i < maxRetries; i++) {
+                        try {
+                            const response = await fetch(url, { method: 'HEAD' });
+                            if (response.ok) {
+                                window.location.href = url;
+                                return;
+                            }
+                        } catch (e) {
+                            console.log(`[Setup Wizard] 跳转重试 ${i + 1}/${maxRetries}...`);
+                            await new Promise(r => setTimeout(r, 500));
+                        }
+                    }
+                    // 最后一次尝试直接跳转
+                    window.location.href = url;
+                };
+                
+                await redirectWithRetry('login.html');
+            } catch (e) {
+                console.error(e);
+                errorDiv.innerText = '导入失败: ' + e;
+                errorDiv.style.display = 'block';
+                btn.disabled = false;
+                btnText.innerText = '重试';
+            }
+        };
+
+        // 恢复模式逻辑
+        async function checkRestorePending() {
+            try {
+                const config = await invoke('db_check_restore_pending');
+                if (config) {
+                    showRestoreMode(config);
+                }
+            } catch (e) {
+                console.error('检查恢复配置失败:', e);
+            }
+        }
+
+        function showRestoreMode(config) {
+            showStep('restore');
+            document.getElementById('restore-source-path').innerText = config.source_path;
+            
+            const expiresAt = new Date(config.expires_at);
+            if (new Date() > expiresAt) {
+                showRestoreError('恢复配置已过期，请手动重新选择文件。');
+                document.getElementById('restore-retry-area').style.display = 'block';
+                return;
+            }
+
+            executeRestore();
+        }
+
+        async function executeRestore() {
+            const progressFill = document.getElementById('restore-progress-fill');
+            const progressText = document.getElementById('restore-progress-text');
+            const errorDiv = document.getElementById('restore-error');
+            const retryArea = document.getElementById('restore-retry-area');
+
+            errorDiv.style.display = 'none';
+            retryArea.style.display = 'none';
+            progressFill.style.width = '20%';
+            progressText.innerText = '正在准备环境...';
+
+            try {
+                // 模拟进度条
+                setTimeout(() => { progressFill.style.width = '50%'; progressText.innerText = '正在复制数据库文件...'; }, 500);
+                
+                const result = await invoke('db_execute_restore');
+                
+                progressFill.style.width = '100%';
+                progressText.innerText = '恢复成功，正在完成最后配置...';
+
+                // 清理工作
+                try {
+                    localStorage.clear();
+                } catch (_) {}
+
+                setTimeout(() => {
+                    window.location.href = 'login.html';
+                }, 1000);
+
+            } catch (e) {
+                console.error('恢复执行失败:', e);
+                showRestoreError('恢复失败: ' + e);
+                retryArea.style.display = 'block';
+            }
+        }
+
+        function showRestoreError(msg) {
+            const errorDiv = document.getElementById('restore-error');
+            errorDiv.innerText = msg;
+            errorDiv.style.display = 'block';
+            document.getElementById('restore-progress-text').innerText = '恢复终止';
+        }
+
+        async function cancelRestore() {
+            try {
+                await invoke('db_cancel_restore');
+                showStep(1);
+            } catch (e) {
+                alert('取消失败: ' + e);
+            }
+        }
+
+        // Initialize event listeners when DOM is ready
+        document.addEventListener('DOMContentLoaded', () => {
+            // 首先检查是否有待恢复的任务
+            checkRestorePending();
+
+            // Option selection
+            document.getElementById('opt-card-new').addEventListener('click', () => selectOption('new'));
+            document.getElementById('opt-card-import').addEventListener('click', () => selectOption('import'));
+
+            // Action buttons
+            document.getElementById('btn-create').addEventListener('click', createNewDb);
+            document.getElementById('btn-import').addEventListener('click', importDb);
+            document.getElementById('btn-select-file').addEventListener('click', selectFile);
+            
+            // Restore buttons
+            document.getElementById('btn-restore-retry').addEventListener('click', executeRestore);
+            document.getElementById('btn-restore-cancel').addEventListener('click', cancelRestore);
+
+            // Back buttons
+            document.querySelectorAll('.btn-back').forEach(btn => {
+                btn.addEventListener('click', () => showStep(1));
+            });
+        });
+    </script>
+</body>
+
+</html>

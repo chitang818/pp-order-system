@@ -1,0 +1,83 @@
+{
+  "name": "pp-foreign-trade-order-system",
+  "version": "2.0.3",
+  "description": "PP外贸订单管理系统 - 支持订单管理、发票、装箱单、销售确认书生成",
+  "main": "src-tauri/src/main.rs",
+  "scripts": {
+    "//": "=== 🚀 开发模式 ===",
+    "dev": "vite",
+    "dev:comment": "⚡ 前端开发 - 仅前端(2-5秒) | 限制：无后端API、文件保存降级 | 命令行使用",
+    "dev:backend": "nodemon ./backend/app.js --watch backend",
+    "dev:backend:comment": "🔧 后端开发 - 仅后端 | 适合：API测试(Postman) | 命令行使用",
+    "dev:all": "concurrently \"npm run dev:backend\" \"wait-on http://127.0.0.1:3000/api/health && npm run dev\" --names \"backend,frontend\" --prefix-colors \"blue,green\" --kill-others-on-fail",
+    "dev:all:comment": "🌐 日常开发 - 前端+后端(5-10秒) | 推荐：95%开发时间 | 脚本：快速启动.bat",
+    "//tauri": "=== 🖥️  桌面应用开发 ===",
+    "tauri": "tauri",
+    "tauri:dev": "cross-env DB_PATH=%APPDATA%\\com.pp.ordermanagement\\data\\erp.sqlite DATA_ROOT=%APPDATA%\\com.pp.ordermanagement\\data CONFIG_ROOT=%APPDATA%\\com.pp.ordermanagement\\config concurrently \"npm run dev:backend\" \"tauri dev\" --names \"backend,tauri\" --prefix-colors \"blue,green\" --kill-others-on-fail",
+    "tauri:dev:comment": "🖥️  桌面应用开发(15-30秒首次启动) | 适合：测试原生功能、完整功能验证 | 功能：文件对话框、托盘图标、开机自启等",
+    "tauri:build": "tauri build",
+    "tauri:build:comment": "📦 生产构建 - 打包桌面应用",
+    "tauri:build:debug": "tauri build --debug",
+    "//build": "=== 📦 构建 ===",
+    "build": "vite build",
+    "build:prod": "vite build --mode production",
+    "preview": "vite preview",
+    "start": "node ./backend/app.js",
+    "//quality": "=== 🔍 代码质量 ===",
+    "lint": "eslint . --ext .js",
+    "lint:fix": "eslint . --ext .js --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "//test": "=== 🧪 测试 ===",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "test:ui": "vitest --ui",
+    "//hooks": "=== 🪝 Git钩子 ===",
+    "precommit": "lint-staged",
+    "prepare": "husky install"
+  },
+  "keywords": [
+    "order-management",
+    "foreign-trade",
+    "invoice",
+    "pdf-generator",
+    "export-import"
+  ],
+  "author": "Your Company",
+  "license": "MIT",
+  "devDependencies": {
+    "@tauri-apps/cli": "^2.9.6",
+    "@tauri-apps/plugin-dialog": "2.4.2",
+    "@tauri-apps/plugin-fs": "^2.4.4",
+    "@vitejs/plugin-legacy": "^7.2.1",
+    "@vitest/ui": "^2.1.8",
+    "baseline-browser-mapping": "^2.9.14",
+    "concurrently": "^9.2.1",
+    "cross-env": "^10.1.0",
+    "eslint": "^8.57.0",
+    "eslint-config-prettier": "^9.1.0",
+    "husky": "^9.1.7",
+    "jsdom": "^25.0.1",
+    "lint-staged": "^15.2.11",
+    "nodemon": "^3.1.10",
+    "prettier": "^3.3.3",
+    "vite": "^7.1.12",
+    "vitest": "^2.1.8",
+    "wait-on": "^8.0.1"
+  },
+  "lint-staged": {
+    "*.js": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,md,css,html}": [
+      "prettier --write"
+    ]
+  },
+  "dependencies": {
+    "@tauri-apps/api": "^2.9.1",
+    "chart.js": "^4.5.1",
+    "exceljs": "^4.4.0"
+  }
+}

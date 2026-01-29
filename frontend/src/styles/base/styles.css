@@ -1,0 +1,1174 @@
+/* 全局样式 */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* 主题颜色预设样式 */
+.color-presets {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.color-preset {
+    width: 28px;
+    height: 28px;
+    border-radius: 4px;
+    border: 2px solid transparent;
+    cursor: pointer;
+}
+
+.color-preset.selected {
+    border-color: #333;
+}
+
+.form-subtext {
+    font-size: 12px;
+    color: #777;
+    margin-top: 4px;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    color: #333;
+}
+
+.container {
+    width: 100%;
+    margin: 0 auto;
+    padding: 20px;
+    min-height: 100vh;
+    max-width: none;
+}
+
+/* 顶部工具栏与面包屑（与新建订单页一致） */
+.utility-bar {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    padding: 8px 12px;
+    margin: 12px 0;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+}
+
+.breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+}
+
+.breadcrumb a {
+    color: #333;
+    text-decoration: none;
+    padding: 2px 6px;
+    border-radius: 6px;
+}
+
+.breadcrumb a:hover {
+    background: #f3f4f6;
+}
+
+.breadcrumb .sep {
+    color: #6b7280;
+}
+
+.utility-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* 头部样式 */
+.header {
+    background: linear-gradient(135deg, #2c3e50, #3498db);
+    color: white;
+    padding: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.header h1 {
+    font-size: 24px;
+    font-weight: 300;
+}
+
+.header-buttons {
+    display: flex;
+    gap: 10px;
+}
+
+/* 按钮样式 */
+.btn {
+    background: #007bff;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    font-family: inherit;
+}
+
+.btn:hover {
+    background: #0056b3;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.btn-primary {
+    background: #007bff;
+}
+
+.btn-primary:hover {
+    background: #0056b3;
+}
+
+.btn-success {
+    background: #28a745;
+}
+
+.btn-success:hover {
+    background: #1e7e34;
+}
+
+.btn-secondary {
+    background: #95a5a6;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background: #7f8c8d;
+}
+
+.btn-small {
+    padding: 5px 10px;
+    font-size: 12px;
+}
+
+/* 危险动作按钮 */
+.btn-danger {
+    background: #dc3545;
+    color: #fff;
+    border: none;
+}
+
+.btn-danger:hover {
+    background: #c82333;
+}
+
+/* 主内容区域 */
+.main-content {
+    display: flex;
+    gap: 20px;
+    height: calc(100vh - 140px);
+    max-width: none;
+}
+
+/* 左侧输入面板 */
+.input-panel {
+    flex: 0 0 55%;
+    background: white;
+    border-radius: 10px;
+    padding: 25px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    overflow-y: auto;
+    max-height: 100%;
+}
+
+.form-section {
+    margin-bottom: 25px;
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+/* 缩小上方“发票信息/客户信息”占用空间 */
+.input-panel .form-section:first-of-type,
+.input-panel .form-section:nth-of-type(2) {
+    padding: 12px;
+    /* 压缩内边距 */
+    margin-bottom: 12px;
+    /* 缩小区块间距 */
+}
+
+.input-panel .form-section:first-of-type h3,
+.input-panel .form-section:nth-of-type(2) h3 {
+    font-size: 14px;
+    /* 标题更紧凑 */
+    margin-bottom: 10px;
+}
+
+.input-panel .form-section:first-of-type .form-group,
+.input-panel .form-section:nth-of-type(2) .form-group {
+    margin-bottom: 12px;
+    /* 表单项间距更紧凑 */
+}
+
+.input-panel .form-section:first-of-type .form-group label,
+.input-panel .form-section:nth-of-type(2) .form-group label {
+    font-size: 12px;
+    /* 标签更小 */
+    margin-bottom: 6px;
+}
+
+.input-panel .form-section:first-of-type .form-row,
+.input-panel .form-section:nth-of-type(2) .form-row {
+    gap: 8px;
+    /* 缩小横向间距 */
+}
+
+/* 为商品信息留出更多展示区域 */
+#productList {
+    min-height: 440px;
+    /* 提升商品列表最小高度 */
+}
+
+.form-section h3 {
+    color: #2c3e50;
+    margin-bottom: 15px;
+    font-size: 16px;
+    border-bottom: 2px solid #3498db;
+    padding-bottom: 5px;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-row {
+    display: flex;
+    gap: 10px;
+}
+
+.form-row .form-group {
+    flex: 1;
+}
+
+/* 数量输入窄宽度 */
+.quantity-narrow {
+    flex: 0 0 140px;
+}
+
+.quantity-narrow .form-group,
+.quantity-narrow input {
+    width: 100%;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #495057;
+    font-size: 14px;
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select {
+    width: 100%;
+    padding: 12px 15px;
+    border: 1px solid #ced4da;
+    border-radius: 6px;
+    font-size: 14px;
+    transition: all 0.3s ease;
+    background-color: #fff;
+}
+
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+    background-color: #fff;
+}
+
+.form-group textarea {
+    height: 60px;
+    resize: vertical;
+}
+
+/* 商品信息样式 */
+.product-section {
+    margin-top: 25px;
+}
+
+.product-form {
+    display: grid;
+    grid-template-columns: 2.5fr 1fr 1fr 1fr;
+    gap: 15px;
+    margin-bottom: 20px;
+    align-items: end;
+}
+
+.product-list {
+    max-height: 350px;
+    overflow-y: auto;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    margin-top: 15px;
+}
+
+.product-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+    /* 整体字体缩小 */
+}
+
+.product-table th,
+.product-table td {
+    padding: 8px 6px;
+    /* 减少内边距使布局更紧凑 */
+    text-align: center;
+    /* 统一居中对齐 */
+    border-bottom: 1px solid #eee;
+    font-size: 12px;
+    /* 字体大小统一 */
+    vertical-align: middle;
+    /* 垂直居中 */
+}
+
+.product-table th {
+    background-color: #f8f9fa;
+    font-weight: 600;
+    color: #495057;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    line-height: 1.2;
+    /* 紧凑行高 */
+    white-space: nowrap;
+    /* 防止换行 */
+}
+
+.product-table tbody tr:hover {
+    background-color: #f8f9fa;
+}
+
+.product-table .actions {
+    text-align: center;
+    width: 80px;
+}
+
+/* 输入框样式优化 */
+.product-table input.input,
+.product-table select.select {
+    padding: 4px 6px;
+    /* 减少输入框内边距 */
+    font-size: 12px;
+    /* 统一字体大小 */
+    border-radius: 4px;
+    /* 圆角稍小 */
+    min-height: 28px;
+    /* 统一最小高度 */
+    width: 100%;
+    /* 占满单元格 */
+}
+
+/* 型号字段特殊处理 */
+.product-table .model-field {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.product-table .model-field .row-index {
+    font-size: 11px;
+    color: #6c757d;
+    min-width: 20px;
+}
+
+/* 拖拽手柄样式 */
+.product-table .drag-handle {
+    cursor: move;
+    color: #6c757d;
+    font-size: 14px;
+    margin-right: 4px;
+}
+
+/* 发票内容表格额外信息行 */
+.products-table .subheader-info td {
+    font-weight: 600;
+    padding: 4px 8px;
+    /* 压缩子表头内边距 */
+    font-size: 11px;
+    /* 子表头更紧凑 */
+}
+
+.btn-remove {
+    background: #dc3545;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: background-color 0.2s;
+}
+
+.btn-remove:hover {
+    background: #c82333;
+}
+
+/* 商品列表样式 */
+.product-item {
+    background: #f8f9fa;
+    padding: 15px 50px 15px 15px;
+    /* 右侧为删除按钮预留空间 */
+    margin-bottom: 10px;
+    border-radius: 5px;
+    border: 1px solid #e9ecef;
+    position: relative;
+}
+
+/* 新增商品的紧凑输入模式：隐藏标签、减小间距与内边距 */
+.product-item.compact {
+    padding: 10px 50px 10px 10px;
+    margin-bottom: 8px;
+}
+
+.product-item.compact .form-group label {
+    display: none;
+}
+
+.product-item.compact .product-row {
+    gap: 6px;
+    margin-bottom: 6px;
+}
+
+.product-item.compact .form-group input,
+.product-item.compact .form-group select {
+    padding: 8px 10px;
+}
+
+/* 商品卡片左上角序号徽标 */
+.product-item .serial-badge {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: #6c757d;
+    color: #fff;
+    border-radius: 12px;
+    padding: 2px 8px;
+    font-size: 12px;
+    line-height: 1;
+}
+
+.product-item .remove-product {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: #e74c3c;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 25px;
+    height: 25px;
+    cursor: pointer;
+    font-size: 12px;
+}
+
+.product-row {
+    display: grid;
+    grid-template-columns: 0.3fr 3fr 0.7fr 0.9fr 1fr 1fr;
+    /* 增加序号列在最左侧 */
+    gap: 8px;
+    /* 间距 */
+    margin-bottom: 10px;
+    align-items: end;
+    /* 底部对齐 */
+}
+
+.product-row .form-group {
+    margin-bottom: 0;
+}
+
+/* 一行排布下的各字段宽度优化 */
+.product-item .product-description {
+    min-width: 0;
+}
+
+.product-item .quantity-narrow input {
+    width: 100%;
+}
+
+.product-item .price-narrow input {
+    width: 100%;
+}
+
+.product-item .unit-inline select {
+    width: 100%;
+}
+
+.product-item .amount-inline input {
+    width: 100%;
+}
+
+/* 单位与金额同行布局的最小宽度，避免过窄 */
+.product-item .unit-inline {
+    min-width: 0;
+}
+
+.product-item .amount-inline {
+    min-width: 0;
+}
+
+/* 首行输入宽度优化：数量与单价窄化 */
+.product-item .quantity-narrow input {
+    width: 100%;
+}
+
+.product-item .price-narrow input {
+    width: 100%;
+}
+
+/* 右侧预览面板 */
+.preview-panel {
+    flex: 0 0 45%;
+    background: white;
+    border-radius: 10px;
+    padding: 25px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    overflow-y: auto;
+    max-height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.preview-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.preview-header h3 {
+    color: #2c3e50;
+}
+
+.zoom-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* A4预览样式 */
+.preview-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+    background: #f8f9fa;
+    min-height: 100vh;
+    overflow: auto;
+}
+
+.preview-controls {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 25px;
+    background: white;
+    padding: 12px 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.zoom-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.zoom-btn {
+    width: 36px;
+    height: 36px;
+    border: 1px solid #ced4da;
+    background: white;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.zoom-btn:hover {
+    background: #f8f9fa;
+    border-color: #007bff;
+    color: #007bff;
+}
+
+.zoom-level {
+    margin: 0 15px;
+    font-weight: 600;
+    color: #495057;
+    min-width: 60px;
+    text-align: center;
+}
+
+.a4-preview {
+    width: 595px;
+    min-height: 842px;
+    background: white;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    transform-origin: top center;
+    margin: 0 auto;
+    position: relative;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+/* A4发票预览样式 */
+.invoice-preview {
+    width: 595px;
+    min-height: 842px;
+    background: white;
+    padding: 20px;
+    /* 进一步压缩整体内边距，为表格留更多空间 */
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+    transform-origin: top center;
+    transition: transform 0.3s ease;
+    font-size: 14px;
+    line-height: 1.35;
+    /* 轻微压缩行高，保持可读 */
+}
+
+/* 单据中心表头统一样式 */
+.doc-header {
+    text-align: center;
+    margin-bottom: 12px;
+}
+
+.doc-company {
+    /* font-size由styleMode动态控制，不固定 */
+    font-weight: 600;
+}
+
+.doc-title {
+    /* font-size由styleMode动态控制，不固定 */
+    font-weight: 600;
+    margin-top: 6px;
+}
+
+.doc-subline {
+    color: #666 !important;
+    /* font-size由styleMode动态控制，不固定 */
+    margin-bottom: 4px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    width: 100% !important;
+    display: block !important;
+}
+
+/* 生产通知单：订单日期与合同号同行左右分布 */
+.doc-subline.split {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    /* font-size由styleMode动态控制，不固定 */
+    font-weight: 600 !important;
+}
+
+/* 生产通知单表头：合同号行间距增大 */
+.doc-header .doc-subline.contract-no-line {
+    margin-top: 8px !important;
+    margin-bottom: 8px !important;
+    line-height: 1.6 !important;
+}
+
+/* 全局三段式：表头/产品信息/底部区域 */
+.doc-body {
+    margin-top: 8px;
+}
+
+.doc-footer {
+    margin-top: 8px;
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+    align-items: flex-start;
+}
+
+.doc-footer .footer-block {
+    min-width: 240px;
+}
+
+.doc-footer .footer-block strong {
+    display: inline-block;
+    min-width: 84px;
+}
+
+/* 发票内容样式 */
+.invoice-content {
+    padding: 12mm;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    font-size: 12px;
+    line-height: 1.5;
+    color: #333;
+    background: white;
+}
+
+/* 发票头部 */
+.invoice-header {
+    text-align: center;
+    margin-bottom: 8px;
+    /* 进一步减少头部与下方内容间距 */
+    border-bottom: 2px solid #333;
+    padding-bottom: 6px;
+    /* 表头内边距进一步缩小 */
+}
+
+.company-name {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 6px;
+    /* 压缩公司名下间距 */
+    color: #2c3e50;
+    line-height: 1.2;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+
+.company-address {
+    font-size: 11px;
+    /* 进一步缩小字体大小 */
+    color: #666;
+    margin-bottom: 6px;
+    /* 压缩地址下间距 */
+    line-height: 1.2;
+    /* 进一步压缩行高 */
+    white-space: nowrap;
+    /* 强制一行显示 */
+    overflow: hidden;
+    /* 隐藏溢出内容 */
+    text-overflow: ellipsis;
+    /* 溢出时显示省略号 */
+    width: 100%;
+    /* 确保占满可用宽度 */
+    display: inline-block;
+    /* 确保作为一个块级元素处理 */
+}
+
+.invoice-title {
+    font-size: 22px;
+    /* 标题轻微缩小 */
+    font-weight: 700;
+    color: #e74c3c;
+    margin-top: 8px;
+    /* 缩小顶部间距 */
+    letter-spacing: 1px;
+}
+
+/* 发票信息表格 */
+.invoice-info {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    /* 更紧凑的左右信息区间距 */
+    margin-bottom: 8px;
+    /* 与下方客户信息间距更紧凑 */
+    font-size: 11px;
+    /* 统一为11px，便于与客户信息一致 */
+}
+
+.info-section {
+    background: #f8f9fa;
+    padding: 6px;
+    /* 进一步压缩区块内边距 */
+    border-radius: 5px;
+}
+
+.info-row {
+    display: flex;
+    margin-bottom: 4px;
+    /* 行间距进一步压缩 */
+}
+
+.info-label {
+    font-weight: bold;
+    min-width: 110px;
+    /* 标签宽度缩小 */
+    color: #2c3e50;
+    white-space: nowrap;
+}
+
+.info-value {
+    flex: 1;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+
+/* 客户信息 */
+.customer-info {
+    margin-bottom: 8px;
+    /* 更小的下间距，为表格留更多空间 */
+    padding: 6px;
+    /* 内边距进一步压缩 */
+    background: #f8f9fa;
+    border-radius: 5px;
+    font-size: 11px;
+    /* 字号与发票信息保持一致 */
+}
+
+.customer-info h4 {
+    color: #2c3e50;
+    margin-bottom: 4px;
+    /* 标题下间距更加紧凑 */
+    font-size: 13px;
+    /* 标题对齐整体视觉但不突兀 */
+}
+
+/* 商品表格 */
+.products-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 10px;
+    /* 进一步缩小下方间距 */
+    font-size: 12px;
+}
+
+.products-table th,
+.products-table td {
+    border: 1px solid #ddd;
+    padding: 2.5px;
+    /* 单元格内边距再次压缩 */
+    text-align: left;
+}
+
+.products-table th {
+    padding: 6px 12px !important;
+    /* 缩小内边距实现紧凑显示 */
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    /* 与订单页面panel-header保持一致的背景 */
+    color: #495057;
+    font-weight: 600;
+    text-align: left;
+    line-height: 1.3 !important;
+    /* 减小行高实现紧凑显示 */
+    font-size: 13px !important;
+    /* 稍微减小字体大小 */
+}
+
+.products-table .text-center {
+    text-align: center;
+}
+
+.products-table .text-right {
+    text-align: right;
+}
+
+/* 总值列强制单行显示并保持内联间距 */
+.products-table .amount-cell {
+    white-space: nowrap;
+}
+
+.products-table .amount-cell .no-value-inline {
+    margin-right: 6px;
+    display: inline-block;
+}
+
+.products-table .amount-cell .amount-inline {
+    display: inline-block;
+}
+
+/* 商品表格正文文字颜色统一为黑色 */
+.products-table td {
+    color: #000;
+    line-height: 1.2;
+    /* 压缩正文行距 */
+    font-size: 12px;
+    /* 预览表格字体轻微减小，稳定一页 */
+}
+
+/* 描述列中的序号与数量行样式，贴近参考图 */
+.products-table .desc-col .item-index {
+    margin-right: 4px;
+}
+
+.products-table .desc-col {
+    line-height: 1.12;
+    /* 描述列整体行距更紧凑 */
+}
+
+.products-table .desc-col .qty-line {
+    display: inline-block;
+    line-height: 1.05;
+    /* 数量行进一步压缩行高 */
+    white-space: nowrap;
+    /* 避免在描述列中换行 */
+}
+
+.products-table .packages-line {
+    font-weight: bold;
+}
+
+/* 总计行与参考图风格对齐 */
+.total-row {
+    background: #f8f9fa;
+    font-weight: bold;
+}
+
+/* 总计行左侧内容保持单行显示 */
+.products-table .summary-inline {
+    white-space: nowrap;
+    display: inline-block;
+}
+
+.products-table .summary-inline .total-text {
+    margin-left: 10px;
+}
+
+/* 商品表格表头文字颜色统一为黑色 */
+.products-table th {
+    color: #000;
+}
+
+/* 左侧商品编辑列表文字颜色统一为黑色 */
+.product-table th,
+.product-table td {
+    color: #000;
+}
+
+/* 总计行 */
+.total-row {
+    background: #f8f9fa;
+    font-weight: bold;
+}
+
+/* 发票底部 */
+.invoice-footer {
+    display: none;
+}
+
+/* 签名图片容器样式 - 重构版本 */
+.signature-container {
+    position: relative;
+    display: inline-block;
+    width: 200px;
+    height: 80px;
+    margin: 0;
+    padding: 0;
+}
+
+.signature-container img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    object-position: center;
+    display: block;
+    opacity: 1;
+    transition: opacity 0.3s ease;
+}
+
+/* 不同单据类型的签名图片定位 */
+.signature-container[data-doc-type="invoice"] {
+    margin-left: auto;
+    width: 257px;
+    height: 100px;
+}
+
+.signature-container[data-doc-type="packing"] {
+    margin-left: auto;
+    width: 257px;
+    height: 100px;
+}
+
+.signature-container[data-doc-type="sales"] {
+    width: 257px;
+    height: 100px;
+}
+
+/* 签名图片加载状态 */
+.signature-container.loading {
+    background: #f5f5f5;
+    border: 1px dashed #ccc;
+}
+
+.signature-container.loading::after {
+    content: "加载中...";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 12px;
+    color: #666;
+}
+
+.signature-container.error {
+    background: #fef2f2;
+    border: 1px dashed #fca5a5;
+}
+
+.signature-container.error::after {
+    content: "签名图片";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 12px;
+    color: #dc2626;
+}
+
+/* 响应式布局 - 打印适配 */
+@media print {
+    .signature-container {
+        width: 180px !important;
+        height: 70px !important;
+        break-inside: avoid;
+    }
+
+    .signature-container[data-doc-type="invoice"],
+    .signature-container[data-doc-type="packing"],
+    .signature-container[data-doc-type="sales"] {
+        width: 257px !important;
+        height: 100px !important;
+    }
+
+    .signature-container img {
+        print-color-adjust: exact;
+        -webkit-print-color-adjust: exact;
+    }
+}
+
+/* 小屏幕适配 */
+@media (max-width: 768px) {
+    .signature-container {
+        width: 160px;
+        height: 64px;
+    }
+
+    .signature-container[data-doc-type="invoice"],
+    .signature-container[data-doc-type="packing"],
+    .signature-container[data-doc-type="sales"] {
+        width: 200px;
+        height: 81px;
+    }
+}
+
+/* 旧样式保留（兼容性） */
+.stamp-container {
+    margin-top: 6px;
+    text-align: center;
+}
+
+.stamp-image {
+    max-width: 160px;
+    max-height: 120px;
+    opacity: 0.95;
+    /* 略微透明可与底色协调 */
+}
+
+.signature-box {
+    text-align: center;
+    width: 200px;
+}
+
+.signature-line {
+    border-bottom: 1px solid #333;
+    margin-bottom: 5px;
+    height: 40px;
+}
+
+/* 旧弹窗样式已删除，所有弹窗统一使用 ModalDialog 模块 */
+
+/* 响应式设计 */
+@media (max-width: 1200px) {
+    .main-content {
+        flex-direction: column;
+    }
+
+    .input-panel {
+        width: 100%;
+        height: 400px;
+    }
+
+    .preview-panel {
+        height: calc(100vh - 480px);
+    }
+
+    .invoice-preview {
+        transform: scale(0.7);
+    }
+}
+
+@media (max-width: 768px) {
+    .header {
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .form-row {
+        flex-direction: column;
+    }
+
+    .invoice-preview {
+        transform: scale(0.5);
+    }
+}
+
+/* 打印样式 */
+@media print {
+    body * {
+        visibility: hidden;
+    }
+
+    .invoice-preview,
+    .invoice-preview * {
+        visibility: visible;
+    }
+
+    .invoice-preview {
+        position: absolute;
+        left: 0;
+        top: 0;
+        transform: none !important;
+        box-shadow: none;
+        margin: 0;
+        padding: 0;
+    }
+}
+
+.product-item.inline-serial .serial-cell {
+    display: flex;
+    align-items: center;
+}
+
+.product-item.inline-serial .serial-badge {
+    position: static;
+    /* 改为在行内显示 */
+}
+
+/* 整个商品列表区域进入紧凑模式时进一步压缩间距 */
+#productList.compact .product-item {
+    margin-bottom: 6px;
+    padding: 8px 42px 8px 8px;
+}
+
+#productList.compact .product-row {
+    gap: 6px;
+    margin-bottom: 6px;
+}

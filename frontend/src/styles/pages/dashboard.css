@@ -1,0 +1,2321 @@
+/**
+ * 仪表盘样式
+ * 参考 Art Design Pro 设计风格
+ * 
+ * ============================================
+ * 统一卡片布局设计系统
+ * ============================================
+ * 
+ * 本文件使用统一的卡片设计变量，方便调整和维护
+ * 所有卡片样式都基于以下设计规则，确保视觉统一和易于维护
+ * 
+ * 【卡片尺寸等级】
+ * - small:   紧凑型卡片（内边距16px，最小高度180px）
+ * - medium:  标准型卡片（内边距20px，最小高度200px）
+ * - large:   大型卡片（内边距24px，最小高度240px+）
+ * 
+ * 【圆角规则】
+ * - 所有卡片统一：12px（--card-radius）
+ * 
+ * 【内边距规则】
+ * - 紧凑型：--card-padding-small (16px)
+ * - 标准型：--card-padding-medium (20px)
+ * - 大型：--card-padding-large (24px)
+ * 
+ * 【间距规则】
+ * - 卡片间距：--card-gap (16px，使用--spacing-lg)
+ * - 区域间距：--card-section-gap (24px，使用--spacing-2xl)
+ * - 容器内边距：--dashboard-container-padding (24px)
+ * 
+ * 【阴影规则】
+ * - 标准阴影：--card-shadow
+ * - 悬停阴影：--card-shadow-hover
+ * - 特殊阴影：--card-shadow-special（欢迎卡片等）
+ * 
+ * 【使用示例】
+ * 1. 创建标准卡片：使用 .dashboard-card 基础类
+ * 2. 应用尺寸等级：添加 .dashboard-card-small/medium/large
+ * 3. 调整间距：修改 --card-gap 和 --card-section-gap 变量
+ * 4. 调整内边距：修改 --card-padding-* 变量
+ * 5. 调整圆角：修改 --card-radius 变量
+ * 
+ * 【响应式调整】
+ * 响应式断点会自动调整变量值，确保在不同屏幕下保持统一
+ * - ≤768px: 内边距和高度适当减小
+ * - ≤480px: 进一步减小内边距和高度
+ * 
+ * 【布局调整指南】
+ * 1. 调整卡片宽度：修改 grid-template-columns
+ * 2. 调整卡片位置：修改 grid-column: span 值
+ * 3. 调整卡片大小：修改对应的 padding 和 min-height 变量
+ * 4. 统一修改间距：修改 --card-gap 和 --card-section-gap
+ */
+
+/* ==================== 卡片设计变量系统 ==================== */
+:root {
+  /* 卡片圆角 - 所有卡片统一使用 */
+  --card-radius: 12px;
+  /* 统一卡片圆角 */
+
+  /* 卡片内边距 - 尺寸等级 */
+  --card-padding-small: 16px;
+  /* 紧凑型卡片 */
+  --card-padding-medium: 20px;
+  /* 标准型卡片 */
+  --card-padding-large: 24px;
+  /* 大型卡片 */
+
+  /* 卡片最小高度 - 尺寸等级（可选，不强制） */
+  --card-min-height-small: 180px;
+  /* 紧凑型卡片 */
+  --card-min-height-medium: 200px;
+  /* 标准型卡片 */
+  --card-min-height-large: 240px;
+  /* 大型卡片 */
+
+  /* 卡片自定义尺寸 - 允许每个卡片独立设置 */
+  --card-custom-height: auto;
+  /* 自定义高度，默认auto */
+  --card-custom-min-height: auto;
+  /* 自定义最小高度，默认auto */
+  --card-custom-max-height: none;
+  /* 自定义最大高度，默认none */
+  --card-custom-padding: var(--card-padding-medium);
+  /* 自定义内边距 */
+
+  /* 卡片间距 */
+  --card-gap: var(--spacing-lg);
+  /* 16px - 卡片之间的间距 */
+  --card-section-gap: var(--spacing-2xl);
+  /* 24px - 区域之间的间距 */
+
+  /* 卡片阴影 */
+  --card-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  --card-shadow-hover: 0 8px 24px rgba(0, 0, 0, 0.12);
+  --card-shadow-special: 0 4px 20px rgba(102, 126, 234, 0.3);
+
+  /* 卡片边框 */
+  --card-border: 1px solid rgba(0, 0, 0, 0.05);
+  --card-border-hover: 1px solid #000000;
+  /* 悬停时显示黑色边框 */
+
+  /* 容器内边距 */
+  --dashboard-container-padding: var(--spacing-2xl);
+  /* 24px */
+
+  /* ==================== 单元格网格系统 ==================== */
+  /* 单元格大小 - 正方形，类似Excel工作表 */
+  --cell-size: 120px;
+  /* 单元格大小（正方形），增大以确保卡片有足够空间 */
+  --cell-gap: var(--card-gap);
+  /* 单元格间距，与卡片间距一致 */
+
+  /* 网格列数和行数 - 可以根据需要调整 */
+  --grid-cols: 12;
+  /* 默认12列 */
+  --grid-rows: auto;
+  /* 行数自动，根据内容决定 */
+}
+
+/* ==================== 基础卡片样式类 ==================== */
+.dashboard-card {
+  background: #ffffff;
+  border-radius: var(--card-radius);
+  padding: var(--card-custom-padding, var(--card-padding-medium));
+  box-shadow: var(--card-shadow);
+  border: var(--card-border);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  /* 使用自定义尺寸变量，如果没有设置则使用默认值 */
+  height: var(--card-custom-height, auto);
+  min-height: var(--card-custom-min-height, var(--card-min-height-medium));
+  max-height: var(--card-custom-max-height, none);
+}
+
+.dashboard-card:hover {
+  box-shadow: var(--card-shadow-hover);
+  border-color: var(--card-border-hover);
+  transform: translateY(-2px);
+}
+
+/* 卡片尺寸变体 */
+.dashboard-card-small {
+  padding: var(--card-padding-small);
+  min-height: var(--card-min-height-small);
+}
+
+.dashboard-card-medium {
+  padding: var(--card-padding-medium);
+  min-height: var(--card-min-height-medium);
+}
+
+.dashboard-card-large {
+  padding: var(--card-padding-large);
+  min-height: var(--card-min-height-large);
+}
+
+/* 特殊卡片（欢迎卡片等） */
+.dashboard-card-special {
+  border-radius: var(--card-radius);
+  box-shadow: var(--card-shadow-special);
+}
+
+/* ==================== 卡片尺寸工具类 ==================== */
+/* 
+ * 使用说明：
+ * 1. 通过CSS变量自定义：在元素上设置 --card-custom-height, --card-custom-min-height 等
+ * 2. 通过工具类快速设置：添加 .card-height-medium, .card-padding-large 等类
+ * 3. 通过特定卡片变量：设置 --destination-card-height, --welcome-card-height 等
+ * 
+ * 示例：
+ * - 设置目的港卡片高度为300px: #destinationDistributionCard { --destination-card-height: 300px; }
+ * - 设置欢迎卡片最小高度为150px: .welcome-card { --welcome-card-min-height: 150px; }
+ * - 使用工具类: <div class="card-height-large card-padding-large">
+ */
+
+/* 快速设置卡片高度的工具类 */
+.card-height-auto {
+  --card-custom-height: auto;
+  --card-custom-min-height: auto;
+}
+
+.card-height-small {
+  --card-custom-height: var(--card-min-height-small);
+  --card-custom-min-height: var(--card-min-height-small);
+}
+
+.card-height-medium {
+  --card-custom-height: var(--card-min-height-medium);
+  --card-custom-min-height: var(--card-min-height-medium);
+}
+
+.card-height-large {
+  --card-custom-height: var(--card-min-height-large);
+  --card-custom-min-height: var(--card-min-height-large);
+}
+
+/* 快速设置卡片最小高度的工具类（不设置固定高度） */
+.card-min-height-none {
+  --card-custom-min-height: auto;
+}
+
+.card-min-height-small {
+  --card-custom-min-height: var(--card-min-height-small);
+}
+
+.card-min-height-medium {
+  --card-custom-min-height: var(--card-min-height-medium);
+}
+
+.card-min-height-large {
+  --card-custom-min-height: var(--card-min-height-large);
+}
+
+/* 快速设置卡片内边距的工具类 */
+.card-padding-small {
+  --card-custom-padding: var(--card-padding-small);
+}
+
+.card-padding-medium {
+  --card-custom-padding: var(--card-padding-medium);
+}
+
+.card-padding-large {
+  --card-custom-padding: var(--card-padding-large);
+}
+
+/* ==================== 卡片尺寸工具类 ==================== */
+/* 
+ * 使用说明：
+ * 1. 通过CSS变量自定义：在元素上设置 --card-custom-height, --card-custom-min-height 等
+ * 2. 通过工具类快速设置：添加 .card-height-medium, .card-padding-large 等类
+ * 3. 通过特定卡片变量：设置 --destination-card-height, --welcome-card-height 等
+ * 
+ * 示例：
+ * - 设置目的港卡片高度为300px: #destinationDistributionCard { --destination-card-height: 300px; }
+ * - 设置欢迎卡片最小高度为150px: .welcome-card { --welcome-card-min-height: 150px; }
+ * - 使用工具类: <div class="card-height-large card-padding-large">
+ */
+
+/* 快速设置卡片高度的工具类 */
+.card-height-auto {
+  --card-custom-height: auto;
+  --card-custom-min-height: auto;
+}
+
+.card-height-small {
+  --card-custom-height: var(--card-min-height-small);
+  --card-custom-min-height: var(--card-min-height-small);
+}
+
+.card-height-medium {
+  --card-custom-height: var(--card-min-height-medium);
+  --card-custom-min-height: var(--card-min-height-medium);
+}
+
+.card-height-large {
+  --card-custom-height: var(--card-min-height-large);
+  --card-custom-min-height: var(--card-min-height-large);
+}
+
+/* 快速设置卡片最小高度的工具类（不设置固定高度） */
+.card-min-height-none {
+  --card-custom-min-height: auto;
+}
+
+.card-min-height-small {
+  --card-custom-min-height: var(--card-min-height-small);
+}
+
+.card-min-height-medium {
+  --card-custom-min-height: var(--card-min-height-medium);
+}
+
+.card-min-height-large {
+  --card-custom-min-height: var(--card-min-height-large);
+}
+
+/* 快速设置卡片内边距的工具类 */
+.card-padding-small {
+  --card-custom-padding: var(--card-padding-small);
+}
+
+.card-padding-medium {
+  --card-custom-padding: var(--card-padding-medium);
+}
+
+.card-padding-large {
+  --card-custom-padding: var(--card-padding-large);
+}
+
+/* 确保首页可以滚动 */
+#view-home.panel .panel-body {
+  overflow-y: auto !important;
+  overflow-x: auto !important;
+  /* 改为auto，允许横向滚动，避免内容被裁剪 */
+  height: 100% !important;
+  max-height: calc(100vh - 60px) !important;
+  background: transparent !important;
+  /* 移除白色背景，使用灰色背景 */
+  padding: 0 !important;
+  /* 移除默认padding，由dashboard-container控制 */
+  /* 确保内容不被裁剪 */
+  min-width: 0;
+  /* 允许收缩 */
+  /* 确保内容可以超出容器，不被裁剪 */
+  overflow: visible !important;
+  /* 允许内容超出，不被裁剪 */
+}
+
+/* 覆盖erp.css中的overflow: hidden设置，确保首页内容不被裁剪 */
+.main:has(#view-home.view-active) #view-container,
+.main.home-active #view-container {
+  overflow: visible !important;
+  /* 允许内容超出，不被裁剪 */
+  min-width: 0;
+  /* 允许收缩 */
+  /* 确保内容可以完全显示 */
+  width: 100%;
+  max-width: none;
+  /* 移除最大宽度限制 */
+}
+
+/* 覆盖erp.css中.main的overflow: hidden设置 */
+.main:has(#view-home.view-active),
+.main.home-active {
+  overflow-x: auto !important;
+  /* 允许横向滚动，避免内容被裁剪 */
+  overflow-y: auto !important;
+  /* 允许纵向滚动 */
+}
+
+/* ==================== 首页卡片布局 - 主流Grid布局方案 ==================== */
+.dashboard-container {
+  padding: var(--dashboard-container-padding);
+  background: #f5f7fa;
+  min-height: calc(100vh - 60px);
+  width: 100%;
+  position: relative;
+  /* 使用CSS Grid布局，所有卡片直接作为子元素 */
+  display: grid;
+  /* 使用响应式列布局：24列，每列1fr */
+  grid-template-columns: repeat(24, 1fr);
+  /* 自动行高：通过JavaScript动态设置，确保行高等于列宽 */
+  /* 初始值，会被JavaScript覆盖为精确的列宽值 */
+  grid-auto-rows: auto;
+  /* 卡片间距 */
+  gap: var(--card-gap);
+  /* 确保内容不被裁剪 */
+  overflow: visible;
+}
+
+/* ==================== 布局编辑模式样式 ==================== */
+.dashboard-container.layout-editing-mode {
+  position: relative;
+}
+
+.dashboard-container.layout-editing-mode::before {
+  content: '布局设置模式：拖动顶部条移动位置，拖动右下角调整大小（24列网格）';
+  position: fixed;
+  top: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(99, 102, 241, 0.95);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 13px;
+  z-index: 10000;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  pointer-events: none;
+}
+
+/* 网格背景样式 */
+.dashboard-container.layout-editing-mode .layout-grid-background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image:
+    linear-gradient(to right, rgba(99, 102, 241, 0.15) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(99, 102, 241, 0.15) 1px, transparent 1px);
+  background-size: calc((100% - var(--dashboard-container-padding, 24px) * 2 - var(--card-gap, 16px) * 23) / 24) calc((100% - var(--dashboard-container-padding, 24px) * 2 - var(--card-gap, 16px) * 23) / 24);
+  background-position: var(--dashboard-container-padding, 24px) var(--dashboard-container-padding, 24px);
+  margin: 0;
+  padding: 0;
+}
+
+/* 确保卡片在网格背景之上 */
+.dashboard-container.layout-editing-mode>*:not(.layout-grid-background) {
+  position: relative;
+  z-index: 1;
+}
+
+.layout-editing-card {
+  transition: all 0.2s ease;
+}
+
+.layout-editing-card:hover {
+  box-shadow: 0 4px 16px rgba(99, 102, 241, 0.3) !important;
+  transform: translateY(-2px);
+}
+
+/* 卡片拖动句柄样式 */
+.card-drag-handle {
+  user-select: none;
+}
+
+.card-drag-handle:hover {
+  background: rgba(99, 102, 241, 0.2) !important;
+}
+
+/* 卡片调整大小句柄样式 */
+.card-resize-handle {
+  user-select: none;
+}
+
+.card-resize-handle:hover {
+  background: rgba(99, 102, 241, 1) !important;
+  transform: scale(1.1);
+}
+
+/* 拖动和调整大小时的样式 */
+.layout-editing-card.dragging {
+  opacity: 0.7;
+  z-index: 1000;
+  transition: none;
+}
+
+.layout-editing-card.resizing {
+  transition: none;
+}
+
+#btnLayoutSettings.editing-mode {
+  background: #6366f1;
+  color: white;
+}
+
+#btnLayoutSettings.editing-mode:hover {
+  background: #4f46e5;
+}
+
+/* ==================== 通用卡片悬停效果 ==================== */
+/* 为所有卡片添加统一的悬停黑色边框效果 */
+/* 这个规则会应用到所有有 border 属性的卡片元素 */
+.dashboard-container>*[style*="border"],
+.dashboard-container>*[class*="card"],
+.dashboard-container>*[id*="Card"],
+.dashboard-container>*[id*="Chart"] {
+  transition: border-color 0.3s ease;
+}
+
+.dashboard-container>*[style*="border"]:hover,
+.dashboard-container>*[class*="card"]:hover,
+.dashboard-container>*[id*="Card"]:hover,
+.dashboard-container>*[id*="Chart"]:hover {
+  border-color: var(--card-border-hover) !important;
+  /* 黑色边框 */
+}
+
+/* ==================== 首页卡片布局规划 ==================== */
+/* 
+ * 布局说明（12列Grid布局）：
+ * 
+ * 第1行: [欢迎6列] [目的港2列] [产品2列] [箱型2列]
+ * 第2行: [发货2列] [空2列] [收款2列] [状态2列] [空4列]
+ * 第3行: [统计2列] [统计2列] [统计2列] [统计2列] [统计2列] [空2列]
+ * 第4行: [订单趋势6列] [客户排行6列]
+ * 第5行: [月度对比6列] [空6列]
+ * 第6行: [快速操作6列] [最近记录6列]
+ */
+
+/* 待办提醒卡片 - 默认布局：第4行，第1-8列，3行高 */
+#todoReminderCard {
+  background: #ffffff;
+  border-radius: var(--card-radius);
+  padding: var(--card-padding-medium);
+  box-shadow: var(--card-shadow);
+  border: var(--card-border);
+  transition: all 0.3s ease;
+  min-height: 150px;
+  /* 默认布局（基于 CARD_CONFIGS），JavaScript 会覆盖 */
+  grid-column: 1 / span 8;
+  grid-row: 4 / span 3;
+}
+
+/* 欢迎卡片 - 默认布局：第1行，第1-8列，3行高 */
+.welcome-card {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: var(--card-radius);
+  padding: var(--card-padding-large);
+  box-shadow: var(--card-shadow-special);
+  position: relative;
+  overflow: hidden;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 150px;
+  /* 恢复原来的高度 */
+  border: var(--card-border);
+  transition: all 0.3s ease;
+  /* Grid布局：默认位置（基于 CARD_CONFIGS），JavaScript 会覆盖 */
+  grid-column: 1 / span 8;
+  grid-row: 1 / span 3;
+  grid-row: 1;
+}
+
+/* 欢迎卡片悬停效果 - 黑色边框 */
+.welcome-card:hover {
+  border-color: var(--card-border-hover);
+}
+
+/* 欢迎卡片的装饰元素可以绝对定位，但相对于卡片本身 */
+.welcome-card::before {
+  position: absolute;
+  /* 装饰元素可以绝对定位 */
+  /* 但需要确保父元素有position: relative */
+}
+
+/* AI服务卡片 - 标准卡片，支持自定义尺寸 */
+.ai-service-card {
+  background: #ffffff;
+  border-radius: var(--card-radius);
+  padding: var(--card-custom-padding, var(--card-padding-medium));
+  box-shadow: var(--card-shadow);
+  border: var(--card-border);
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  /* 使用自定义尺寸变量，允许自由设置 */
+  height: var(--card-custom-height, auto);
+  min-height: var(--card-custom-min-height, var(--card-min-height-medium));
+  max-height: var(--card-custom-max-height, none);
+}
+
+/* 在顶部容器中，AI服务卡片与目的港卡片使用完全相同的高度计算 */
+.top-cards-container #aiServiceCard.ai-service-card {
+  /* 覆盖基础类的设置，直接使用目的港卡片的高度变量 */
+  --card-custom-height: var(--destination-card-height, auto);
+  --card-custom-min-height: var(--destination-card-min-height, var(--card-min-height-medium));
+  --card-custom-max-height: var(--destination-card-max-height, none);
+  --card-custom-padding: var(--destination-card-padding, var(--card-padding-medium));
+}
+
+/* AI服务卡片自定义尺寸 - 与目的港城市分布卡片高度一致 */
+.top-cards-container #aiServiceCard {
+  /* 直接使用目的港卡片的高度设置，确保完全一致 */
+  --card-custom-height: var(--destination-card-height, auto);
+  --card-custom-min-height: var(--destination-card-min-height, var(--card-min-height-medium));
+  --card-custom-max-height: var(--destination-card-max-height, none);
+  --card-custom-padding: var(--destination-card-padding, var(--card-padding-medium));
+  /* 强制应用，确保与目的港卡片完全一致 */
+  height: var(--card-custom-height) !important;
+  min-height: var(--card-custom-min-height) !important;
+  max-height: var(--card-custom-max-height) !important;
+  padding: var(--card-custom-padding) !important;
+  box-sizing: border-box !important;
+  /* 确保使用与目的港卡片相同的计算方式 */
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+.ai-service-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  flex-shrink: 0;
+  /* 防止头部被压缩 */
+}
+
+.ai-service-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 18px;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.ai-service-icon {
+  font-size: 20px;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+}
+
+.ai-service-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 0;
+  /* 移除最小高度限制，让内容区域可以收缩 */
+  overflow-y: auto;
+  /* 如果内容过多，允许滚动 */
+}
+
+.welcome-card::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.welcome-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: relative;
+  z-index: 1;
+}
+
+.welcome-left {
+  flex: 1;
+}
+
+.welcome-greeting {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.welcome-text {
+  font-size: 24px;
+  font-weight: 600;
+  color: #ffffff;
+  line-height: 1.2;
+}
+
+.welcome-username {
+  font-size: 24px;
+  font-weight: 700;
+  color: #ffffff;
+  line-height: 1.2;
+}
+
+.welcome-info {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.welcome-weather {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.weather-icon {
+  font-size: 20px;
+  line-height: 1;
+}
+
+.weather-text {
+  font-size: 16px;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.welcome-blessing {
+  font-size: 16px;
+  color: rgba(255, 255, 255, 0.85);
+  font-weight: 400;
+}
+
+.welcome-right {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.welcome-avatar-wrapper {
+  position: relative;
+}
+
+.welcome-avatar,
+.welcome-avatar-default {
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  border: 5px solid rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 56px;
+  text-transform: uppercase;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.welcome-avatar {
+  object-fit: cover;
+}
+
+.welcome-avatar-wrapper:hover .welcome-avatar,
+.welcome-avatar-wrapper:hover .welcome-avatar-default {
+  transform: scale(1.05);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .welcome-card {
+    padding: 24px;
+  }
+
+  .welcome-content {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 20px;
+  }
+
+  .welcome-right {
+    align-self: flex-end;
+  }
+
+  .welcome-text,
+  .welcome-username {
+    font-size: 24px;
+  }
+
+  .welcome-avatar,
+  .welcome-avatar-default {
+    width: 60px;
+    height: 60px;
+    font-size: 24px;
+  }
+}
+
+/* ==================== 提醒卡片区域 ==================== */
+/* 移除中间容器，卡片直接作为dashboard-container的子元素 */
+.reminders-grid {
+  display: none;
+  /* 不再需要，卡片直接作为dashboard-container的子元素 */
+}
+
+.reminder-card {
+  background: #ffffff;
+  border-radius: var(--card-radius);
+  padding: var(--card-padding-medium);
+  box-shadow: var(--card-shadow);
+  border: var(--card-border);
+  /* 关键：使用relative定位以支持内部绝对定位的设置按钮，但卡片本身在网格平面上 */
+  position: relative;
+  /* 为了支持.reminder-settings-btn的绝对定位 */
+  min-width: 0;
+  /* 允许内容收缩 */
+  display: flex;
+  flex-direction: column;
+  min-height: 300px;
+  /* 提醒卡片需要更多高度显示列表 */
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: auto;
+  /* 移除z-index，所有卡片在同一平面上 */
+}
+
+/* 发货提醒卡片 - 第2行，第1-2列 */
+/* 发货提醒卡片 - 默认布局：第6行，第1-6列，6行高 */
+#shipmentReminderCard {
+  background: #ffffff;
+  border-radius: var(--card-radius);
+  padding: var(--card-padding-medium);
+  box-shadow: var(--card-shadow);
+  border: var(--card-border);
+  transition: all 0.3s ease;
+  min-height: 400px;
+  /* 默认布局（基于 CARD_CONFIGS），JavaScript 会覆盖 */
+  grid-column: 1 / span 6;
+  grid-row: 6 / span 6;
+}
+
+/* 收款提醒卡片 - 默认布局：第6行，第9-14列，6行高 */
+#paymentReminderCard {
+  background: #ffffff;
+  border-radius: var(--card-radius);
+  padding: var(--card-padding-medium);
+  box-shadow: var(--card-shadow);
+  border: var(--card-border);
+  transition: all 0.3s ease;
+  min-height: 400px;
+  /* 默认布局（基于 CARD_CONFIGS），JavaScript 会覆盖 */
+  grid-column: 9 / span 6;
+  grid-row: 6 / span 6;
+}
+
+/* 提醒卡片悬停效果 - 黑色边框 */
+.reminder-card:hover {
+  box-shadow: var(--card-shadow-hover);
+  border-color: var(--card-border-hover);
+}
+
+/* 顶部容器中的 reminder-card 允许独立设置尺寸，覆盖默认的 min-height: 300px */
+.top-cards-container .reminder-card {
+  /* 不设置固定高度，让ID选择器控制 */
+  min-height: auto;
+  /* 移除默认的 300px，让每个卡片独立设置 */
+}
+
+/* 目的港分布和产品排名卡片 - 使用单元格网格系统 */
+.top-cards-container #aiSecretaryCard,
+.top-cards-container #destinationDistributionCard,
+.top-cards-container #productRankingCard {
+  margin-bottom: 0 !important;
+  border-radius: var(--card-radius) !important;
+  box-sizing: border-box !important;
+  padding: var(--destination-card-padding, var(--card-padding-medium)) !important;
+  /* 单元格网格系统：每个卡片独立设置大小和位置 */
+}
+
+/* AI秘书卡片 - 默认布局：第1行，第9-12列，5行高 */
+#aiSecretaryCard {
+  background: #ffffff;
+  border-radius: var(--card-radius);
+  padding: var(--card-padding-medium);
+  box-shadow: var(--card-shadow);
+  border: var(--card-border);
+  transition: all 0.3s ease;
+  min-height: 200px;
+  /* 默认布局（基于 CARD_CONFIGS），JavaScript 会覆盖 */
+  grid-column: 9 / span 4;
+  grid-row: 1 / span 5;
+}
+
+/* 目的港城市分布卡片 - 默认布局：第1行，第13-16列，5行高 */
+#destinationDistributionCard {
+  background: #ffffff;
+  border-radius: var(--card-radius);
+  padding: var(--card-padding-medium);
+  box-shadow: var(--card-shadow);
+  border: var(--card-border);
+  transition: all 0.3s ease;
+  min-height: 200px;
+  /* 默认布局（基于 CARD_CONFIGS），JavaScript 会覆盖 */
+  grid-column: 13 / span 4;
+  grid-row: 1 / span 5;
+}
+
+/* 产品数量排名卡片 - 默认布局：第1行，第17-20列，5行高 */
+#productRankingCard {
+  background: #ffffff;
+  border-radius: var(--card-radius);
+  padding: var(--card-padding-medium);
+  box-shadow: var(--card-shadow);
+  border: var(--card-border);
+  transition: all 0.3s ease;
+  min-height: 200px;
+  /* 默认布局（基于 CARD_CONFIGS），JavaScript 会覆盖 */
+  grid-column: 17 / span 4;
+  grid-row: 1 / span 5;
+}
+
+/* 箱型统计卡片 - 默认布局：第1行，第21-24列，5行高 */
+#boxTypeStatsCard {
+  background: #ffffff;
+  border-radius: var(--card-radius);
+  padding: var(--card-padding-medium);
+  box-shadow: var(--card-shadow);
+  border: var(--card-border);
+  transition: all 0.3s ease;
+  min-height: 200px;
+  /* 默认布局（基于 CARD_CONFIGS），JavaScript 会覆盖 */
+  grid-column: 21 / span 4;
+  grid-row: 1 / span 5;
+}
+
+/* 订单状态分布图表 - 默认布局：第15行，第7-12列，6行高 */
+#statusDistributionChart {
+  background: #ffffff;
+  border-radius: var(--card-radius);
+  padding: var(--card-padding-medium);
+  box-shadow: var(--card-shadow);
+  border: var(--card-border);
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  min-height: 200px;
+  /* 默认布局（基于 CARD_CONFIGS），JavaScript 会覆盖 */
+  grid-column: 13 / span 6;
+  grid-row: 18 / span 6;
+}
+
+/* 订单状态分布图表悬停效果 - 黑色边框 */
+#statusDistributionChart:hover {
+  border-color: var(--card-border-hover);
+}
+
+/* 订单状态分布图表悬停效果 - 黑色边框 */
+#statusDistributionChart:hover {
+  border-color: var(--card-border-hover);
+}
+
+.top-cards-container #statusDistributionChart .chart-title {
+  font-size: 16px;
+  margin-bottom: 12px;
+  font-weight: 600;
+}
+
+.top-cards-container #statusDistributionChart .chart-container {
+  flex: 1;
+  min-height: 150px;
+  height: auto;
+}
+
+.reminder-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid #f3f4f6;
+  position: relative;
+  z-index: 1;
+  gap: 12px;
+}
+
+.reminder-header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  justify-content: flex-end;
+  min-width: 0;
+  /* 允许收缩 */
+}
+
+/* 滚动消息条 */
+.reminder-scroll-message {
+  display: none;
+  /* 默认隐藏，通过JS控制显示 */
+  padding: 6px 12px;
+  background: transparent;
+  /* 移除背景色 */
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  overflow: hidden;
+  position: relative;
+  min-height: 28px;
+  line-height: 1.5;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+  /* 允许收缩 */
+  max-width: 100%;
+  /* 限制最大宽度 */
+}
+
+.reminder-scroll-message[style*="display: flex"],
+.reminder-scroll-message[style*="display:block"] {
+  display: flex !important;
+}
+
+.reminder-scroll-message-red {
+  color: #dc2626;
+  background: transparent;
+  /* 移除背景色 */
+}
+
+.reminder-scroll-message-blue {
+  color: #2563eb;
+  background: transparent;
+  /* 移除背景色 */
+}
+
+.reminder-scroll-message-black {
+  color: #1f2937;
+  background: transparent;
+  /* 移除背景色 */
+}
+
+/* 滚动动画 */
+@keyframes scroll-message {
+  0% {
+    transform: translateX(100%);
+  }
+
+  100% {
+    transform: translateX(-100%);
+  }
+}
+
+.reminder-scroll-text {
+  display: inline-block;
+  white-space: nowrap;
+  padding-right: 50px;
+  /* 确保文本完全滚动出视野 */
+}
+
+/* 鼠标悬停时暂停滚动动画 */
+.reminder-scroll-message:hover .reminder-scroll-text {
+  animation-play-state: paused !important;
+  cursor: default;
+}
+
+.reminder-card-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.reminder-icon {
+  font-size: 20px;
+}
+
+.reminder-settings-btn {
+  background: none;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  color: #6b7280;
+  position: relative;
+  z-index: 10;
+  pointer-events: auto;
+  user-select: none;
+  -webkit-user-select: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  min-height: 32px;
+}
+
+.reminder-settings-btn:hover {
+  background: #f3f4f6;
+  color: #3b82f6;
+  transform: scale(1.1);
+}
+
+.reminder-settings-btn:active {
+  transform: scale(0.95);
+}
+
+.reminder-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 400px;
+  overflow-y: auto;
+  padding-right: 4px;
+  flex: 1;
+  /* 允许列表区域自动填充剩余空间 */
+}
+
+.reminder-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.reminder-list::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.reminder-list::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+.reminder-list::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+.reminder-item {
+  padding: 14px 16px;
+  background: #ffffff;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid #e5e7eb;
+  margin-bottom: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.reminder-item:hover {
+  background: #f9fafb;
+  border-color: #3b82f6;
+  transform: translateX(4px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+}
+
+.reminder-item-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 13px;
+  line-height: 1.6;
+  width: 100%;
+  flex-wrap: wrap;
+  /* 允许内容换行以适应更小的宽度 */
+}
+
+/* 左侧：合同号（不显示客户名） */
+.reminder-item-left {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+}
+
+.reminder-item-contract-no {
+  font-weight: 600;
+  color: #1f2937;
+  font-size: 14px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 中间：日期/金额区域 */
+.reminder-item-date-section,
+.reminder-item-amount-section {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+  padding: 4px 10px;
+  background: #f3f4f6;
+  border-radius: 6px;
+  white-space: nowrap;
+  font-size: 12px;
+}
+
+.reminder-item-icon {
+  font-size: 14px;
+  line-height: 1;
+}
+
+.reminder-item-date {
+  color: #4b5563;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.reminder-item-amount {
+  color: #059669;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* 右侧：时间标签 */
+.reminder-item-time-section {
+  flex-shrink: 0;
+  padding: 4px 10px;
+  border-radius: 16px;
+  font-size: 11px;
+  font-weight: 500;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+.reminder-item-time-urgent {
+  background: #fee2e2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+}
+
+.reminder-item-time-warning {
+  background: #fef3c7;
+  color: #d97706;
+  border: 1px solid #fde68a;
+}
+
+.reminder-item-time-normal {
+  background: #e0f2fe;
+  color: #0284c7;
+  border: 1px solid #bae6fd;
+}
+
+.reminder-item-time-disabled {
+  background: #f3f4f6;
+  color: #9ca3af;
+  border: 1px solid #e5e7eb;
+}
+
+.reminder-empty {
+  text-align: center;
+  padding: 40px 20px;
+  color: #9ca3af;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+/* 加载和错误状态 */
+.dashboard-loading,
+.dashboard-error {
+  min-height: 300px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+}
+
+.dashboard-error {
+  color: #dc2626;
+}
+
+.dashboard-error button {
+  margin-top: 20px;
+  padding: 10px 20px;
+  background: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: background 0.2s ease;
+}
+
+.dashboard-error button:hover {
+  background: #2563eb;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ==================== 统计卡片网格 ==================== */
+/* 统计卡片区域 - 由JS动态生成，直接作为dashboard-container的子元素 */
+.stats-grid {
+  display: none;
+  /* 不再需要，卡片直接作为dashboard-container的子元素 */
+}
+
+/* 统计卡片 - 第3行，每个占据2列 */
+/* 重要：只应用于首页dashboard-container内的统计卡片，不影响其他页面的统计卡片 */
+.dashboard-container .stat-card {
+  background: #ffffff;
+  border-radius: var(--card-radius);
+  padding: var(--card-padding-medium);
+  box-shadow: var(--card-shadow);
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  position: relative;
+  overflow: visible;
+  border: var(--card-border);
+  min-width: 0;
+  min-height: 80px;
+  /* Grid布局：第3行，每个占据2列，通过JS动态设置位置 */
+  grid-column: span 2;
+  grid-row: 3;
+}
+
+/* 统计卡片悬停效果 - 黑色边框 */
+.dashboard-container .stat-card:hover {
+  border-color: var(--card-border-hover);
+}
+
+/* 为每个统计卡片设置不同的列位置，避免重叠 */
+.dashboard-container .stat-card:nth-child(1) {
+  grid-column: 1 / span 2;
+}
+
+.dashboard-container .stat-card:nth-child(2) {
+  grid-column: 3 / span 2;
+}
+
+.dashboard-container .stat-card:nth-child(3) {
+  grid-column: 5 / span 2;
+}
+
+.dashboard-container .stat-card:nth-child(4) {
+  grid-column: 7 / span 2;
+}
+
+.dashboard-container .stat-card:nth-child(5) {
+  grid-column: 9 / span 2;
+}
+
+.dashboard-container .stat-card:nth-child(6) {
+  grid-column: 1 / span 2;
+  grid-row: 4;
+}
+
+/* 有金额后缀的卡片需要更宽，确保金额完整显示 */
+.dashboard-container .stat-card[data-has-suffix="true"] {
+  --stat-card-cols: 2;
+  /* 在网格中占两列 */
+  grid-column: var(--stat-card-col-start, auto) / span var(--stat-card-cols);
+}
+
+.dashboard-container .stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--color-start, #667eea), var(--color-end, #764ba2));
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.3s ease;
+}
+
+.dashboard-container .stat-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--card-shadow-hover);
+  border-color: var(--card-border-hover);
+  /* 黑色边框 */
+}
+
+.dashboard-container .stat-card:hover::before {
+  transform: scaleX(1);
+}
+
+/* 图标容器 - 紧凑圆形背景 */
+.dashboard-container .stat-card-icon-wrapper {
+  width: 48px;
+  height: 48px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: linear-gradient(135deg, var(--color-start, #667eea), var(--color-end, #764ba2));
+  box-shadow: 0 3px 10px rgba(102, 126, 234, 0.25);
+  transition: all 0.3s ease;
+}
+
+.dashboard-container .stat-card:hover .stat-card-icon-wrapper {
+  transform: scale(1.08);
+  box-shadow: 0 5px 14px rgba(102, 126, 234, 0.35);
+}
+
+.dashboard-container .stat-card-icon {
+  font-size: 24px;
+  line-height: 1;
+  filter: brightness(0) invert(1);
+}
+
+/* 内容区域 - 紧凑布局 */
+.dashboard-container .stat-card-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  justify-content: center;
+  overflow: visible;
+}
+
+.dashboard-container .stat-card-label {
+  font-size: 13px;
+  color: #6b7280;
+  font-weight: 500;
+  line-height: 1.4;
+  margin: 0;
+  white-space: nowrap;
+}
+
+.dashboard-container .stat-card-value-wrapper {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  flex-wrap: nowrap;
+  line-height: 1.2;
+  width: 100%;
+}
+
+.dashboard-container .stat-card-value {
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.2;
+  color: #1f2937;
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  white-space: nowrap;
+  letter-spacing: -0.3px;
+  flex-shrink: 1;
+  min-width: 0;
+}
+
+.dashboard-container .stat-card-suffix {
+  font-size: 12px;
+  font-weight: 600;
+  color: #9ca3af;
+  margin-left: 3px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  line-height: 1.2;
+  align-self: baseline;
+}
+
+/* 卡片头部（已废弃，保留兼容） */
+.dashboard-container .stat-card-header {
+  display: none;
+}
+
+/* ==================== 图表网格 ==================== */
+/* 图表区域 - 卡片直接作为dashboard-container的子元素 */
+.charts-grid {
+  display: none;
+  /* 不再需要，卡片直接作为dashboard-container的子元素 */
+}
+
+/* 图表卡片 - 大型卡片 */
+.chart-card {
+  background: #ffffff;
+  border-radius: var(--card-radius);
+  padding: var(--card-padding-large);
+  box-shadow: var(--card-shadow);
+  min-height: 360px;
+  border: var(--card-border);
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+/* 订单趋势图表 - 默认布局：第12行，第1-12列，2行高 */
+#orderTrendChart {
+  /* 默认布局（基于 CARD_CONFIGS），JavaScript 会覆盖 */
+  grid-column: 1 / span 12;
+  grid-row: 12 / span 2;
+}
+
+/* 客户交易排行图表 - 默认布局：第12行，第13-24列，2行高 */
+#customerRankingChart {
+  /* 默认布局（基于 CARD_CONFIGS），JavaScript 会覆盖 */
+  grid-column: 13 / span 12;
+  grid-row: 12 / span 2;
+}
+
+/* 月度对比图表 - 默认布局：第16行，第1-12列，2行高 */
+#monthlyComparisonChart {
+  /* 默认布局（基于 CARD_CONFIGS），JavaScript 会覆盖 */
+  grid-column: 1 / span 12;
+  grid-row: 16 / span 2;
+}
+
+/* 年度对比图表 - 默认布局：第24行，第1-12列，6行高 */
+#yearlyComparisonChart {
+  /* 默认布局（基于 CARD_CONFIGS），JavaScript 会覆盖 */
+  grid-column: 1 / span 12;
+  grid-row: 24 / span 6;
+}
+
+/* 图表卡片悬停效果 - 黑色边框 */
+.chart-card:hover {
+  box-shadow: var(--card-shadow-hover);
+  border-color: var(--card-border-hover);
+  /* 黑色边框 */
+}
+
+.chart-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0 0 20px 0;
+  padding-bottom: 16px;
+  border-bottom: 2px solid #f3f4f6;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ==================== 每日话题卡片 ==================== */
+.topic-card {
+  background: #ffffff;
+  border-radius: var(--card-radius);
+  padding: var(--card-padding-medium);
+  box-shadow: var(--card-shadow);
+  border: var(--card-border);
+  transition: all 0.3s ease;
+  position: relative;
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  min-height: auto;
+  height: 100%;
+  overflow: hidden;
+}
+
+.topic-card:hover {
+  box-shadow: var(--card-shadow-hover);
+  border-color: var(--card-border-hover);
+}
+
+.topic-card-header {
+  flex: 0 0 auto;
+  width: auto;
+  min-width: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding-right: 24px;
+  border-right: 2px solid #f3f4f6;
+  overflow: visible;
+}
+
+.topic-card-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1f2937;
+  writing-mode: horizontal-tb;
+  text-orientation: unset;
+  line-height: 1.5;
+  letter-spacing: normal;
+  white-space: nowrap;
+  height: auto;
+  display: block;
+}
+
+.topic-card-content {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-left: 24px;
+  min-height: 100%;
+}
+
+.topic-card-placeholder {
+  color: #9ca3af;
+  font-size: 14px;
+  text-align: center;
+  padding: 20px;
+}
+
+/* 响应式：小屏幕时改为垂直布局 */
+@media (max-width: 768px) {
+  .topic-card {
+    flex-direction: column;
+    min-height: auto;
+  }
+
+  .topic-card-header {
+    width: 100%;
+    padding-right: 0;
+    padding-bottom: 16px;
+    border-right: none;
+    border-bottom: 2px solid #f3f4f6;
+  }
+
+  .topic-card-title {
+    writing-mode: horizontal-tb;
+    text-orientation: unset;
+    letter-spacing: normal;
+    height: auto;
+    display: block;
+  }
+
+  .topic-card-content {
+    padding-left: 0;
+    padding-top: 16px;
+  }
+}
+
+.chart-title::before {
+  content: '';
+  width: 4px;
+  height: 18px;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  border-radius: 2px;
+}
+
+.chart-container {
+  position: relative;
+  height: 280px;
+  width: 100%;
+}
+
+.chart-container canvas {
+  max-height: 100%;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* ==================== 操作网格 ==================== */
+/* 快速操作区域 - 卡片直接作为dashboard-container的子元素 */
+.actions-grid {
+  display: none;
+  /* 不再需要，卡片直接作为dashboard-container的子元素 */
+}
+
+/* 快速操作卡片 - 默认布局：第18行，第1-6列，2行高 */
+.quick-actions-card {
+  background: #ffffff;
+  border-radius: var(--card-radius);
+  padding: var(--card-padding-large);
+  box-shadow: var(--card-shadow);
+  border: var(--card-border);
+  transition: all 0.3s ease;
+  min-height: 300px;
+  /* 默认布局（基于 CARD_CONFIGS），JavaScript 会覆盖 */
+  grid-column: 1 / span 6;
+  grid-row: 18 / span 2;
+}
+
+/* 最近操作记录卡片 - 默认布局：第20行，第15-20列，2行高 */
+.recent-activities-card {
+  background: #ffffff;
+  border-radius: var(--card-radius);
+  padding: var(--card-padding-large);
+  box-shadow: var(--card-shadow);
+  border: var(--card-border);
+  transition: all 0.3s ease;
+  min-height: 300px;
+  /* 默认布局（基于 CARD_CONFIGS），JavaScript 会覆盖 */
+  grid-column: 15 / span 6;
+  grid-row: 20 / span 2;
+}
+
+/* 快速操作和最近操作记录卡片悬停效果 - 黑色边框 */
+.quick-actions-card:hover,
+.recent-activities-card:hover {
+  box-shadow: var(--card-shadow-hover);
+  border-color: var(--card-border-hover);
+  /* 黑色边框 */
+}
+
+.card-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0 0 20px 0;
+  padding-bottom: 16px;
+  border-bottom: 2px solid #f3f4f6;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.card-title::before {
+  content: '';
+  width: 4px;
+  height: 18px;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  border-radius: 2px;
+}
+
+/* 快速操作列表 - 优化布局 */
+.quick-actions-list {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+
+.quick-action-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background: #ffffff;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  text-decoration: none;
+  color: #1f2937;
+  position: relative;
+  overflow: hidden;
+  min-height: 100px;
+}
+
+.quick-action-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(102, 126, 234, 0.08), transparent);
+  transition: left 0.5s ease;
+}
+
+.quick-action-btn:hover::before {
+  left: 100%;
+}
+
+.quick-action-btn:hover {
+  border-color: var(--action-color, #667eea);
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.05), #ffffff);
+  transform: translateY(-3px);
+  box-shadow: 0 6px 16px rgba(102, 126, 234, 0.12);
+}
+
+.quick-action-icon {
+  font-size: 28px;
+  margin-bottom: 10px;
+  transition: transform 0.3s ease;
+}
+
+.quick-action-btn:hover .quick-action-icon {
+  transform: scale(1.15);
+}
+
+.quick-action-label {
+  font-size: 13px;
+  font-weight: 500;
+  text-align: center;
+  line-height: 1.4;
+}
+
+/* 最近操作记录 - 优化样式 */
+.recent-activities-content {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-height: 500px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.recent-activities-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.recent-activities-content::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.recent-activities-content::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+.recent-activities-content::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+.recent-activity-section {
+  margin-bottom: 0;
+}
+
+.recent-activity-section-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #475569;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.recent-activity-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.recent-activity-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px;
+  background: #f8fafc;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+}
+
+.recent-activity-item:hover {
+  background: #f1f5f9;
+  border-color: #e5e7eb;
+  transform: translateX(2px);
+}
+
+.recent-activity-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.recent-activity-main {
+  font-size: 14px;
+  font-weight: 500;
+  color: #1f2937;
+  line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.recent-activity-sub {
+  font-size: 12px;
+  color: #6b7280;
+  line-height: 1.3;
+}
+
+.recent-activity-time {
+  font-size: 11px;
+  color: #9ca3af;
+  white-space: nowrap;
+  margin-left: 12px;
+  flex-shrink: 0;
+}
+
+.recent-activity-empty {
+  text-align: center;
+  padding: 40px 20px;
+  color: #9ca3af;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+/* 页面标题优化 */
+.panel-header {
+  margin-bottom: 24px;
+}
+
+.panel-title {
+  font-size: 24px;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+/* 刷新按钮优化 */
+.refresh-btn {
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  color: #6b7280;
+  transition: all 0.3s ease;
+}
+
+.refresh-btn:hover {
+  background: #f9fafb;
+  border-color: #667eea;
+  color: #667eea;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(102, 126, 234, 0.1);
+}
+
+/* ==================== 响应式布局 ==================== */
+/* 响应式变量调整 */
+@media (max-width: 768px) {
+  :root {
+    --card-padding-small: 14px;
+    --card-padding-medium: 18px;
+    --card-padding-large: 20px;
+    --card-min-height-small: 160px;
+    --card-min-height-medium: 180px;
+    --card-min-height-large: 220px;
+    --dashboard-container-padding: var(--spacing-lg);
+  }
+}
+
+@media (max-width: 480px) {
+  :root {
+    --card-padding-small: 12px;
+    --card-padding-medium: 16px;
+    --card-padding-large: 18px;
+    --card-min-height-small: 140px;
+    --card-min-height-medium: 160px;
+    --card-min-height-large: 200px;
+    --dashboard-container-padding: var(--spacing-md);
+  }
+}
+
+/* 大屏幕布局调整 - 单元格网格系统响应式 */
+@media (max-width: 1600px) {
+  .top-cards-container {
+    /* 减少列数，单元格大小稍微增大 */
+    --grid-cols: 10;
+    --cell-size: 110px;
+    /* 稍微增大单元格，确保卡片有足够空间 */
+  }
+}
+
+/* 中等屏幕布局调整 - 单元格网格系统响应式 */
+@media (max-width: 1200px) {
+  .top-cards-container {
+    /* 减少列数，单元格大小可以适当缩小 */
+    --grid-cols: 8;
+    --cell-size: 100px;
+    /* 保持较大的单元格，确保卡片不被压缩 */
+  }
+}
+
+/* 平板布局调整 - 单元格网格系统响应式 */
+@media (max-width: 992px) {
+  .top-cards-container {
+    /* 进一步减少列数 */
+    --grid-cols: 6;
+    --cell-size: 80px;
+    /* 进一步缩小单元格 */
+  }
+}
+
+/* 移动端布局调整 */
+@media (max-width: 768px) {
+  .dashboard-container {
+    padding: var(--dashboard-container-padding);
+  }
+
+  .top-cards-container {
+    /* 移动端使用更少的列数和更小的单元格 */
+    --grid-cols: 4;
+    --cell-size: 70px;
+    /* 移动端单元格更小 */
+  }
+
+  .reminders-grid {
+    grid-template-columns: 1fr;
+    /* 移动端单列 */
+    gap: var(--card-gap);
+  }
+
+  .reminder-card {
+    min-height: 280px;
+    /* 提醒卡片需要更多高度显示列表 */
+  }
+
+  .reminder-list {
+    max-height: 250px;
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr;
+    /* 移动端单列 */
+    gap: var(--card-gap);
+  }
+
+  .dashboard-container .stat-card[data-has-suffix="true"] {
+    grid-column: span 1;
+  }
+
+  .charts-grid {
+    grid-template-columns: 1fr;
+    gap: var(--card-gap);
+  }
+
+  .actions-grid {
+    grid-template-columns: 1fr;
+    gap: var(--card-gap);
+  }
+
+  .quick-actions-list {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .recent-activities-content {
+    max-height: 400px;
+  }
+
+  .dashboard-container .dashboard-container .stat-card {
+    padding: var(--card-padding-medium);
+  }
+
+  .chart-card {
+    min-height: 300px;
+    padding: var(--card-padding-medium);
+  }
+}
+
+/* 超小屏幕布局调整 */
+@media (max-width: 480px) {
+  .dashboard-container {
+    padding: var(--dashboard-container-padding);
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr;
+    gap: var(--card-gap);
+  }
+
+  .dashboard-container .stat-card {
+    padding: var(--card-padding-medium);
+    min-width: auto;
+  }
+
+  .dashboard-container .stat-card[data-has-suffix="true"] {
+    min-width: auto;
+  }
+
+  .dashboard-container .stat-card-icon-wrapper {
+    width: 44px;
+    height: 44px;
+  }
+
+  .dashboard-container .stat-card-icon {
+    font-size: 20px;
+  }
+
+  .dashboard-container .stat-card-value {
+    font-size: 22px;
+  }
+
+  .dashboard-container .stat-card-label {
+    font-size: 12px;
+  }
+
+  .chart-card {
+    padding: var(--card-padding-medium);
+  }
+
+  .chart-container {
+    height: 240px;
+  }
+
+  .quick-actions-list {
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--spacing-sm);
+  }
+
+  .quick-action-btn {
+    padding: var(--spacing-lg) var(--spacing-sm);
+    min-height: 90px;
+  }
+
+  .quick-action-icon {
+    font-size: 24px;
+  }
+
+  .quick-action-label {
+    font-size: 12px;
+  }
+}
+
+/* 目的港分布和产品排名卡片样式 */
+.stat-card-chart {
+  min-height: var(--card-min-height-medium);
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+  /* 隐藏横向滚动条 */
+  border-radius: var(--card-radius);
+  padding: var(--card-padding-medium);
+}
+
+/* 在顶部容器中的stat-card-chart使用最小高度，与订单状态分布卡片保持一致 */
+/* 顶部容器中的 stat-card-chart 类 - 允许独立设置，不强制统一高度 */
+/* 移除固定高度设置，让ID选择器控制每个卡片的尺寸 */
+.top-cards-container .stat-card-chart {
+  min-height: auto;
+  /* 移除默认设置，让每个卡片独立控制 */
+}
+
+.stat-card-chart-content {
+  flex: 1;
+  padding-top: 12px;
+  overflow: hidden;
+  /* 移除滚动条 */
+  min-height: 120px;
+  /* 确保有足够的内容显示空间 */
+}
+
+/* 目的港分布列表 */
+.destination-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  /* 进一步减小间距，让5个项目更紧凑 */
+  overflow: hidden;
+  /* 移除滚动条 */
+  width: 100%;
+  /* 确保不超出容器 */
+}
+
+.destination-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  /* 减小间距：从12px到8px */
+  padding: 5px 8px;
+  /* 进一步减小padding，让内容更紧凑 */
+  background: #f8fafc;
+  border-radius: 6px;
+  /* 减小圆角：从8px到6px */
+  transition: all 0.2s ease;
+}
+
+.destination-item:hover {
+  background: #f1f5f9;
+  transform: translateX(2px);
+}
+
+.destination-rank {
+  flex-shrink: 0;
+  width: 24px;
+  /* 减小尺寸：从28px到24px */
+  height: 24px;
+  /* 减小尺寸：从28px到24px */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #ffffff;
+  border-radius: 5px;
+  /* 减小圆角：从6px到5px */
+  font-size: 11px;
+  /* 减小字体：从13px到11px */
+  font-weight: 600;
+}
+
+.destination-item:nth-child(1) .destination-rank {
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+}
+
+.destination-item:nth-child(2) .destination-rank {
+  background: linear-gradient(135deg, #94a3b8 0%, #64748b 100%);
+}
+
+.destination-item:nth-child(3) .destination-rank {
+  background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+}
+
+.destination-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.destination-city {
+  font-size: 13px;
+  /* 减小字体：从15px到13px */
+  font-weight: 600;
+  color: #1e293b;
+  margin-bottom: 2px;
+  /* 减小间距：从4px到2px */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.destination-stats {
+  display: flex;
+  gap: 8px;
+  /* 减小间距：从12px到8px */
+  font-size: 11px;
+  /* 减小字体：从12px到11px */
+  color: #64748b;
+}
+
+.destination-orders {
+  color: #64748b;
+  font-weight: 500;
+}
+
+.destination-amount {
+  color: #3b82f6;
+  font-weight: 500;
+}
+
+.destination-bar {
+  flex-shrink: 0;
+  width: 80px;
+  height: 6px;
+  background: #e2e8f0;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.destination-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+/* 产品排名列表 */
+.product-ranking-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  /* 进一步减小间距，让5个项目更紧凑 */
+  overflow: hidden;
+  /* 移除滚动条 */
+  width: 100%;
+  /* 确保不超出容器 */
+}
+
+.product-ranking-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  /* 减小间距：从12px到8px */
+  padding: 5px 8px;
+  /* 进一步减小padding，让内容更紧凑 */
+  background: #f8fafc;
+  border-radius: 6px;
+  /* 减小圆角：从8px到6px */
+  transition: all 0.2s ease;
+}
+
+.product-ranking-item:hover {
+  background: #f1f5f9;
+  transform: translateX(2px);
+}
+
+.product-ranking-rank {
+  flex-shrink: 0;
+  width: 24px;
+  /* 减小尺寸：从28px到24px */
+  height: 24px;
+  /* 减小尺寸：从28px到24px */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  color: #ffffff;
+  border-radius: 5px;
+  /* 减小圆角：从6px到5px */
+  font-size: 11px;
+  /* 减小字体：从13px到11px */
+  font-weight: 600;
+}
+
+.product-ranking-item:nth-child(1) .product-ranking-rank {
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+}
+
+.product-ranking-item:nth-child(2) .product-ranking-rank {
+  background: linear-gradient(135deg, #94a3b8 0%, #64748b 100%);
+}
+
+.product-ranking-item:nth-child(3) .product-ranking-rank {
+  background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+}
+
+.product-ranking-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.product-ranking-model {
+  font-size: 13px;
+  /* 减小字体：从15px到13px */
+  font-weight: 600;
+  color: #1e293b;
+  margin-bottom: 2px;
+  /* 减小间距：从4px到2px */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.product-ranking-stats {
+  display: flex;
+  gap: 8px;
+  /* 减小间距：从12px到8px */
+  font-size: 11px;
+  /* 减小字体：从12px到11px */
+  color: #64748b;
+}
+
+.product-ranking-quantity {
+  color: #64748b;
+  font-weight: 500;
+}
+
+.product-ranking-amount {
+  color: #3b82f6;
+  font-weight: 500;
+}
+
+.product-ranking-orders {
+  color: #64748b;
+  font-weight: 500;
+}
+
+.product-ranking-bar {
+  flex-shrink: 0;
+  width: 80px;
+  height: 6px;
+  background: #e2e8f0;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.product-ranking-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #f093fb 0%, #f5576c 100%);
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+/* 响应式设计 */
+@media (max-width: 1200px) {
+
+  .destination-bar,
+  .product-ranking-bar {
+    width: 60px;
+  }
+
+  .destination-stats,
+  .product-ranking-stats {
+    flex-direction: column;
+    gap: 4px;
+  }
+}

@@ -1,0 +1,43 @@
+<section id="view-analytics" class="panel view-enter" data-view>
+  <div class="panel-header">
+    <div class="panel-title">统计概览</div>
+    <div class="panel-actions">
+      <button class="btn success" id="btnExportAnalytics" style="background: #10B981; border-color: #10B981;">
+        <span style="margin-right: 4px;">📊</span>导出CSV
+      </button>
+      <button class="btn primary" id="btnRefreshAnalytics" style="background: #3B82F6; border-color: #3B82F6;">
+        <span style="margin-right: 4px;">🔄</span>刷新
+      </button>
+    </div>
+  </div>
+  <div class="panel-body" id="analyticsSummary">
+    <!-- 加载状态 -->
+    <div id="analyticsLoading" style="text-align: center; padding: 40px; color: #6b7280;">
+      <div style="font-size: 16px;">加载中...</div>
+    </div>
+    
+    <!-- 提示信息 -->
+    <div id="analyticsInfo" style="display: none; background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 8px; padding: 16px; margin-bottom: 20px; color: #0369a1;">
+      <div style="font-size: 14px; line-height: 1.6;">
+        <strong>💡 提示：</strong>基础统计信息（统计卡片、图表、排行榜）已在首页展示。本页面专注于提供更详细的统计分析功能。
+      </div>
+    </div>
+    
+    <!-- 详细统计内容区域（可根据需要添加统计概览特有的内容） -->
+    <div id="analyticsContent" style="display: none;">
+      <div style="text-align: center; padding: 60px 20px; color: #6b7280;">
+        <div style="font-size: 48px; margin-bottom: 16px;">📊</div>
+        <div style="font-size: 18px; font-weight: 600; margin-bottom: 8px; color: #1f2937;">统计概览</div>
+        <div style="font-size: 14px; line-height: 1.6;">
+          更多详细的统计分析功能正在开发中...
+        </div>
+      </div>
+    </div>
+    
+    <!-- 错误提示 -->
+    <div id="analyticsError" style="display: none; text-align: center; padding: 40px; color: #ef4444;">
+      <div style="font-size: 16px;">加载失败，请刷新重试</div>
+    </div>
+  </div>
+</section>
+

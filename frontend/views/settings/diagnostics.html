@@ -1,0 +1,139 @@
+<section id="settingsDiagnosticsPage" data-view class="panel" style="display: none;">
+  <!-- 主要内容区 -->
+  <div class="settings-single-column">
+
+    <!-- 帮助与支持卡片 -->
+    <div class="settings-card">
+      <div class="settings-card-header">
+        <div class="settings-card-icon success">🤝</div>
+        <div class="settings-card-title-group">
+          <h3 class="settings-card-title">帮助与支持</h3>
+          <p class="settings-card-subtitle">获取使用指导、查看手册及联系技术支持</p>
+        </div>
+      </div>
+      <div class="settings-card-body">
+        <div class="settings-info-box">
+          <span class="settings-info-icon">📖</span>
+          <div class="settings-info-content">
+            <p class="settings-info-text">
+              欢迎使用 PP 订单管理系统。如果您在操作中遇到困难，可以先查阅本地使用手册或通过下方联系方式咨询。
+            </p>
+          </div>
+        </div>
+
+        <div class="settings-actions" style="justify-content: flex-start; gap: 12px; margin-top: 16px;">
+          <button class="settings-btn primary" id="btnOpenManual">
+            <span class="settings-btn-icon">📚</span>
+            查看使用手册
+          </button>
+          <button class="settings-btn secondary" id="btnContactSupport">
+            <span class="settings-btn-icon">💬</span>
+            联系技术支持
+          </button>
+        </div>
+
+        <div style="margin-top: 24px; padding: 15px; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0;">
+          <h4 style="font-size: 14px; color: #2d3748; margin-bottom: 10px; font-weight: 700;">联系方式</h4>
+          <ul class="settings-list" style="background: transparent;">
+            <li class="settings-list-item" style="padding: 8px 0; background: transparent;">
+              <span class="settings-list-icon" style="font-size: 16px;">🐧</span>
+              <span class="settings-list-text" style="font-size: 13px;">QQ: 185034202</span>
+            </li>
+            <li class="settings-list-item" style="padding: 8px 0; background: transparent;">
+              <span class="settings-list-icon" style="font-size: 16px;">📧</span>
+              <span class="settings-list-text" style="font-size: 13px;">Email: 185034202@qq.com</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- 系统关于卡片 (从数据库设置移动至此) -->
+    <div class="settings-card">
+      <div class="settings-card-header">
+        <div class="settings-card-icon info">ℹ️</div>
+        <div class="settings-card-title-group">
+          <h3 class="settings-card-title">关于系统</h3>
+          <p class="settings-card-subtitle">当前软件版本及运行参数</p>
+        </div>
+      </div>
+      <div class="settings-card-body">
+        <ul class="settings-list">
+          <li class="settings-list-item">
+            <span class="settings-list-icon">📦</span>
+            <span class="settings-list-text" id="diagAppInfoLabel">系统版本：加载中...</span>
+          </li>
+          <li class="settings-list-item">
+            <span class="settings-list-icon">🌐</span>
+            <span class="settings-list-text" id="envLabel">运行模式：Tauri (Native)</span>
+          </li>
+          <li class="settings-list-item">
+            <span class="settings-list-icon">💻</span>
+            <span class="settings-list-text">核心引擎：Tauri 2.0 (Rust) + Node.js</span>
+          </li>
+          <li class="settings-list-item">
+            <span class="settings-list-icon">✅</span>
+            <span class="settings-list-text" id="diagHealthLabel">服务状态：自检中...</span>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- 诊断与日志卡片 -->
+    <div class="settings-card">
+      <div class="settings-card-header">
+        <div class="settings-card-icon">🩺</div>
+        <div class="settings-card-title-group">
+          <h3 class="settings-card-title">系统诊断与修复</h3>
+          <p class="settings-card-subtitle">导出诊断包、查看日志及自检修复</p>
+        </div>
+      </div>
+      <div class="settings-card-body">
+        <div class="settings-info-box warning">
+          <span class="settings-info-icon">⚠️</span>
+          <div class="settings-info-content">
+            <p class="settings-info-text" style="font-size: 12px;">
+              仅在系统出现无法解决的故障时，在技术支持指导下使用。
+            </p>
+          </div>
+        </div>
+
+        <div class="settings-actions" style="justify-content: flex-start; gap: 10px; flex-wrap: wrap;">
+          <button class="settings-btn primary" id="btnExportDiagnostics">
+            <span class="settings-btn-icon">📦</span>
+            一键导出诊断包
+          </button>
+          <button class="settings-btn secondary" id="btnOpenLogsDir">
+            <span class="settings-btn-icon">📂</span>
+            日志目录
+          </button>
+          <button class="settings-btn secondary" id="btnOpenAppDataDir">
+            <span class="settings-btn-icon">📂</span>
+            数据根目录
+          </button>
+        </div>
+
+        <div style="margin-top: 20px; border-top: 1px solid #eee; padding-top: 15px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <label class="settings-label" style="margin-bottom: 0;">
+              <span class="settings-label-icon">▶️</span>
+              系统核心自检
+            </label>
+            <button class="settings-btn secondary" id="btnRunAutoDiagnosis" style="padding: 4px 12px; font-size: 12px;">
+              开始检测
+            </button>
+          </div>
+          <div id="diagnosisResults" class="test-results-container" style="max-height: 200px; overflow-y: auto;">
+            <!-- 自检结果 -->
+          </div>
+        </div>
+
+        <div style="margin-top: 15px;">
+          <label class="settings-label" style="font-size: 12px;">上次导出包路径</label>
+          <input type="text" class="settings-input" id="diagLastExportPath" placeholder="暂未导出" readonly style="font-size: 12px; height: 32px;" />
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>

@@ -1,0 +1,352 @@
+/**
+ * PP预览器 (Paper Previewer) 样式
+ * 统一的A4文档预览与编辑组件样式
+ */
+
+/* ========== 容器样式 ========== */
+.pp-container {
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background: #d4d4d4;
+  position: relative;
+}
+
+/* ========== 缩放包装器 ========== */
+.pp-zoom-wrapper {
+  transform-origin: top center;
+  transition: transform 0.2s ease-out;
+  margin: 0 auto;
+  width: fit-content;
+  height: fit-content;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  padding: 40px;
+  box-sizing: content-box;
+}
+
+/* ========== 页面容器 ========== */
+.pp-pages {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  margin: 0;
+  padding: 0 0 15px 0;
+}
+
+/* ========== A4页面样式 ========== */
+.pp-paper {
+  width: 210mm;
+  min-height: 297mm;
+  height: 297mm;
+  background: #fff;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.05);
+  border: 2px solid #3b82f6;
+  position: relative;
+  box-sizing: border-box;
+  overflow: visible;
+  flex-shrink: 0;
+  display: block;
+  page-break-after: always;
+  margin: 0;
+}
+
+/* ========== 页面内容 ========== */
+.pp-page-content {
+  width: 100%;
+  height: 100%;
+}
+
+/* ========== 页边距标记 ========== */
+.margin-mark {
+  position: absolute;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.margin-mark::before,
+.margin-mark::after {
+  content: '';
+  position: absolute;
+  background: #9ca3af;
+}
+
+/* 水平线 */
+.margin-mark-top-left::before,
+.margin-mark-top-right::before,
+.margin-mark-bottom-left::before,
+.margin-mark-bottom-right::before {
+  width: 12px;
+  height: 1.5px;
+  top: 0;
+}
+
+/* 垂直线 */
+.margin-mark-top-left::after,
+.margin-mark-top-right::after,
+.margin-mark-bottom-left::after,
+.margin-mark-bottom-right::after {
+  width: 1.5px;
+  height: 12px;
+  top: 0;
+}
+
+/* 左侧标记 */
+.margin-mark-top-left::before,
+.margin-mark-top-left::after,
+.margin-mark-bottom-left::before,
+.margin-mark-bottom-left::after {
+  left: 0;
+}
+
+/* 右侧标记 */
+.margin-mark-top-right::before,
+.margin-mark-top-right::after,
+.margin-mark-bottom-right::before,
+.margin-mark-bottom-right::after {
+  right: 0;
+}
+
+/* 底部标记调整 */
+.margin-mark-bottom-left::before,
+.margin-mark-bottom-left::after,
+.margin-mark-bottom-right::before,
+.margin-mark-bottom-right::after {
+  top: auto;
+  bottom: 0;
+}
+
+/* ========== 编辑模式样式 ========== */
+.pp-mode-edit [data-block-id] {
+  outline: 1px dashed rgba(59, 130, 246, 0.3);
+  outline-offset: 2px;
+  transition: outline 0.15s ease-out, background 0.15s ease-out;
+  cursor: pointer;
+}
+
+.pp-mode-edit [data-block-id]:hover {
+  outline: 1px dashed rgba(59, 130, 246, 0.6);
+  background: rgba(59, 130, 246, 0.02);
+}
+
+.pp-mode-edit .pp-block-visible {
+  outline: 1px dashed rgba(59, 130, 246, 0.4);
+}
+
+/* ========== 查看模式样式 ========== */
+.pp-mode-view [data-block-id] {
+  outline: none !important;
+  cursor: default;
+}
+
+/* ========== 区块覆盖层 ========== */
+.pp-block-overlay {
+  position: absolute;
+  pointer-events: none;
+  z-index: 100;
+  box-sizing: border-box;
+  transition: all 0.15s ease-out;
+}
+
+.pp-block-overlay-selected {
+  border: 2px solid #3b82f6;
+  background: rgba(59, 130, 246, 0.1);
+  z-index: 101;
+}
+
+.pp-block-overlay-hovered {
+  border: 2px solid #10b981;
+  background: rgba(16, 185, 129, 0.05);
+  z-index: 100;
+}
+
+/* 选中标识角标 */
+.pp-block-overlay-badge {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 16px;
+  height: 16px;
+  background: #3b82f6;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 10px;
+  font-weight: bold;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+/* ========== 区块包装器 ========== */
+.block-wrapper {
+  display: block;
+}
+
+/* ========== 缩放控制器样式 ========== */
+.zoom-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.zoom-group {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  padding: 4px 8px;
+}
+
+.zoom-btn {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  border-radius: 4px;
+  cursor: pointer;
+  color: #374151;
+  font-size: 16px;
+  transition: all 0.15s ease-out;
+}
+
+.zoom-btn:hover {
+  background: #f3f4f6;
+  color: #1f2937;
+}
+
+.zoom-btn:active {
+  background: #e5e7eb;
+}
+
+.zoom-btn .icon {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.zoom-display {
+  min-width: 48px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 500;
+  color: #374151;
+}
+
+/* ========== 空状态 ========== */
+.pp-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 40px;
+  text-align: center;
+  color: #9ca3af;
+}
+
+.pp-empty-state .empty-icon {
+  font-size: 64px;
+  margin-bottom: 16px;
+  opacity: 0.5;
+}
+
+.pp-empty-state .empty-text {
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* ========== 错误状态 ========== */
+.pp-error-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 40px;
+  text-align: center;
+  color: #dc2626;
+}
+
+.pp-error-state .error-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+.pp-error-state .error-text {
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* ========== 加载状态 ========== */
+.pp-loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 40px;
+}
+
+.pp-loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #e5e7eb;
+  border-top-color: #3b82f6;
+  border-radius: 50%;
+  animation: pp-spin 1s linear infinite;
+}
+
+@keyframes pp-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.pp-loading-text {
+  margin-top: 16px;
+  font-size: 14px;
+  color: #6b7280;
+}
+
+/* ========== 打印样式 ========== */
+@media print {
+  .pp-container {
+    background: #fff;
+    overflow: visible;
+  }
+  
+  .pp-zoom-wrapper {
+    transform: none !important;
+    padding: 0;
+  }
+  
+  .pp-paper {
+    box-shadow: none;
+    border: none;
+    page-break-after: always;
+  }
+  
+  .margin-mark {
+    display: none;
+  }
+  
+  .pp-block-overlay {
+    display: none;
+  }
+  
+  [data-block-id] {
+    outline: none !important;
+  }
+}
+

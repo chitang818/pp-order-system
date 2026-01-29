@@ -1,0 +1,116 @@
+{
+  "root": true,
+  "env": {
+    "browser": true,
+    "node": true,
+    "es2021": true,
+    "es6": true
+  },
+  "extends": [
+    "eslint:recommended",
+    "prettier"
+  ],
+  "parserOptions": {
+    "ecmaVersion": 2022,
+    "sourceType": "module",
+    "ecmaFeatures": {
+      "jsx": false,
+      "modules": true
+    }
+  },
+  "ignorePatterns": [
+    "temp_conversions/",
+    "data/",
+    "images/",
+    "frontend/js/docx.min.js",
+    "node_modules/",
+    "dist/",
+    "build/"
+  ],
+  "rules": {
+    "no-unused-vars": [
+      "warn",
+      {
+        "args": "none",
+        "varsIgnorePattern": "^_",
+        "argsIgnorePattern": "^_"
+      }
+    ],
+    "no-console": [
+      "warn",
+      {
+        "allow": [
+          "warn",
+          "error"
+        ]
+      }
+    ],
+    "no-debugger": "warn",
+    "no-alert": "warn",
+    "prefer-const": "warn",
+    "no-var": "error",
+    "eqeqeq": [
+      "warn",
+      "always"
+    ],
+    "curly": [
+      "warn",
+      "all"
+    ],
+    "brace-style": [
+      "warn",
+      "1tbs"
+    ],
+    "semi": [
+      "error",
+      "always"
+    ],
+    "quotes": [
+      "warn",
+      "single",
+      {
+        "avoidEscape": true
+      }
+    ],
+    "comma-dangle": [
+      "warn",
+      "never"
+    ],
+    "object-curly-spacing": [
+      "warn",
+      "always"
+    ],
+    "array-bracket-spacing": [
+      "warn",
+      "never"
+    ],
+    "space-before-function-paren": [
+      "warn",
+      {
+        "anonymous": "always",
+        "named": "never",
+        "asyncArrow": "always"
+      }
+    ]
+  },
+  "globals": {
+    "window": "readonly",
+    "document": "readonly",
+    "location": "readonly",
+    "navigator": "readonly",
+    "console": "readonly",
+    "setTimeout": "readonly",
+    "clearTimeout": "readonly",
+    "setInterval": "readonly",
+    "clearInterval": "readonly",
+    "fetch": "readonly",
+    "Promise": "readonly",
+    "URL": "readonly",
+    "URLSearchParams": "readonly",
+    "StorageService": "readonly",
+    "ApiService": "readonly",
+    "CacheService": "readonly",
+    "NotificationSystem": "readonly",
+    "ModalDialog": "readonly"
+  }
+}

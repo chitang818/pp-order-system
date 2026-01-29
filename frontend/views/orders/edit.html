@@ -1,0 +1,2497 @@
+<div id="view-orders-edit" data-view class="panel">
+  <style>
+    /* 统一间距变量：垂直输入间距与标签-输入水平间距，含响应式 */
+    #view-orders-edit {
+      /* design_system: 可通过设置 `data-design-system` 或根变量覆盖 */
+      /* 收紧默认间距：更紧凑但保留响应式缩放 */
+      --spacing-input-vert: var(--spacing_value, clamp(4px, 0.6vw, 8px));
+      --label-spacing: var(--label_spacing, clamp(6px, 0.8vw, 12px));
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      min-height: 0;
+      overflow: hidden;
+      position: relative;
+      flex: 1;
+    }
+
+    /* 固定表头样式 - 相对于#view-orders-edit容器固定，与订单列表页面保持一致 */
+    #view-orders-edit .order-edit-header {
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      background: #ffffff;
+      border-bottom: 0.5px solid #e2e8f0;
+      box-shadow: none;
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      flex-shrink: 0;
+      min-height: 56px;
+      height: 56px;
+      width: 100%;
+      box-sizing: border-box;
+      margin: 0;
+    }
+
+    #view-orders-edit .order-edit-header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex: 1;
+      min-width: 0;
+    }
+
+    #view-orders-edit .order-edit-header-title {
+      font-size: var(--font-size-2xl);
+      font-weight: 700;
+      color: var(--text);
+      white-space: nowrap;
+      line-height: 24px;
+      height: 24px;
+      margin: 0;
+      padding: 0;
+      display: block;
+      box-sizing: border-box;
+    }
+
+    #view-orders-edit .order-edit-header-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    /* 内容区域可滚动 */
+    #view-orders-edit .order-edit-content {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding: 24px;
+      background: #f9fafb;
+      min-height: 0;
+      /* 确保flex布局正确 */
+      max-height: 100%;
+      /* 限制最大高度 */
+      -webkit-overflow-scrolling: touch;
+      /* iOS平滑滚动 */
+    }
+
+    /* 内容区域内的面板样式 */
+    #view-orders-edit .order-edit-content .content-section {
+      background: #ffffff;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      margin-bottom: 24px;
+      overflow: hidden;
+      transition: box-shadow 0.3s ease;
+    }
+
+    #view-orders-edit .order-edit-content .content-section:hover {
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+    }
+
+    #view-orders-edit .order-edit-content .content-section-header {
+      padding: 8px 16px;
+      background: linear-gradient(135deg, rgba(59, 130, 246, 0.3) 0%, rgba(147, 197, 253, 0.3) 100%);
+      color: #1e40af;
+      font-size: 14px;
+      font-weight: 600;
+      border-bottom: 1px solid rgba(191, 219, 254, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      min-height: 36px;
+      transition: background 0.3s ease, border-bottom-color 0.3s ease;
+    }
+
+    /* A类品：浅蓝色渐变（默认） */
+    #view-orders-edit #section-products.template-1 .content-section-header,
+    #view-orders-edit #section-products:not(.template-2):not(.template-3) .content-section-header {
+      background: linear-gradient(135deg, rgba(59, 130, 246, 0.3) 0%, rgba(147, 197, 253, 0.3) 100%);
+      color: #1e40af;
+      border-bottom: 1px solid rgba(191, 219, 254, 0.5);
+    }
+
+    /* B类品：浅橙色渐变 */
+    #view-orders-edit #section-products.template-2 .content-section-header {
+      background: linear-gradient(135deg, rgba(245, 158, 11, 0.3) 0%, rgba(251, 191, 36, 0.3) 100%);
+      color: #92400e;
+      border-bottom: 1px solid rgba(253, 230, 138, 0.5);
+    }
+
+    /* C类品：浅粉色渐变 */
+    #view-orders-edit #section-products.template-3 .content-section-header {
+      background: linear-gradient(135deg, rgba(249, 168, 212, 0.3) 0%, rgba(251, 207, 232, 0.3) 100%);
+      color: #9f1239;
+      border-bottom: 1px solid rgba(252, 231, 243, 0.5);
+    }
+
+    #view-orders-edit .order-edit-content .content-section-header .template-switch-container {
+      display: flex;
+      gap: 8px;
+    }
+
+    #view-orders-edit .order-edit-content .content-section-header .btn-template {
+      padding: 4px 12px;
+      font-size: 12px;
+      background: rgba(255, 255, 255, 0.2);
+      color: #ffffff;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    #view-orders-edit .order-edit-content .content-section-header .btn-template:hover {
+      background: rgba(255, 255, 255, 0.3);
+    }
+
+    #view-orders-edit .order-edit-content .content-section-header .btn-template.active {
+      background: rgba(255, 255, 255, 0.9);
+      color: #667eea;
+      border-color: rgba(255, 255, 255, 0.9);
+    }
+
+    #view-orders-edit .order-edit-content .content-section-body {
+      padding: 24px;
+    }
+
+    /* 合同编号显示样式 */
+    #view-orders-edit #orderContractNoDisplay {
+      font-size: 14px;
+      color: #6b7280;
+      font-weight: 500;
+      padding: 6px 14px;
+      background: #f3f4f6;
+      border-radius: 6px;
+      display: none;
+      border: 1px solid #e5e7eb;
+    }
+
+    #view-orders-edit #orderContractNoDisplay.show {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* 合同编号值：红色加粗 */
+    #view-orders-edit #orderContractNoValue {
+      color: #e74c3c !important;
+      font-weight: 700 !important;
+    }
+
+    /* 更具体的选择器确保样式生效 */
+    #view-orders-edit #orderContractNoDisplay #orderContractNoValue {
+      color: #e74c3c !important;
+      font-weight: 700 !important;
+    }
+
+    /* 确保合同编号标签保持灰色 */
+    #view-orders-edit #orderContractNoDisplay>span:first-child {
+      color: #9ca3af !important;
+    }
+
+    /* 仅作用于本页的尺寸优化 */
+    #view-orders-edit .content-section-body .input,
+    #view-orders-edit .content-section-body .select {
+      height: 36px;
+      font-size: 15px;
+      padding: 8px 10px;
+    }
+
+    /* 优化滚动条样式 */
+    #view-orders-edit .order-edit-content::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    #view-orders-edit .order-edit-content::-webkit-scrollbar-track {
+      background: #f1f1f1;
+      border-radius: 4px;
+    }
+
+    #view-orders-edit .order-edit-content::-webkit-scrollbar-thumb {
+      background: #c1c1c1;
+      border-radius: 4px;
+    }
+
+    #view-orders-edit .order-edit-content::-webkit-scrollbar-thumb:hover {
+      background: #a8a8a8;
+    }
+
+    /* 模板切换按钮样式 */
+    #view-orders-edit .template-switch-container {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    #view-orders-edit .btn-template {
+      padding: 6px 16px;
+      font-size: 13px;
+      font-weight: 500;
+      border: 1px solid #d1d5db;
+      border-radius: 4px;
+      background-color: #ffffff;
+      color: #6b7280;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    #view-orders-edit .btn-template:hover {
+      border-color: #3b82f6;
+      color: #3b82f6;
+      background-color: #eff6ff;
+    }
+
+    /* A类品按钮选中时使用蓝色（默认） */
+    #view-orders-edit .btn-template[data-template="1"].active,
+    #view-orders-edit #btnTemplate1.active {
+      border-color: #3b82f6;
+      background-color: #3b82f6;
+      color: #ffffff;
+      font-weight: 600;
+    }
+
+    /* B类品按钮选中时使用橙色 */
+    #view-orders-edit .btn-template[data-template="2"].active,
+    #view-orders-edit #btnTemplate2.active {
+      border-color: #f59e0b;
+      background-color: #f59e0b;
+      color: #ffffff;
+      font-weight: 600;
+    }
+
+    /* C类品按钮选中时使用淡粉色 */
+    #view-orders-edit .btn-template[data-template="3"].active,
+    #view-orders-edit #btnTemplate3.active {
+      border-color: #f9a8d4;
+      background-color: #f9a8d4;
+      color: #ffffff;
+      font-weight: 600;
+    }
+
+    /* C类品按钮悬停效果 */
+    #view-orders-edit .btn-template[data-template="3"]:hover,
+    #view-orders-edit #btnTemplate3:hover {
+      border-color: #f9a8d4;
+      color: #f9a8d4;
+      background-color: #fce7f3;
+    }
+
+    /* A类品按钮悬停效果 */
+    #view-orders-edit .btn-template[data-template="1"]:hover,
+    #view-orders-edit #btnTemplate1:hover {
+      border-color: #3b82f6;
+      color: #3b82f6;
+      background-color: #eff6ff;
+    }
+
+    /* B类品按钮悬停效果 */
+    #view-orders-edit .btn-template[data-template="2"]:hover,
+    #view-orders-edit #btnTemplate2:hover {
+      border-color: #f59e0b;
+      color: #f59e0b;
+      background-color: #fef3c7;
+    }
+
+    #view-orders-edit .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    #view-orders-edit .panel-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    #view-orders-edit .panel-actions .btn {
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    /* 确保面板标题和操作按钮在同一行且对齐 */
+    #view-orders-edit .panel-title {
+      flex: 1;
+      min-width: 0;
+    }
+
+    /* 日期输入框样式优化 */
+    #view-orders-edit .date-input-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+      width: 100%;
+    }
+
+    #view-orders-edit .date-input {
+      flex: 1;
+      padding-right: 35px !important;
+      height: 36px !important;
+      font-size: 15px !important;
+      padding-top: 8px !important;
+      padding-bottom: 8px !important;
+      padding-left: 10px !important;
+    }
+
+    #view-orders-edit #contractNo.date-input {
+      padding-right: 45px !important;
+    }
+
+    #view-orders-edit .date-picker-btn {
+      position: absolute;
+      right: 5px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none !important;
+      border: none !important;
+      cursor: pointer;
+      font-size: 14px;
+      color: #007bff;
+      padding: 2px 6px !important;
+      min-width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1;
+      white-space: nowrap;
+    }
+
+    #view-orders-edit .date-picker-btn#btnAddOrderNo {
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    #view-orders-edit .date-picker-btn:hover {
+      color: #0056b3;
+      background: none !important;
+    }
+
+    /* 调整为每行显示7个内容的布局（支持订单状态在金额右边） */
+    #view-orders-edit .content-section-body .form-grid {
+      max-width: none;
+      width: 100%;
+      grid-template-columns: repeat(7, 1fr);
+      gap: var(--spacing-input-vert);
+    }
+
+    @media (max-width: 1400px) {
+      #view-orders-edit .content-section-body .form-grid {
+        grid-template-columns: repeat(6, 1fr);
+      }
+    }
+
+    @media (max-width: 1280px) {
+      #view-orders-edit .content-section-body .form-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    @media (max-width: 768px) {
+      #view-orders-edit .content-section-body .form-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    #view-orders-edit #ordCustomerSelect {
+      height: 44px;
+      font-size: 16px;
+    }
+
+    /* 表格基础布局在后面统一定义 */
+    /* 单元格内堆叠元素垂直间距更小，避免拉高行高 */
+    #view-orders-edit #prodTable td>*+* {
+      margin-top: 2px;
+    }
+
+    /* 标签与输入水平间距统一（本页覆盖） */
+    #view-orders-edit .form-item {
+      gap: var(--label-spacing);
+      align-items: start;
+    }
+
+    #view-orders-edit .form-item>label+* {
+      margin-left: 0;
+    }
+
+    /* 表格单元格内输入框和选择框的基础样式 - 已在上面的具体选择器中统一设置 */
+    #view-orders-edit #prodTable td .input,
+    #view-orders-edit #prodTable td .select {
+      height: 32px;
+      font-size: 14px;
+      box-sizing: border-box;
+    }
+
+    /* 勾选列行号与行高亮样式 */
+    #view-orders-edit #prodTable .row-index {
+      color: var(--muted);
+      font-size: 12px;
+      margin-right: 0;
+      display: inline-block;
+      padding: 2px 6px;
+      border-radius: 6px;
+      background-color: #f5f7fa;
+      border: 1px solid #e5e7eb;
+    }
+
+    /* 型号单元格：行号紧挨在输入左侧并垂直居中 */
+    #view-orders-edit #prodTable .model-field {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    #view-orders-edit #prodTable .model-field .input {
+      flex: 1 1 auto;
+    }
+
+    /* 产品表所有输入内容居中显示 */
+    #view-orders-edit #prodTable td .input {
+      text-align: center;
+    }
+
+    /* 拖拽排序句柄与拖拽态样式 */
+    #view-orders-edit #prodTable .drag-handle {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      margin-right: 6px;
+      cursor: grab;
+      border-radius: 2px;
+      vertical-align: middle;
+      background:
+        linear-gradient(#9aa0a6, #9aa0a6) left 4px top 3px/1px 10px no-repeat,
+        linear-gradient(#9aa0a6, #9aa0a6) left 8px top 3px/1px 10px no-repeat,
+        linear-gradient(#9aa0a6, #9aa0a6) left 12px top 3px/1px 10px no-repeat;
+      touch-action: none;
+      /* 触摸拖拽时禁用滚动干扰 */
+    }
+
+    #view-orders-edit #prodTable tr.dragging {
+      opacity: 0.6;
+    }
+
+    /* 拖拽目标占位高亮条 */
+    #view-orders-edit #prodTable tr.drag-over-before {
+      box-shadow: 0 -3px 0 0 #3b82f6 inset;
+    }
+
+    #view-orders-edit #prodTable tr.drag-over-after {
+      box-shadow: 0 3px 0 0 #3b82f6 inset;
+    }
+
+    #view-orders-edit #prodTable tr.drag-over-before.drag-over-after {
+      box-shadow: 0 -3px 0 0 #3b82f6 inset, 0 3px 0 0 #3b82f6 inset;
+    }
+
+    /* 表头文字居中，与输入框保持一致 */
+    #view-orders-edit #prodTable th {
+      text-align: center;
+    }
+
+    /* 防止下拉被剪裁 */
+    #view-orders-edit #prodTable td {
+      overflow: visible;
+    }
+
+    /* 移除包装单位提示：仅隐藏单位提示，不影响额外信息展示 */
+    #view-orders-edit #prodTable .packunit-tip[data-packunit] {
+      display: none;
+    }
+
+    /* 生产通知信息：优化布局，进一步扩大输入框尺寸和左移对齐 */
+    #view-orders-edit .prodnote-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 25px;
+      align-items: start;
+    }
+
+    #view-orders-edit .prodnote-grid .left-compact {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      max-width: 100%;
+    }
+
+    #view-orders-edit .prodnote-grid .right-compact {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      max-width: 100%;
+    }
+
+    /* 箱型和货箱数量同行布局 */
+    #view-orders-edit .prodnote-grid .box-type-row {
+      display: flex;
+      gap: 15px;
+      align-items: end;
+      margin-bottom: 0;
+    }
+
+    #view-orders-edit .prodnote-grid .box-type-container {
+      flex: 1;
+      min-width: 0;
+    }
+
+    #view-orders-edit .prodnote-grid .box-quantity-container {
+      flex: 0 0 120px;
+    }
+
+    #view-orders-edit .prodnote-grid .box-type-container label,
+    #view-orders-edit .prodnote-grid .box-quantity-container label {
+      font-size: 13px;
+      margin-bottom: 5px;
+      font-weight: 500;
+      color: #333;
+      display: block;
+    }
+
+    #view-orders-edit .prodnote-grid .box-type-select,
+    #view-orders-edit .prodnote-grid .box-quantity-select {
+      font-size: 13px;
+      padding: 8px 10px;
+      height: 36px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      width: 100%;
+    }
+
+    #view-orders-edit .prodnote-grid .left-compact .form-item,
+    #view-orders-edit .prodnote-grid .right-compact .form-item {
+      margin-bottom: 0;
+    }
+
+    #view-orders-edit .prodnote-grid .left-compact .form-item label,
+    #view-orders-edit .prodnote-grid .right-compact .form-item label {
+      font-size: 13px;
+      margin-bottom: 5px;
+      font-weight: 500;
+      color: #333;
+    }
+
+    #view-orders-edit .prodnote-grid .left-compact .form-item .select,
+    #view-orders-edit .prodnote-grid .right-compact .form-item .select {
+      font-size: 13px;
+      padding: 8px 10px;
+      height: 36px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+
+    #view-orders-edit .prodnote-grid .marks-field .textarea {
+      min-height: 90px;
+      font-size: 13px;
+      padding: 10px 12px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      resize: vertical;
+      line-height: 1.4;
+      width: 100%;
+    }
+
+    #view-orders-edit .prodnote-grid .production-notes {
+      margin-bottom: 0;
+    }
+
+    #view-orders-edit .prodnote-grid .production-notes label {
+      font-size: 13px;
+      margin-bottom: 5px;
+      font-weight: 500;
+      color: #333;
+      display: block;
+    }
+
+    #view-orders-edit .prodnote-grid .production-notes .textarea {
+      min-height: 200px;
+      font-size: 13px;
+      padding: 12px 15px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      line-height: 1.5;
+      resize: vertical;
+      width: 100%;
+    }
+
+    /* 备注按钮样式 */
+    #view-orders-edit .remark-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    #view-orders-edit .btn-remark {
+      padding: 4px 8px;
+      font-size: 12px;
+      background-color: #f8f9fa;
+      border: 1px solid #dee2e6;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      color: #495057;
+    }
+
+    #view-orders-edit .btn-remark:hover {
+      background-color: #e9ecef;
+      border-color: #adb5bd;
+    }
+
+    #view-orders-edit .btn-remark:active {
+      background-color: #dee2e6;
+      transform: translateY(1px);
+    }
+
+    /* 数字输入移除上下微调按钮 */
+    #view-orders-edit input[type=number]::-webkit-outer-spin-button,
+    #view-orders-edit input[type=number]::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      appearance: none;
+      margin: 0;
+    }
+
+    #view-orders-edit input[type=number] {
+      -moz-appearance: textfield;
+      appearance: textfield;
+    }
+
+    /* 拉货通知信息样式 */
+    #view-orders-edit .pickup-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    #view-orders-edit .pickup-grid .top-row {
+      display: grid;
+      grid-template-columns: 0.8fr 0.8fr 0.8fr 1.6fr;
+      gap: 20px;
+      align-items: start;
+    }
+
+    #view-orders-edit .pickup-grid .bottom-row {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 20px;
+      align-items: start;
+    }
+
+    #view-orders-edit .pickup-grid label {
+      font-size: 13px;
+      margin-bottom: 5px;
+      font-weight: 500;
+      color: #333;
+      display: block;
+    }
+
+    #view-orders-edit .pickup-grid .required {
+      color: #e74c3c;
+      font-weight: bold;
+    }
+
+    #view-orders-edit .pickup-grid .input,
+    #view-orders-edit .pickup-grid .textarea {
+      font-size: 13px;
+      padding: 8px 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    #view-orders-edit .pickup-grid .input {
+      height: 36px;
+    }
+
+    #view-orders-edit .pickup-grid .textarea {
+      min-height: 100px;
+      resize: vertical;
+      line-height: 1.4;
+    }
+
+    #view-orders-edit .pickup-grid .date-input-group,
+    #view-orders-edit .pickup-grid .time-input-group {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    #view-orders-edit .pickup-grid .date-input-group .input,
+    #view-orders-edit .pickup-grid .time-input-group .input {
+      flex: 1;
+    }
+
+    #view-orders-edit .pickup-grid .btn-pick-date,
+    #view-orders-edit .pickup-grid .btn-pick-time {
+      padding: 8px 12px;
+      font-size: 12px;
+      background-color: #f8f9fa;
+      border: 1px solid #dee2e6;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      color: #495057;
+      white-space: nowrap;
+    }
+
+    #view-orders-edit .pickup-grid .btn-pick-date:hover,
+    #view-orders-edit .pickup-grid .btn-pick-time:hover {
+      background-color: #e9ecef;
+      border-color: #adb5bd;
+    }
+
+    /* 响应式布局 */
+    @media (max-width: 1280px) {
+      #view-orders-edit .pickup-grid .top-row {
+        grid-template-columns: 0.8fr 1.2fr;
+      }
+
+      #view-orders-edit .pickup-grid .bottom-row {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 768px) {
+      #view-orders-edit .pickup-grid .top-row {
+        grid-template-columns: 1fr;
+      }
+
+      #view-orders-edit .pickup-grid .bottom-row {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* 产品型号自动完成下拉框样式 */
+    .product-autocomplete-container {
+      position: relative;
+      display: inline-block;
+      width: 100%;
+    }
+
+    /* 产品型号自动匹配弹窗 - 使用固定定位模态框方式 */
+    .product-autocomplete-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.1);
+      z-index: 999999;
+      display: none;
+      pointer-events: none;
+    }
+
+    .product-autocomplete-dropdown {
+      position: fixed;
+      background: white;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.3);
+      max-height: 300px;
+      overflow-y: auto;
+      z-index: 1000000;
+      display: none;
+      min-width: 300px;
+      max-width: 500px;
+      pointer-events: auto;
+    }
+
+    .product-autocomplete-item {
+      padding: 12px 16px;
+      cursor: pointer;
+      border-bottom: 1px solid #f0f0f0;
+      font-size: 14px;
+      transition: background-color 0.2s ease;
+      line-height: 1.4;
+    }
+
+    .product-autocomplete-item:last-child {
+      border-bottom: none;
+    }
+
+    .product-autocomplete-item:hover,
+    .product-autocomplete-item.selected,
+    .product-autocomplete-item.highlighted {
+      background: #f8f9ff;
+      color: #2563eb;
+    }
+
+    .product-autocomplete-no-results {
+      padding: 12px 16px;
+      color: #999;
+      font-size: 14px;
+      text-align: center;
+      font-style: italic;
+      cursor: default;
+    }
+
+    /* 响应式设计：在小屏幕上调整弹窗样式 */
+    @media (max-width: 768px) {
+      .product-autocomplete-dropdown {
+        max-height: 250px;
+        font-size: 14px;
+        min-width: 280px;
+        max-width: 90vw;
+      }
+
+      .product-autocomplete-item {
+        padding: 10px 14px;
+        font-size: 13px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .product-autocomplete-dropdown {
+        max-height: 200px;
+        font-size: 13px;
+        min-width: 260px;
+        max-width: 95vw;
+      }
+
+      .product-autocomplete-item {
+        padding: 8px 12px;
+        font-size: 12px;
+      }
+    }
+
+    /* 确保产品明细区域有足够的底部间距，避免弹窗被遮挡 */
+    #view-orders-edit #panel-products {
+      margin-bottom: 40px;
+    }
+
+    /* 优化产品明细表格的布局，为弹窗预留空间 */
+    #view-orders-edit #panel-products .panel-body {
+      padding-bottom: 30px;
+      overflow: visible;
+    }
+
+    /* 产品型号自动填充弹窗样式 */
+    .autocomplete-container {
+      position: relative;
+      display: inline-block;
+      width: 100%;
+    }
+
+    .autocomplete-dropdown {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background: white;
+      border: 1px solid #ddd;
+      border-top: none;
+      border-radius: 0 0 4px 4px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      max-height: 200px;
+      overflow-y: auto;
+      z-index: 1000;
+      display: none;
+    }
+
+    .autocomplete-dropdown.show {
+      display: block;
+    }
+
+    .autocomplete-item {
+      padding: 8px 12px;
+      cursor: pointer;
+      border-bottom: 1px solid #f0f0f0;
+      transition: background-color 0.2s ease;
+    }
+
+    .autocomplete-item:last-child {
+      border-bottom: none;
+    }
+
+    .autocomplete-item:hover,
+    .autocomplete-item.selected {
+      background-color: #f5f5f5;
+    }
+
+    .autocomplete-item.active {
+      background-color: #e3f2fd;
+    }
+
+    .autocomplete-item-model {
+      font-weight: bold;
+      color: #333;
+      margin-bottom: 2px;
+    }
+
+    .autocomplete-item-desc {
+      font-size: 12px;
+      color: #666;
+      margin-bottom: 2px;
+    }
+
+    .autocomplete-item-weight {
+      font-size: 11px;
+      color: #999;
+    }
+
+    .autocomplete-loading {
+      padding: 12px;
+      text-align: center;
+      color: #666;
+      font-size: 12px;
+    }
+
+    .autocomplete-no-results {
+      padding: 12px;
+      text-align: center;
+      color: #999;
+      font-size: 12px;
+    }
+
+    /* 统一所有输入框样式 - 参考包皮布输入框，确保所有输入框占用更多空间，左右边距一致 */
+    /* 所有输入框统一宽度和边距 */
+    #view-orders-edit #prodTable td input[data-field],
+    #view-orders-edit #prodTable td input[data-field="quantity"],
+    #view-orders-edit #prodTable td input[data-field="packages"],
+    #view-orders-edit #prodTable td input[data-field="estimatedWeightInput"],
+    #view-orders-edit #prodTable td input[data-field="actualWeight"],
+    #view-orders-edit #prodTable td input[data-field="labelWeight"],
+    #view-orders-edit #prodTable td input[data-field="unitPrice"],
+    #view-orders-edit #prodTable td input[data-field="labelBatchNo"],
+    #view-orders-edit #prodTable td input[data-field="marks"],
+    #view-orders-edit #prodTable td input[data-field="label"],
+    #view-orders-edit #prodTable td input[data-field="model"] {
+      width: calc(100% - 2px) !important;
+      /* 减去边框宽度 */
+      min-width: 0 !important;
+      max-width: 100% !important;
+      box-sizing: border-box !important;
+      padding: 6px 8px !important;
+      /* 统一内边距 */
+      border: 1px solid #d1d5db !important;
+      /* 添加边框 */
+      border-radius: 4px !important;
+      /* 添加圆角 */
+      text-align: center !important;
+      /* 文字居中 */
+      overflow: visible !important;
+      /* 允许内容显示 */
+      white-space: nowrap !important;
+      /* 防止换行 */
+    }
+
+    /* 计算区输入框 - 只读样式 */
+    #view-orders-edit #prodTable input[data-field="estimatedWeight"],
+    #view-orders-edit #prodTable input[data-field="packing"],
+    #view-orders-edit #prodTable .total-weight {
+      width: calc(100% - 2px) !important;
+      /* 减去边框宽度 */
+      min-width: 0 !important;
+      max-width: 100% !important;
+      box-sizing: border-box !important;
+      padding: 6px 8px !important;
+      /* 统一内边距 */
+      border: 1px solid #d1d5db !important;
+      /* 添加边框 */
+      border-radius: 4px !important;
+      /* 添加圆角 */
+    }
+
+    /* 计算区输入框：透明背景，让单元格绿色背景色显示（任何情况下） */
+    #view-orders-edit #prodTable input[data-field="estimatedWeight"],
+    #view-orders-edit #prodTable input[data-field="packing"],
+    #view-orders-edit #prodTable .total-weight {
+      background-color: transparent !important;
+    }
+
+    /* 计算区输入框文字样式 */
+    #view-orders-edit #prodTable input[data-field="estimatedWeight"],
+    #view-orders-edit #prodTable input[data-field="packing"],
+    #view-orders-edit #prodTable .total-weight {
+      text-align: center !important;
+      /* 文字居中 */
+      overflow: visible !important;
+      /* 允许内容显示 */
+      white-space: nowrap !important;
+      /* 防止换行 */
+    }
+
+    /* 包装列特殊处理 - 确保有足够空间显示文字 */
+    #view-orders-edit #prodTable td.calc-section:nth-child(13) {
+      overflow: visible !important;
+      padding: 8px 4px !important;
+      /* 确保有足够的内边距 */
+    }
+
+    #view-orders-edit #prodTable td.calc-section:nth-child(13) input[data-field="packing"] {
+      width: calc(100% - 2px) !important;
+      /* 减去边框宽度 */
+      min-width: 80px !important;
+      /* 设置最小宽度确保能显示内容 */
+    }
+
+    /* 统一所有选择框样式 - 确保占用更多空间，左右边距一致 */
+    #view-orders-edit #prodTable select[data-field="unit"],
+    #view-orders-edit #prodTable select[data-field="safetyFactor"],
+    #view-orders-edit #prodTable select[data-field="cleanliness"],
+    #view-orders-edit #prodTable select[data-field="wrappingCloth"] {
+      width: calc(100% - 4px) !important;
+      /* 减去少量边距，确保左右边距一致 */
+      min-width: 0 !important;
+      max-width: 100% !important;
+      box-sizing: border-box !important;
+      padding: 6px 8px !important;
+      /* 统一内边距，与其他输入框一致 */
+      background-color: #e3f2fd;
+      /* 浅蓝色底色 */
+      text-align: center;
+      text-align-last: center;
+      /* 确保选中的选项居中 */
+      border: 1px solid #bbdefb;
+      border-radius: 4px;
+      /* 移除下拉箭头 */
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+      background-image: none;
+    }
+
+    /* 选择框选项居中显示 */
+    #view-orders-edit #prodTable select[data-field="unit"] option {
+      text-align: center;
+    }
+
+    #view-orders-edit #prodTable select[data-field="safetyFactor"] option,
+    #view-orders-edit #prodTable select[data-field="cleanliness"] option,
+    #view-orders-edit #prodTable select[data-field="wrappingCloth"] option {
+      text-align: center;
+    }
+
+    /* 产品表格整体布局优化 */
+    #view-orders-edit #prodTable {
+      table-layout: auto;
+      /* 改为自动布局，让列宽根据内容和设定的宽度自适应 */
+      width: 100%;
+      border-collapse: collapse;
+      /* 合并边框，确保对齐 */
+    }
+
+    #view-orders-edit #prodTable td {
+      padding: 8px 6px;
+      /* 统一内边距 */
+      text-align: center;
+      vertical-align: middle !important;
+      white-space: nowrap;
+      border: 1px solid #e8e8e8;
+      /* 浅色边框 */
+      background-color: #ffffff;
+      overflow: visible !important;
+      /* 确保内容可以显示 */
+    }
+
+    /* 复选框列单元格样式 - 参考启用列的布局方式 */
+    #view-orders-edit #prodTable tbody tr td.checkbox-col {
+      vertical-align: middle !important;
+      text-align: center !important;
+    }
+
+    #view-orders-edit #prodTable th {
+      padding: 8px 6px;
+      /* 与td完全一致的内边距 */
+      text-align: center;
+      vertical-align: middle;
+      font-weight: 600;
+      background-color: #f5f7fa;
+      border: 1px solid #d0d7de;
+      line-height: 1.4;
+      /* 优化行高，适配两行显示 */
+      font-size: 13px;
+      color: #333;
+    }
+
+    /* 表头行整体样式 - 统一为浅灰色，与复选框背景色一致 */
+    #view-orders-edit #prodTable thead tr {
+      background: #f8fafc !important;
+    }
+
+    /* B类品选中时，表头背景色统一为浅灰色 */
+    #view-orders-edit #prodTable.template-2 thead tr {
+      background: #f8fafc !important;
+    }
+
+    /* 数据行悬停效果 */
+    #view-orders-edit #prodTable tbody tr:hover {
+      background-color: #f8f9fa !important;
+    }
+
+    /* 数据行交替背景色已移除 - 改为按区域设置背景色 */
+    /* 通用区、可变区、计算区的背景色在下方单独设置 */
+    /* 确保所有输入框和选择框居中对齐 */
+    #view-orders-edit #prodTable input,
+    #view-orders-edit #prodTable select {
+      margin: 0 auto;
+      display: block;
+      text-align: center;
+      box-sizing: border-box;
+      border: 1px solid #d1d5db;
+      /* 统一边框样式 */
+      border-radius: 4px;
+      /* 统一圆角 */
+      padding: 5px 8px;
+      /* 统一内边距 */
+      font-size: 13px;
+      /* 统一字体大小 */
+      transition: all 0.2s ease;
+      /* 添加过渡效果 */
+      background-color: #ffffff;
+    }
+
+    /* 输入框获得焦点时的样式 */
+    #view-orders-edit #prodTable input:focus,
+    #view-orders-edit #prodTable select:focus {
+      outline: none;
+      border: 2px solid #3b82f6 !important;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2), 0 1px 3px rgba(0, 0, 0, 0.1);
+      background-color: #fffbeb;
+      position: relative;
+      z-index: 10;
+    }
+
+    /* 输入框悬停效果 */
+    #view-orders-edit #prodTable input:hover:not(:focus),
+    #view-orders-edit #prodTable select:hover:not(:focus) {
+      border-color: #9ca3af;
+    }
+
+    /* 拖拽按钮样式 - 在复选框列内，参考启用列的布局方式 */
+    #view-orders-edit #prodTable td.checkbox-col .drag-handle {
+      display: inline-block !important;
+      vertical-align: middle !important;
+      margin: 0 3px !important;
+      /* 左右间距 */
+      cursor: grab;
+      width: 16px !important;
+      height: 16px !important;
+    }
+
+    /* 复选框样式 - 在复选框列内，参考启用列的布局方式 */
+    #view-orders-edit #prodTable td.checkbox-col input[type="checkbox"].row-check {
+      display: inline-block !important;
+      vertical-align: middle !important;
+      margin: 0 3px !important;
+      /* 左右间距 */
+      cursor: pointer;
+      width: 16px !important;
+      height: 16px !important;
+    }
+
+    /* 表头复选框样式 */
+    #view-orders-edit #prodTable th.checkbox-col input[type="checkbox"] {
+      display: block !important;
+      margin: 0 auto !important;
+      cursor: pointer;
+      width: 16px !important;
+      height: 16px !important;
+    }
+
+
+    /* 复选框列特殊样式 */
+    #view-orders-edit #prodTable td:nth-child(1) {
+      text-align: center;
+      white-space: nowrap;
+    }
+
+    /* 复选框列布局：参考启用列的布局方式 */
+    #view-orders-edit #prodTable td.checkbox-col {
+      display: table-cell !important;
+      /* 使用普通表格单元格 */
+      text-align: center !important;
+      /* 水平居中 */
+      vertical-align: middle !important;
+      /* 垂直居中 */
+      padding: 8px 6px !important;
+      /* 与默认td样式一致 */
+      box-sizing: border-box !important;
+      white-space: nowrap !important;
+    }
+
+    /* 复选框列内部元素：水平排列拖动按钮、复选框 */
+    #view-orders-edit #prodTable td.checkbox-col .drag-handle,
+    #view-orders-edit #prodTable td.checkbox-col .row-check {
+      display: inline-block !important;
+      vertical-align: middle !important;
+      margin: 0 3px !important;
+      /* 左右间距 */
+    }
+
+    /* 复选框列表头样式 */
+    #view-orders-edit #prodTable th.checkbox-col {
+      display: table-cell !important;
+      /* 使用普通表格单元格 */
+      text-align: center !important;
+      /* 水平居中 */
+      vertical-align: middle !important;
+      /* 垂直居中 */
+      padding: 8px 6px !important;
+      /* 与默认th样式一致 */
+      box-sizing: border-box !important;
+    }
+
+    /* 序号显示优化 */
+    #view-orders-edit #prodTable .row-index {
+      display: inline-block;
+      margin-right: 6px;
+      font-weight: 600;
+      color: #6366f1;
+      background-color: #eef2ff;
+      /* 浅蓝紫色背景 */
+      border: 1px solid #c7d2fe;
+      padding: 3px 8px;
+      border-radius: 4px;
+      text-align: center;
+      min-width: 24px;
+      font-size: 12px;
+    }
+
+    /* 型号字段特殊处理 */
+    #view-orders-edit #prodTable .model-field {
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 6px;
+    }
+
+    #view-orders-edit #prodTable .model-field input {
+      flex: 1;
+      text-align: left !important;
+      display: block;
+      margin: 0;
+      font-weight: 500;
+    }
+
+    /* 确保页面布局完整显示，防止内容溢出 */
+    #view-orders-edit .panel-body {
+      overflow-x: auto !important;
+      overflow-y: visible !important;
+      max-width: 100%;
+      height: auto !important;
+      max-height: none !important;
+      /* 确保滚动条始终显示，不会因为选中行而消失 */
+      scrollbar-width: thin;
+      /* Firefox */
+      scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
+      /* Firefox */
+    }
+
+    /* 确保滚动条样式一致，不会抖动 */
+    #view-orders-edit .panel-body::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+
+    #view-orders-edit .panel-body::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    #view-orders-edit .panel-body::-webkit-scrollbar-thumb {
+      background-color: rgba(0, 0, 0, 0.2);
+      border-radius: 4px;
+    }
+
+    #view-orders-edit .panel-body::-webkit-scrollbar-thumb:hover {
+      background-color: rgba(0, 0, 0, 0.3);
+    }
+
+    #view-orders-edit #prodTable {
+      min-width: 1400px;
+      /* 调整最小宽度以适应新增的包装、包皮布列 */
+    }
+
+    /* 确保主内容区域可以滚动，恢复整个页面滚动 */
+    #view-orders-edit .main {
+      overflow-x: auto !important;
+      overflow-y: auto !important;
+      padding-right: 10px;
+      height: auto !important;
+      max-height: none !important;
+      display: block !important;
+      flex-direction: initial !important;
+      /* 确保滚动条始终显示，不会因为选中行而消失 */
+      scrollbar-width: thin;
+      /* Firefox */
+      scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
+      /* Firefox */
+    }
+
+    /* 确保滚动条样式一致，不会抖动 */
+    #view-orders-edit .main::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+
+    #view-orders-edit .main::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    #view-orders-edit .main::-webkit-scrollbar-thumb {
+      background-color: rgba(0, 0, 0, 0.2);
+      border-radius: 4px;
+    }
+
+    #view-orders-edit .main::-webkit-scrollbar-thumb:hover {
+      background-color: rgba(0, 0, 0, 0.3);
+    }
+
+    /* 恢复面板的默认显示方式，不限制高度 */
+    #view-orders-edit .panel {
+      height: auto !important;
+      flex: initial !important;
+      display: block !important;
+      flex-direction: initial !important;
+    }
+
+    /* 确保 panel-body 不独立滚动 */
+    #view-orders-edit .panel-body {
+      overflow: visible !important;
+      height: auto !important;
+      max-height: none !important;
+      display: block !important;
+      flex-direction: initial !important;
+      flex: initial !important;
+      min-height: initial !important;
+    }
+
+    /* 统计行样式优化 */
+    #view-orders-edit #prodTable .total-row {
+      background-color: #f8fafc !important;
+      /* 合计行整体浅灰色背景 */
+      font-weight: 600;
+    }
+
+    #view-orders-edit #prodTable .total-row td {
+      border-top: 2px solid #d0d7de !important;
+      font-size: 14px;
+      background-color: #f8fafc !important;
+      /* 合计行所有单元格浅灰色背景 */
+    }
+
+    /* 合计行的预估总净重输入框：字体样式 */
+    #view-orders-edit #prodTable .total-weight {
+      font-weight: 700;
+      text-align: center;
+      color: #1e40af;
+    }
+
+    /* 计算区样式在下方统一设置（见第1496-1506行） */
+
+    /* 产品明细表格列宽统一定义 - 使用百分比分配：复选框区4%、通用区60%、可变区20%、计算区16%（包装7%、预估总净重5%、启用4%） */
+    /* 表格使用固定布局以确保列宽分配准确 */
+    #view-orders-edit #prodTable {
+      table-layout: fixed;
+      width: 100%;
+    }
+
+    /* 复选框列 - 第1列（4%，最小宽度确保内容完整显示） */
+    #view-orders-edit #prodTable th:nth-child(1),
+    #view-orders-edit #prodTable td:nth-child(1) {
+      width: 4% !important;
+      min-width: 50px !important;
+      /* 确保复选框、拖动按钮完整显示 */
+      max-width: 80px !important;
+      /* 限制最大宽度，防止占用过多空间 */
+      box-sizing: border-box !important;
+      overflow: hidden !important;
+      /* 防止溢出到其他单元格 */
+      vertical-align: middle !important;
+      /* 垂直居中 */
+      text-align: center !important;
+      /* 水平居中 */
+    }
+
+    /* 通用区：产品型号 - 第2列（分配18%） */
+    #view-orders-edit #prodTable th:nth-child(2),
+    #view-orders-edit #prodTable td:nth-child(2) {
+      width: 18% !important;
+      box-sizing: border-box !important;
+    }
+
+    /* 通用区：数量 - 第3列（分配6%） */
+    #view-orders-edit #prodTable th:nth-child(3),
+    #view-orders-edit #prodTable td:nth-child(3) {
+      width: 6% !important;
+      box-sizing: border-box !important;
+    }
+
+    /* 通用区：件数 - 第4列（分配6%） */
+    #view-orders-edit #prodTable th:nth-child(4),
+    #view-orders-edit #prodTable td:nth-child(4) {
+      width: 6% !important;
+      box-sizing: border-box !important;
+    }
+
+    /* 通用区：件数单位 - 第5列（分配5%） */
+    #view-orders-edit #prodTable th:nth-child(5),
+    #view-orders-edit #prodTable td:nth-child(5) {
+      width: 5% !important;
+      box-sizing: border-box !important;
+    }
+
+    /* 通用区：单价 - 第6列（分配5%） */
+    #view-orders-edit #prodTable th:nth-child(6),
+    #view-orders-edit #prodTable td:nth-child(6) {
+      width: 5% !important;
+      box-sizing: border-box !important;
+    }
+
+    /* 通用区：实际重量 - 第7列（分配5%） */
+    #view-orders-edit #prodTable th:nth-child(7),
+    #view-orders-edit #prodTable td:nth-child(7) {
+      width: 5% !important;
+      box-sizing: border-box !important;
+    }
+
+    /* 通用区：预估重量 - 第8列（分配5%） */
+    #view-orders-edit #prodTable th:nth-child(8),
+    #view-orders-edit #prodTable td:nth-child(8) {
+      width: 5% !important;
+      box-sizing: border-box !important;
+    }
+
+    /* 通用区：清洁度 - 第9列（分配5%） */
+    #view-orders-edit #prodTable th:nth-child(9),
+    #view-orders-edit #prodTable td:nth-child(9) {
+      width: 5% !important;
+      box-sizing: border-box !important;
+    }
+
+    /* 通用区：包皮布 - 第10列（分配5%） */
+    #view-orders-edit #prodTable th:nth-child(10),
+    #view-orders-edit #prodTable td:nth-child(10) {
+      width: 5% !important;
+      box-sizing: border-box !important;
+    }
+
+    /* A类品和B类品时，隐藏包皮布列（第10列） */
+    #view-orders-edit #prodTable:not(.template-3) th:nth-child(10),
+    #view-orders-edit #prodTable:not(.template-3) td:nth-child(10) {
+      display: none !important;
+    }
+
+    /* C类品时，显示包皮布列（第10列） */
+    #view-orders-edit #prodTable.template-3 th:nth-child(10),
+    #view-orders-edit #prodTable.template-3 td:nth-child(10) {
+      display: table-cell !important;
+    }
+
+    /* 可变区：根据模板显示不同字段 - 第11-12列（20%，每列10%） */
+    #view-orders-edit #prodTable th.variable-section,
+    #view-orders-edit #prodTable td.variable-section {
+      width: 10% !important;
+      box-sizing: border-box !important;
+    }
+
+    /* 计算区：包装 - 第13列（分配7%，确保在所有模板下宽度一致） */
+    #view-orders-edit #prodTable th:nth-child(13).calc-section,
+    #view-orders-edit #prodTable td:nth-child(13).calc-section,
+    #view-orders-edit #prodTable:not(.template-3) th:nth-child(13).calc-section,
+    #view-orders-edit #prodTable:not(.template-3) td:nth-child(13).calc-section,
+    #view-orders-edit #prodTable.template-3 th:nth-child(13).calc-section,
+    #view-orders-edit #prodTable.template-3 td:nth-child(13).calc-section {
+      width: 7% !important;
+      box-sizing: border-box !important;
+    }
+
+    /* 计算区：预估总净重 - 第14列（分配5%，确保在所有模板下宽度一致） */
+    #view-orders-edit #prodTable th:nth-child(14).calc-section,
+    #view-orders-edit #prodTable td:nth-child(14).calc-section,
+    #view-orders-edit #prodTable:not(.template-3) th:nth-child(14).calc-section,
+    #view-orders-edit #prodTable:not(.template-3) td:nth-child(14).calc-section,
+    #view-orders-edit #prodTable.template-3 th:nth-child(14).calc-section,
+    #view-orders-edit #prodTable.template-3 td:nth-child(14).calc-section {
+      width: 5% !important;
+      box-sizing: border-box !important;
+    }
+
+    /* 计算区：启用 - 第15列（分配4%，确保在所有模板下宽度一致） */
+    #view-orders-edit #prodTable th:nth-child(15).calc-section,
+    #view-orders-edit #prodTable td:nth-child(15).calc-section,
+    #view-orders-edit #prodTable:not(.template-3) th:nth-child(15).calc-section,
+    #view-orders-edit #prodTable:not(.template-3) td:nth-child(15).calc-section,
+    #view-orders-edit #prodTable.template-3 th:nth-child(15).calc-section,
+    #view-orders-edit #prodTable.template-3 td:nth-child(15).calc-section {
+      width: 4% !important;
+      box-sizing: border-box !important;
+      text-align: center !important;
+    }
+
+    /* Switch开关样式 - 启用列 */
+    #view-orders-edit #prodTable td.calc-section .switch {
+      position: relative;
+      display: inline-block;
+      width: 40px;
+      height: 20px;
+      margin: 0 auto;
+    }
+
+    #view-orders-edit #prodTable td.calc-section .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    #view-orders-edit #prodTable td.calc-section .switch-slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #ccc;
+      transition: .4s;
+      border-radius: 20px;
+      box-sizing: border-box;
+    }
+
+    #view-orders-edit #prodTable td.calc-section .switch-slider:before {
+      position: absolute;
+      content: "";
+      height: 16px;
+      width: 16px;
+      left: 2px;
+      bottom: 2px;
+      background-color: white;
+      transition: .4s;
+      border-radius: 50%;
+    }
+
+    #view-orders-edit #prodTable td.calc-section .switch input:checked+.switch-slider {
+      background-color: #10b981;
+    }
+
+    #view-orders-edit #prodTable td.calc-section .switch input:focus+.switch-slider {
+      box-shadow: 0 0 1px #10b981;
+    }
+
+    #view-orders-edit #prodTable td.calc-section .switch input:checked+.switch-slider:before {
+      transform: translateX(20px);
+    }
+
+    /* 产品明细表格整体优化 */
+    #view-orders-edit #prodTable tr {
+      transition: all 0.2s ease;
+    }
+
+    /* 鼠标悬停效果 - 多维度视觉反馈，清晰明确（不影响滚动条） */
+    #view-orders-edit #prodTable tbody tr:not(.row-active):hover {
+      background: linear-gradient(135deg,
+          rgba(59, 130, 246, 0.12) 0%,
+          rgba(96, 165, 250, 0.10) 50%,
+          rgba(147, 197, 253, 0.08) 100%) !important;
+      border-left: 4px solid #3b82f6 !important;
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.5),
+        inset 0 -1px 0 rgba(59, 130, 246, 0.15),
+        0 0 0 1px rgba(59, 130, 246, 0.25),
+        0 2px 4px rgba(59, 130, 246, 0.15),
+        0 4px 8px rgba(59, 130, 246, 0.08) !important;
+      /* 移除 position、z-index 和 transform，避免影响滚动条显示和造成抖动 */
+      /* position: relative; */
+      /* z-index: 5; */
+      /* transform: translateY(-1px) scale(1.002); */
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* 悬停时所有单元格微亮效果 */
+    #view-orders-edit #prodTable tbody tr:not(.row-active):hover td {
+      color: #1e40af !important;
+      font-weight: 500;
+    }
+
+    /* 悬停行的单元格需要调整padding，补偿左边框占用的空间 */
+    #view-orders-edit #prodTable tbody tr:not(.row-active):hover td:first-child {
+      padding-left: 2px !important;
+    }
+
+    /* 产品明细表格行选中效果 - 增强边框和输入框视觉效果 */
+    /* 选中行：增强左边框效果（不影响滚动条） */
+    #view-orders-edit #prodTable tbody tr.row-active {
+      border-left: 4px solid #3b82f6 !important;
+      box-shadow: inset 4px 0 0 #3b82f6, 0 2px 8px rgba(59, 130, 246, 0.15) !important;
+      /* 移除 position: relative 和 z-index，避免影响滚动条显示 */
+      /* position: relative; */
+      /* z-index: 5; */
+    }
+
+    /* 选中行悬停：增强边框效果 */
+    #view-orders-edit #prodTable tbody tr.row-active:hover {
+      border-left: 5px solid #2563eb !important;
+      box-shadow: inset 5px 0 0 #2563eb, 0 3px 12px rgba(37, 99, 235, 0.2) !important;
+      /* z-index: 6; */
+    }
+
+    /* 选中行的输入框和下拉框：增强选中效果 */
+    #view-orders-edit #prodTable tbody tr.row-active td input:not(:focus),
+    #view-orders-edit #prodTable tbody tr.row-active td select:not(:focus) {
+      border: 2px solid #3b82f6 !important;
+      background-color: #eff6ff !important;
+      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1) !important;
+      transition: all 0.2s ease !important;
+    }
+
+    /* 选中行的输入框和下拉框悬停：增强效果 */
+    #view-orders-edit #prodTable tbody tr.row-active td input:hover:not(:focus),
+    #view-orders-edit #prodTable tbody tr.row-active td select:hover:not(:focus) {
+      border: 2px solid #2563eb !important;
+      background-color: #dbeafe !important;
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15) !important;
+    }
+
+    /* 选中行的输入框和下拉框聚焦：强烈聚焦效果（不影响滚动条） */
+    #view-orders-edit #prodTable tbody tr.row-active td input:focus,
+    #view-orders-edit #prodTable tbody tr.row-active td select:focus {
+      border: 3px solid #2563eb !important;
+      background-color: #ffffff !important;
+      box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.3), 0 2px 8px rgba(37, 99, 235, 0.2) !important;
+      z-index: 20 !important;
+      /* 移除 transform，避免影响滚动条和造成抖动 */
+      /* transform: scale(1.02) !important; */
+      transition: all 0.2s ease !important;
+    }
+
+    #view-orders-edit #prodTable th {
+      font-weight: 600;
+      font-size: 13px;
+      line-height: 1.3;
+      padding: 10px 6px;
+    }
+
+    #view-orders-edit #prodTable td {
+      padding: 6px 4px;
+      vertical-align: middle;
+    }
+
+    /* ==================== 三个板块的视觉区分样式 ==================== */
+
+    /* 1. 标题行（thead）：所有单元格背景色均为浅灰色 */
+    #view-orders-edit #prodTable thead th {
+      background-color: #f8fafc !important;
+      /* 浅灰色背景 */
+    }
+
+    /* 2. 合计行（.total-row）：除计算区外，所有单元格背景色均为浅灰色 */
+    #view-orders-edit #prodTable .total-row td {
+      background-color: #f8fafc !important;
+      /* 合计行所有单元格浅灰色背景 */
+    }
+
+    /* 合计行的通用区单元格：浅灰色（覆盖内容行的蓝色） */
+    #view-orders-edit #prodTable .total-row td.common-section {
+      background-color: #f8fafc !important;
+      /* 合计行的通用区单元格浅灰色背景 */
+    }
+
+    /* 合计行的可变区单元格：浅灰色（覆盖内容行的颜色） */
+    /* 需要针对所有产品类型设置，确保覆盖模板特定的样式 */
+    #view-orders-edit #prodTable .total-row td.variable-section,
+    #view-orders-edit #prodTable:not(.template-2):not(.template-3) .total-row td.variable-section,
+    #view-orders-edit #prodTable.template-2 .total-row td.variable-section,
+    #view-orders-edit #prodTable.template-3 .total-row td.variable-section {
+      background-color: #f8fafc !important;
+      /* 合计行的可变区单元格浅灰色背景 */
+    }
+
+    /* 合计行的计算区单元格：浅灰色（覆盖合计行的浅绿色，包括包装、预估总净重、启用列） */
+    #view-orders-edit #prodTable .total-row td.calc-section {
+      background-color: #f8fafc !important;
+      /* 合计行的计算区单元格浅灰色背景 */
+    }
+
+    /* 3. 通用区（.common-section）：内容行单元格背景色保持蓝色 */
+    #view-orders-edit #prodTable th.common-section {
+      background-color: #f8fafc !important;
+      /* 标题行浅灰色 */
+    }
+
+    #view-orders-edit #prodTable td.common-section {
+      background-color: #e0f2fe !important;
+      /* 内容行浅蓝色背景 */
+    }
+
+    /* 4. 可变区（.variable-section）：根据产品类型设置背景色 */
+    #view-orders-edit #prodTable th.variable-section {
+      background-color: #f8fafc !important;
+      /* 标题行浅灰色 */
+    }
+
+    /* A类品：可变区背景色为浅蓝色 */
+    #view-orders-edit #prodTable:not(.template-2):not(.template-3) td.variable-section {
+      background-color: #e0f2fe !important;
+      /* 浅蓝色背景 */
+    }
+
+    /* B类品：可变区背景色为黄色 */
+    #view-orders-edit #prodTable.template-2 td.variable-section {
+      background-color: #fef3c7 !important;
+      /* 黄色背景 */
+    }
+
+    /* C类品：可变区背景色为粉色 */
+    #view-orders-edit #prodTable.template-3 td.variable-section {
+      background-color: #fce7f3 !important;
+      /* 粉色背景 */
+    }
+
+    /* 5. 计算区（.calc-section）：任何情况下内容行单元格背景色均为浅绿色 */
+    #view-orders-edit #prodTable th.calc-section {
+      background-color: #f8fafc !important;
+      /* 标题行浅灰色 */
+    }
+
+    #view-orders-edit #prodTable td.calc-section {
+      background-color: #e8f5e8 !important;
+      /* 内容行浅绿色背景（任何情况下） */
+    }
+
+    /* B类品：共用区与变化区之间的分隔线 */
+    #view-orders-edit #prodTable.template-2 th.common-section:last-of-type,
+    #view-orders-edit #prodTable.template-2 td.common-section:last-of-type {
+      border-right: 1px solid #d0d7de !important;
+    }
+
+    /* C类品：共用区与变化区之间的分隔线 */
+    #view-orders-edit #prodTable.template-3 th.common-section:last-of-type,
+    #view-orders-edit #prodTable.template-3 td.common-section:last-of-type {
+      border-right: 1px solid #d0d7de !important;
+    }
+
+    /* 板块标题行样式 */
+    #view-orders-edit #prodTable th.section-header {
+      font-weight: 700;
+      font-size: 14px;
+      padding: 8px 4px;
+      text-align: center;
+      color: #1e293b;
+    }
+
+    /* 复选框列样式 - 参考启用列的布局方式 */
+    #view-orders-edit #prodTable th.checkbox-col {
+      background-color: #f5f7fa !important;
+      border: 1px solid #d0d7de !important;
+      padding: 8px 6px !important;
+      text-align: center !important;
+      vertical-align: middle !important;
+      display: table-cell !important;
+    }
+
+    #view-orders-edit #prodTable td.checkbox-col {
+      background-color: #ffffff !important;
+      border: 1px solid #e8e8e8 !important;
+      display: table-cell !important;
+      text-align: center !important;
+      vertical-align: middle !important;
+      padding: 8px 6px !important;
+      box-sizing: border-box !important;
+      white-space: nowrap !important;
+    }
+
+    #view-orders-edit #prodTable td.checkbox-col .drag-handle {
+      display: inline-block !important;
+      vertical-align: middle !important;
+      margin: 0 3px !important;
+      cursor: grab;
+      width: 16px !important;
+      height: 16px !important;
+    }
+
+    #view-orders-edit #prodTable td.checkbox-col .row-check {
+      display: inline-block !important;
+      vertical-align: middle !important;
+      margin: 0 3px !important;
+      cursor: pointer;
+      width: 16px !important;
+      height: 16px !important;
+    }
+
+    #view-orders-edit #prodTable th.checkbox-col input[type="checkbox"] {
+      display: block !important;
+      margin: 0 auto !important;
+      width: 16px !important;
+      height: 16px !important;
+      cursor: pointer;
+    }
+
+
+    /* 产品型号列（通用区第一列）样式 - 对齐复选框列的边框 */
+    #view-orders-edit #prodTable th.common-section:nth-child(2) {
+      border-left: 1px solid #d0d7de !important;
+    }
+
+    #view-orders-edit #prodTable td.common-section:nth-child(2) {
+      border-left: 1px solid #e8e8e8 !important;
+    }
+
+    /* 板块之间的分隔线 - 仅在板块边界处加粗 */
+    /* A类品：共用区与变化区之间的分隔线（蓝色加粗） */
+    #view-orders-edit #prodTable:not(.template-2):not(.template-3) th.common-section:last-of-type,
+    #view-orders-edit #prodTable:not(.template-2):not(.template-3) td.common-section:last-of-type {
+      border-right: 3px solid #0ea5e9 !important;
+    }
+
+    /* 变化区与计算区之间的分隔线 */
+    #view-orders-edit #prodTable th.variable-section:last-of-type,
+    #view-orders-edit #prodTable td.variable-section:last-of-type {
+      border-right: 3px solid #f59e0b !important;
+    }
+
+    /* 计算区右侧分隔线 */
+    #view-orders-edit #prodTable th.calc-section:last-of-type,
+    #view-orders-edit #prodTable td.calc-section:last-of-type {
+      border-right: 2px solid #cbd5e1 !important;
+    }
+
+    /* 复选框列与共用区之间的分隔线 */
+    #view-orders-edit #prodTable th.checkbox-col,
+    #view-orders-edit #prodTable td.checkbox-col {
+      border-right: 2px solid #cbd5e1 !important;
+    }
+
+    /* 页面整体布局优化 */
+    #view-orders-edit .panel {
+      margin-bottom: 16px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    #view-orders-edit .panel-header {
+      background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+      border-bottom: 1px solid #dee2e6;
+      border-top: 3px solid var(--accent-1);
+      /* 添加蓝色装饰线 */
+      padding: var(--panel-header-padding);
+      /* 使用统一变量 */
+      min-height: var(--panel-header-min-height);
+      /* 使用统一变量 */
+      border-radius: 12px 12px 0 0;
+      /* 调整圆角与首页保持一致 */
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+
+    #view-orders-edit .panel-title {
+      font-weight: 600;
+      color: #495057;
+      font-size: var(--panel-header-font-size);
+      /* 使用统一变量 */
+      line-height: var(--panel-header-line-height);
+      /* 使用统一变量 */
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* 移除旧的panel样式，使用新的content-section样式 */
+    #view-orders-edit .panel-body {
+      padding: 24px;
+      background: #ffffff;
+      border-radius: 0 0 12px 12px;
+      overflow: visible !important;
+      height: auto !important;
+      max-height: none !important;
+      display: block !important;
+      flex-direction: initial !important;
+      flex: initial !important;
+      min-height: initial !important;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    }
+
+    /* 面板间距优化 - 仅用于兼容旧代码 */
+    #view-orders-edit .panel {
+      margin-bottom: 24px;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      transition: box-shadow 0.3s ease;
+    }
+
+    #view-orders-edit .panel:hover {
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+    }
+
+    /* 确保内容区域内的表单网格布局正确 */
+    #view-orders-edit .content-section-body .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px 24px;
+      align-items: start;
+    }
+
+    #view-orders-edit .content-section-body .form-item {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    #view-orders-edit .content-section-body .form-item label {
+      font-weight: 500;
+      color: #495057;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    /* 表单网格布局优化 */
+    #view-orders-edit .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px 24px;
+      align-items: start;
+    }
+
+    #view-orders-edit .form-item {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      transition: all 0.2s ease;
+    }
+
+    #view-orders-edit .form-item:hover {
+      transform: translateY(-1px);
+    }
+
+    #view-orders-edit .form-item label {
+      font-weight: 500;
+      color: #495057;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    /* 确保内容区域内的表格容器正确显示 */
+    #view-orders-edit .content-section-body .table-container {
+      overflow-x: auto;
+      margin-top: 16px;
+      border-radius: 8px;
+      border: 1px solid #e5e7eb;
+    }
+
+    /* 响应式优化 */
+    @media (max-width: 768px) {
+      #view-orders-edit .order-edit-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+        padding: 12px 16px;
+      }
+
+      #view-orders-edit .order-edit-header-right {
+        width: 100%;
+        justify-content: flex-start;
+        flex-wrap: wrap;
+      }
+
+      #view-orders-edit .order-edit-content {
+        padding: 16px;
+      }
+
+      #view-orders-edit .content-section-body {
+        padding: 16px;
+      }
+
+      #view-orders-edit .content-section-header {
+        padding: 12px 16px;
+        font-size: 14px;
+      }
+    }
+
+    /* 生产通知信息区域优化 */
+    #view-orders-edit .prodnote-grid {
+      display: grid;
+      grid-template-columns: 1fr 300px;
+      gap: 20px;
+      align-items: start;
+    }
+
+    #view-orders-edit .two-cols {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    /* 产品明细表格容器优化 */
+    #view-orders-edit .table-container {
+      background: #ffffff;
+      border-radius: 8px;
+      overflow: visible;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.06);
+      border: 1px solid #e5e7eb;
+    }
+
+    /* 表格本身不裁剪内容，确保边框完全显示 */
+    #view-orders-edit #prodTable {
+      overflow: visible;
+      border-collapse: separate;
+      border-spacing: 0;
+    }
+
+    /* 表格圆角处理 */
+    #view-orders-edit #prodTable thead tr:first-child th:first-child {
+      border-top-left-radius: 7px;
+    }
+
+    #view-orders-edit #prodTable thead tr:first-child th:last-child {
+      border-top-right-radius: 7px;
+    }
+
+    /* 操作按钮区域优化 */
+    #view-orders-edit .utility-bar {
+      background: #f8f9fa;
+      border: 1px solid #dee2e6;
+      border-radius: 6px;
+      padding: 8px 12px;
+      margin: 8px 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      font-size: 13px;
+    }
+
+    #view-orders-edit .utility-bar .left-actions,
+    #view-orders-edit .utility-bar .right-actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    #view-orders-edit .utility-bar .text-muted {
+      color: #6c757d;
+      font-size: 12px;
+    }
+
+    /* 生产通知信息新布局样式 */
+    #view-orders-edit .prodnote-grid-new {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    #view-orders-edit .prodnote-grid-new .top-row {
+      display: flex;
+      gap: 20px;
+      align-items: flex-end;
+      /* 确保所有输入框底部对齐 */
+    }
+
+    #view-orders-edit .prodnote-grid-new .bottom-row {
+      width: 100%;
+    }
+
+    #view-orders-edit .prodnote-grid-new .box-type-container {
+      flex: 1;
+      /* 允许伸缩，包含箱型选择框和箱型说明输入框 */
+      min-width: 0;
+      display: flex;
+      gap: 12px;
+      align-items: flex-end;
+    }
+
+    /* 箱型选择框内部容器（固定宽度） */
+    #view-orders-edit .prodnote-grid-new .box-type-container>div:first-child {
+      flex: 0 0 150px;
+      min-width: 150px;
+    }
+
+    /* 箱型说明输入框容器样式 */
+    #view-orders-edit .prodnote-grid-new #boxTypeNoteContainer {
+      flex: 1;
+      min-width: 350px;
+      /* 增大最小宽度，使输入框更大 */
+      max-width: none;
+    }
+
+    #view-orders-edit .prodnote-grid-new .box-type-note-input {
+      width: 100%;
+      min-width: 350px;
+    }
+
+    #view-orders-edit .prodnote-grid-new .box-quantity-container {
+      flex: 0 0 150px;
+      /* 与箱型选择框相同的固定宽度 */
+      min-width: 150px;
+      max-width: 150px;
+    }
+
+    #view-orders-edit .prodnote-grid-new .box-volume-container {
+      flex: 0 0 150px;
+      /* 与箱型选择框相同的固定宽度 */
+      min-width: 150px;
+      max-width: 150px;
+    }
+
+    #view-orders-edit .prodnote-grid-new .marks-container {
+      flex: 1;
+      /* 占据剩余全部可用空间 */
+      min-width: 0;
+    }
+
+    #view-orders-edit .prodnote-grid-new .production-notes-container {
+      width: 100%;
+    }
+
+    #view-orders-edit .prodnote-grid-new .box-type-container label,
+    #view-orders-edit .prodnote-grid-new .box-quantity-container label,
+    #view-orders-edit .prodnote-grid-new .marks-container label,
+    #view-orders-edit .prodnote-grid-new .box-volume-container label,
+    #view-orders-edit .prodnote-grid-new .production-notes-container label {
+      font-size: 13px;
+      margin-bottom: 5px;
+      font-weight: 500;
+      color: #333;
+      display: block;
+    }
+
+    #view-orders-edit .prodnote-grid-new .box-type-select,
+    #view-orders-edit .prodnote-grid-new .box-quantity-select,
+    #view-orders-edit .prodnote-grid-new .box-volume-input {
+      font-size: 13px;
+      padding: 8px 10px;
+      height: 36px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      width: 100%;
+      box-sizing: border-box;
+      /* 确保边框和内边距包含在总尺寸内 */
+      line-height: 1.2;
+      /* 统一行高 */
+      vertical-align: middle;
+      /* 垂直居中对齐 */
+    }
+
+    #view-orders-edit .prodnote-grid-new .marks-note-textarea {
+      height: 36px;
+      /* 默认单行高度，与其他输入框一致 */
+      min-height: 36px;
+      /* 最小高度为单行 */
+      font-size: 13px;
+      padding: 8px 10px;
+      /* 与其他输入框保持一致的内边距 */
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      line-height: 1.2;
+      /* 与其他输入框保持一致的行高 */
+      width: 100%;
+      resize: vertical;
+      /* 保留垂直拖拽调整功能 */
+      overflow: hidden;
+      /* 初始状态隐藏滚动条 */
+      transition: height 0.2s ease;
+      /* 高度变化时的平滑过渡 */
+      box-sizing: border-box;
+      /* 确保边框和内边距包含在总尺寸内 */
+      vertical-align: middle;
+      /* 垂直居中对齐 */
+    }
+
+    /* 当用户拖拽调整高度后，自动显示滚动条 */
+    #view-orders-edit .prodnote-grid-new .marks-note-textarea:focus,
+    #view-orders-edit .prodnote-grid-new .marks-note-textarea[style*="height"] {
+      overflow-y: auto;
+      /* 显示垂直滚动条 */
+    }
+
+    #view-orders-edit .prodnote-grid-new .production-notes-textarea {
+      min-height: 150px;
+      font-size: 13px;
+      padding: 12px 15px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      line-height: 1.5;
+      width: 100%;
+      resize: vertical;
+    }
+
+    /* 响应式布局优化 */
+    @media (max-width: 1200px) {
+      #view-orders-edit .prodnote-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+      }
+
+      #view-orders-edit .form-grid {
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 12px 16px;
+      }
+    }
+
+    @media (max-width: 768px) {
+      #view-orders-edit .form-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+
+      #view-orders-edit .two-cols {
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+    }
+  </style>
+
+  <!-- 固定表头 -->
+  <div class="order-edit-header">
+    <div class="order-edit-header-left">
+      <div class="order-edit-header-title">订单编辑</div>
+      <div id="orderContractNoDisplay">
+        <span style="color: #9ca3af;">合同编号：</span>
+        <span id="orderContractNoValue" style="color: #e74c3c !important; font-weight: 700 !important;"></span>
+      </div>
+      <div class="template-switch-container" style="display: flex; gap: 8px; align-items: center; margin-left: 16px;">
+        <button type="button" class="btn-template active" id="btnTemplate1" data-template="1">A类品</button>
+        <button type="button" class="btn-template" id="btnTemplate2" data-template="2">B类品</button>
+        <button type="button" class="btn-template" id="btnTemplate3" data-template="3">C类品</button>
+      </div>
+    </div>
+    <div class="order-edit-header-right">
+      <button class="btn danger" type="button" id="btnDelSelected" style="display: none;">
+        <span style="margin-right: 4px;">🗑️</span>删除所选
+      </button>
+      <button class="btn success" type="button" id="btnAddProd">
+        <span style="margin-right: 4px;">➕</span>添加明细
+      </button>
+      <button class="btn primary" id="btnSaveOrderNew" type="button">
+        <span style="margin-right: 4px;">💾</span>保存订单
+      </button>
+      <a class="btn ghost" href="#/orders/list" id="backLink">
+        <span style="margin-right: 4px;">↩️</span>返回
+      </a>
+      <div id="boxVolumeValidationTip"
+        style="display: none; color: #e74c3c; font-size: 12px; margin-left: 12px; padding: 6px 12px; background: #fee; border-radius: 4px; border: 1px solid #fcc;">
+        请填写箱型体积后再保存订单
+      </div>
+    </div>
+  </div>
+
+  <!-- 内容区域 -->
+  <div class="order-edit-content">
+    <!-- (1) 订单信息 -->
+    <div class="content-section" id="section-order-info">
+      <div class="content-section-header">（1）订单信息</div>
+      <div class="content-section-body">
+        <div class="form-grid">
+          <!-- 第一行：订单日期、合同编号、客户名称、订单号、发货日期、贸易术语 -->
+          <div class="form-item"><label>DATE（订单日期）</label>
+            <div class="date-input-wrapper">
+              <input type="text" class="input date-input" id="invoiceDate" inputmode="numeric"
+                placeholder="YYYY-MM-DD、20250808 或 0808" />
+              <button class="btn ghost small date-picker-btn" id="btnPickDate" type="button">📅</button>
+            </div>
+          </div>
+          <div class="form-item"><label>合同编号</label>
+            <div class="date-input-wrapper">
+              <input class="input date-input" id="contractNo" />
+              <button class="btn ghost small date-picker-btn" id="btnAddOrderNo" type="button"
+                title="添加订单号">NO.</button>
+            </div>
+          </div>
+          <div class="form-item"><label>ACCOUNT AND RISK OF（客户） <span style="color: #e74c3c;">*</span></label>
+            <select class="select" id="ordCustomerSelect"></select>
+          </div>
+          <div class="form-item"><label>ORDER NO（订单号）</label><input class="input" data-field="orderNo"
+              placeholder="例如 SO-2025-0001" /></div>
+          <div class="form-item"><label>SHIPMENT DATE（发货日期）</label>
+            <div class="date-input-wrapper">
+              <input type="text" class="input date-input" id="shipmentDate" inputmode="numeric"
+                placeholder="YYYY-MM-DD、20250808 或 0808" />
+              <button class="btn ghost small date-picker-btn" id="btnPickShipmentDate" type="button">📅</button>
+            </div>
+          </div>
+          <div class="form-item"><label>Trade Term（贸易术语）</label>
+            <select class="select" data-field="tradeTerm">
+              <option value="">请选择</option>
+              <option value="CIF">CIF</option>
+              <option value="CNF">CNF</option>
+            </select>
+          </div>
+
+          <!-- 第二行：装运港、目的港、发票号、提单号、货运号、订单金额、订单状态 -->
+          <div class="form-item"><label>FROM（装运港）</label><input class="input" id="shipFrom" /></div>
+          <div class="form-item"><label>TO（目的港）</label><select class="select" id="shipTo"></select></div>
+          <div class="form-item"><label>INVOICE NO（发票号）</label><input class="input" id="invoiceNo" /></div>
+          <div class="form-item"><label>B/L No（提单号）</label><input class="input" id="blNo" /></div>
+          <div class="form-item"><label>SHIPPED PER S.S（船名航次）</label><input class="input" id="shippedPerSs" /></div>
+          <div class="form-item"><label>货代</label><select class="select" id="forwarder"></select></div>
+          <div class="form-item"><label>订单总金额 (USD)</label><input type="number" class="input" id="ordAmount"
+              placeholder="自动计算" readonly style="background-color: #f5f5f5;" /></div>
+          <div class="form-item"><label>订单状态</label>
+            <select class="select" id="orderStatus" style="max-width: 200px;">
+              <option value="已创建" selected>已创建</option>
+              <option value="已排产">已排产</option>
+              <option value="已发货">已发货</option>
+              <option value="已完成">已完成</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- (2-1) 产品明细：PP CONTAINER  BAGS -->
+    <div class="content-section" id="section-products">
+      <div class="content-section-header">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <span>(2-1) 产品明细：PP CONTAINER BAGS</span>
+          <div id="productTypeDisplay" style="display: inline-flex; align-items: center; gap: 8px;">
+            <span style="color: #9ca3af;">产品类型：</span>
+            <span id="productTypeValue" style="color: #e74c3c !important; font-weight: 700 !important;">A类品</span>
+          </div>
+        </div>
+      </div>
+      <div class="content-section-body">
+        <div class="table-container">
+          <table class="table" id="prodTable">
+            <thead id="prodTableHead">
+              <tr>
+                <th class="checkbox-col"><input type="checkbox" id="checkAllRows" title="全选/取消全选" /></th>
+                <th class="common-section">产品型号</th>
+                <th class="common-section">数量</th>
+                <th class="common-section">件数</th>
+                <th class="common-section">件数<br />单位</th>
+                <th class="common-section">单价<br />(USD)</th>
+                <th class="common-section">实际<br />重量</th>
+                <th class="common-section">预估<br />重量</th>
+                <th class="common-section">清洁度</th>
+                <th class="common-section">包皮布</th>
+                <th class="variable-section">标签<br />重量</th>
+                <th class="variable-section">安全<br />系数</th>
+                <th class="calc-section">包装</th>
+                <th class="calc-section">预估<br />总净重</th>
+                <th class="calc-section">启用</th>
+              </tr>
+            </thead>
+            <tbody id="prodTbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- (2-2) 产品明细：PP BAGS -->
+    <div class="content-section" id="section-products-pp-bags">
+      <div class="content-section-header">
+        <span>(2-2) 产品明细：PP BAGS</span>
+      </div>
+      <div class="content-section-body">
+      </div>
+    </div>
+
+    <!-- (3) 生产通知信息 -->
+    <div class="content-section" id="section-production">
+      <div class="content-section-header">(3) 生产通知信息</div>
+      <div class="content-section-body">
+        <div class="prodnote-grid-new">
+          <div class="top-row">
+            <div class="box-type-container" style="display: flex; gap: 12px; align-items: flex-end;">
+              <div style="flex: 0 0 150px;">
+                <label>箱型</label>
+                <select class="select box-type-select" data-field="boxType">
+                  <option value="">请选择箱型</option>
+                  <option value="20GP">20GP (20尺普通柜)</option>
+                  <option value="40GP">40GP (40尺普通柜)</option>
+                  <option value="40HC">40HC (40尺高柜)</option>
+                  <option value="45HQ">45HQ (45尺高柜)</option>
+                  <option value="L-107">L-107 (定制箱型)</option>
+                  <option value="其他">其他</option>
+                </select>
+              </div>
+              <div id="boxTypeNoteContainer" style="flex: 1; min-width: 350px; display: none;">
+                <label>箱型说明</label>
+                <input type="text" class="input box-type-note-input" data-field="boxTypeNote" placeholder="请输入箱型说明"
+                  style="width: 100%;">
+              </div>
+            </div>
+            <div class="box-quantity-container">
+              <label>货箱数量</label>
+              <select class="select box-quantity-select" data-field="boxQuantity">
+                <option value="">请选择数量</option>
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+                <option value="6">6</option>
+                <option value="7">7</option>
+                <option value="8">8</option>
+                <option value="9">9</option>
+                <option value="10">10</option>
+              </select>
+            </div>
+            <div class="box-volume-container">
+              <label>箱型体积</label>
+              <input type="text" class="input box-volume-input" data-field="boxVolume" placeholder="如：28CBM">
+            </div>
+            <div class="marks-container">
+              <label>唛头说明</label>
+              <textarea class="textarea marks-note-textarea" data-field="marksNote" placeholder="运输唛头说明，如：客户名、订单号、目的地"
+                rows="1"></textarea>
+            </div>
+          </div>
+          <div class="bottom-row">
+            <div class="production-notes-container">
+              <label>生产通知备注</label>
+              <div class="remark-buttons" style="margin-bottom: 8px;">
+                <button type="button" class="btn-remark" data-remark="D#319-II 请按照新的工艺来安排生产。
+投入口扎带位置放在印刷面上；排出口绳子系2个扣，一定系紧。
+注意排出口的打结方式。
+确认印刷位置（同一根吊带的面）。文件袋缝在印刷面的右面。投入口，
+排出口的扎带缝在与印刷同一侧面上.
+包装用塑料托盘，注意用结实的托盘 以防托盘破损。">默认模版</button>
+              </div>
+              <textarea class="textarea production-notes-textarea" data-field="prodNote" placeholder="生产注意事项、材料要求等"
+                rows="6"></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- (4) 拉货通知信息 -->
+    <div class="content-section" id="section-pickup">
+      <div class="content-section-header">(4) 拉货通知信息</div>
+      <div class="content-section-body">
+        <div class="pickup-grid">
+          <div class="top-row">
+            <div class="pickup-date-container">
+              <label>拉货日期 <span class="required">*</span></label>
+              <div class="date-input-group" style="position: relative;">
+                <input type="text" class="input pickup-date-input" data-field="pickupDate"
+                  placeholder="YYYY-MM-DD、20250808 或 0808" style="padding-right: 35px;" />
+                <button type="button" class="btn btn-secondary btn-pick-date" id="btnPickPickupDate"
+                  style="position: absolute; right: 5px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; font-size: 16px; color: #007bff; padding: 0; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center;">📅</button>
+              </div>
+            </div>
+            <div class="pickup-time-container">
+              <label>拉货时间 <span class="required">*</span></label>
+              <div class="time-input-group" style="position: relative;">
+                <input type="text" class="input pickup-time-input" data-field="pickupTime" placeholder="HH:MM 或 1330"
+                  style="padding-right: 35px;" />
+                <button type="button" class="btn btn-secondary btn-pick-time" id="btnPickPickupTime"
+                  style="position: absolute; right: 5px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; font-size: 16px; color: #007bff; padding: 0; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center;">🕐</button>
+              </div>
+            </div>
+            <div class="container-position-container">
+              <label>货箱位置</label>
+              <input type="text" class="input container-position-input" data-field="containerPosition"
+                placeholder="货箱停放位置描述" />
+            </div>
+            <div class="photo-remark-container">
+              <label>拍照备注</label>
+              <input type="text" class="input photo-remark-input" data-field="photoRemark" placeholder="拍照要求和备注信息" />
+            </div>
+          </div>
+          <div class="bottom-row">
+            <div class="pickup-notes-container">
+              <label>拉货备注</label>
+              <textarea class="textarea pickup-notes-textarea" data-field="pickupNote" placeholder="拉货注意事项、特殊要求等"
+                rows="4"></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>

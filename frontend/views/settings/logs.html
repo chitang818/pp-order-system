@@ -1,0 +1,78 @@
+<section id="settingsLogsPage" data-view class="panel">
+  <div class="settings-single-column full-width">
+    <!-- 日志筛选卡片 -->
+    <div class="settings-card">
+      <div class="settings-card-header">
+        <div class="settings-card-icon info">📋</div>
+        <div class="settings-card-title-group">
+          <h3 class="settings-card-title">操作日志</h3>
+          <p class="settings-card-subtitle">查看系统操作记录</p>
+        </div>
+      </div>
+      <div class="settings-card-body">
+        <div class="form-grid" style="grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 16px;">
+          <div class="settings-form-group">
+            <label class="settings-label">模块筛选</label>
+            <select class="settings-input" id="logFilterModule">
+              <option value="">全部模块</option>
+              <option value="认证">认证</option>
+              <option value="用户管理">用户管理</option>
+              <option value="订单">订单</option>
+              <option value="客户">客户</option>
+              <option value="产品">产品</option>
+              <option value="操作日志">操作日志</option>
+            </select>
+          </div>
+          <div class="settings-form-group">
+            <label class="settings-label">操作类型</label>
+            <select class="settings-input" id="logFilterOperation">
+              <option value="">全部操作</option>
+              <option value="创建">创建</option>
+              <option value="更新">更新</option>
+              <option value="删除">删除</option>
+              <option value="登录">登录</option>
+              <option value="登出">登出</option>
+            </select>
+          </div>
+          <div class="settings-form-group">
+            <label class="settings-label">时间范围</label>
+            <select class="settings-input" id="logFilterTimeRange">
+              <option value="">全部时间</option>
+              <option value="today">今天</option>
+              <option value="week">最近7天</option>
+              <option value="month">最近30天</option>
+            </select>
+          </div>
+        </div>
+        <div style="display: flex; gap: 8px; margin-bottom: 16px;">
+          <button class="settings-btn primary" id="btnSearchLogs">
+            <span class="settings-btn-icon">🔍</span>
+            搜索
+          </button>
+          <button class="settings-btn secondary" id="btnResetLogFilter">
+            <span class="settings-btn-icon">↺</span>
+            重置
+          </button>
+          <button class="settings-btn danger" id="btnClearLogs" style="margin-left: auto;">
+            <span class="settings-btn-icon">🗑️</span>
+            清空日志
+          </button>
+        </div>
+
+        <div id="logsTableContainer">
+          <div class="loading-state" style="text-align: center; padding: 40px;">
+            <div style="font-size: 16px; color: #9ca3af;">加载中...</div>
+          </div>
+        </div>
+
+        <!-- 分页 -->
+        <div id="logsPagination" style="display: flex; justify-content: center; align-items: center; gap: 12px; margin-top: 16px;">
+          <button class="settings-btn secondary" id="btnLogsPrevPage" disabled>上一页</button>
+          <span style="color: #6b7280;">第 <strong id="logsCurrentPage">1</strong> 页 / 共 <strong id="logsTotalPages">1</strong> 页</span>
+          <button class="settings-btn secondary" id="btnLogsNextPage" disabled>下一页</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+

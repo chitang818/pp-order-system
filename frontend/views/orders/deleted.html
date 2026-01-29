@@ -1,0 +1,58 @@
+<section id="view-orders-deleted" class="panel" data-view>
+  <div class="panel-header">
+    <div class="panel-title">已删除订单</div>
+    <div class="panel-actions">
+      <button class="btn success" id="btnRestoreSelectedOrders" style="display:none; background: #10B981; border-color: #10B981;">
+        <span style="margin-right: 4px;">🔄</span>恢复选中
+      </button>
+      <button class="btn danger" id="btnPermanentlyDeleteSelectedOrders" style="display:none; background: #EF4444; border-color: #EF4444;">
+        <span style="margin-right: 4px;">🗑️</span>永久删除
+      </button>
+      <button class="btn primary" id="btnRefreshDeletedOrders">
+        <span style="margin-right: 4px;">🔄</span>刷新
+      </button>
+    </div>
+  </div>
+  <div class="panel-body">
+    <!-- 已删除订单表格 -->
+    <div class="orders-table-container" style="background: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+      <table class="table orders-table" id="deletedOrdersTable" style="table-layout: fixed; width: 100%;">
+        <colgroup>
+          <col style="width: 3%;">
+          <col style="width: 7%;">
+          <col style="width: 9%;">
+          <col style="width: 8%;">
+          <col style="width: 12%;">
+          <col style="width: 8%;">
+          <col style="width: 8%;">
+          <col style="width: 7%;">
+          <col style="width: 10%;">
+          <col style="width: 8%;">
+          <col style="width: 8%;">
+          <col style="width: 7%;">
+          <col style="width: 9%;">
+        </colgroup>
+        <thead>
+          <tr>
+            <th style="text-align: center;"><input type="checkbox" id="selectAllDeletedOrders" title="全选/取消全选"></th>
+            <th style="text-align: center; cursor: pointer;" data-sort="orderDate">📅 订单日期 <span class="sort-icon">⇅</span></th>
+            <th style="text-align: center; cursor: pointer;" data-sort="contractNo">📄 合同编号 <span class="sort-icon">⇅</span></th>
+            <th style="text-align: center; cursor: pointer;" data-sort="invoiceNo">🧾 发票号 <span class="sort-icon">⇅</span></th>
+            <th style="text-align: center; cursor: pointer;" data-sort="customerName">👤 客户 <span class="sort-icon">⇅</span></th>
+            <th style="text-align: center; cursor: pointer;" data-sort="totalUSD">💰 订单金额(USD) <span class="sort-icon">⇅</span></th>
+            <th style="text-align: center; cursor: pointer;" data-sort="paymentDueDate">💰 货款到账时间 <span class="sort-icon">⇅</span></th>
+            <th style="text-align: center; cursor: pointer;" data-sort="shipmentDate">🚢 发货日期 <span class="sort-icon">⇅</span></th>
+            <th style="text-align: center; cursor: pointer;" data-sort="shipTo">🌍 目的港城市 <span class="sort-icon">⇅</span></th>
+            <th style="text-align: center; cursor: pointer;" data-sort="forwarder">🏢 货代 <span class="sort-icon">⇅</span></th>
+            <th style="text-align: center; cursor: pointer;" data-sort="blNo">🚢 提单号 <span class="sort-icon">⇅</span></th>
+            <th style="text-align: center; cursor: pointer;" data-sort="status">📊 订单状态 <span class="sort-icon">⇅</span></th>
+            <th style="text-align: center; cursor: pointer;" data-sort="deletedAt">🗑️ 删除时间 <span class="sort-icon">⇅</span></th>
+            <th style="text-align: center;">⚙️ 操作</th>
+          </tr>
+        </thead>
+        <tbody id="deletedOrdersTbody"></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+

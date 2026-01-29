@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>单据中心</title>
+  <link rel="icon"
+    href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📄</text></svg>">
+  <link rel="stylesheet" href="./src/styles/pages/erp.css" />
+  <link rel="stylesheet" href="./src/styles/components/notification.css" />
+  <link rel="stylesheet" href="./src/styles/base/styles.css" />
+  <link rel="stylesheet" href="./src/styles/pages/docs-preview.css" />
+  <!-- 导出库改为按需动态加载，避免首屏加载阻塞 -->
+</head>
+
+<body>
+  <div class="app-shell">
+    <div class="topbar">
+      <div class="brand">
+        <span class="title">单据中心</span>
+        <nav class="breadcrumb breadcrumbs" aria-label="路径导航">
+          <a href="index.html#/home">首页</a>
+          <span class="sep">/</span>
+          <span>单据中心</span>
+          <span class="sep">/</span>
+          <span>单据生成</span>
+        </nav>
+      </div>
+      <div class="actions"></div>
+    </div>
+    <div class="content">
+      <aside class="sidebar">
+        <div class="group-title">功能模块</div>
+        <nav class="nav" id="nav">
+          <a href="index.html#/home" data-route="home">🏠 首页</a>
+          <a href="index.html#/orders" data-route="orders" class="active">📦 订单管理</a>
+          <a href="index.html#/customers" data-route="customers">👥 客户管理</a>
+          <a href="index.html#/analytics" data-route="analytics">📊 交易统计</a>
+          <a href="index.html#/settings" data-route="settings" id="navSettings">
+            ⚙️ 系统设置
+            <span class="caret" aria-hidden="true"></span>
+          </a>
+          <div class="nav-submenu" id="settingsSubnav">
+            <a href="index.html#/settings/company" data-tab="company">🏢 公司设置</a>
+            <a href="index.html#/settings/database" data-tab="database">💾 数据库设置</a>
+            <a href="index.html#/settings/products" data-tab="products">📋 产品库管理</a>
+            <a href="index.html#/settings/users" data-tab="users">👤 用户管理</a>
+            <a href="index.html#/settings/logs" data-tab="logs">📝 操作日志</a>
+          </div>
+        </nav>
+      </aside>
+      <main class="main">
+        <section class="panel sticky-panel-header">
+          <div class="panel-header">
+            <div class="panel-title">单据生成</div>
+            <div class="panel-actions">
+              <button class="btn small" id="btnBack">返回订单</button>
+              <button class="btn small" id="btnExportWord">导出 Word</button>
+              <button class="btn small" id="btnExportExcel">导出 Excel</button>
+              <button class="btn small" id="btnExportPDF">导出 PDF</button>
+              <button class="btn small export-btn-editable" id="btnExportEditablePDF">导出可编辑PDF</button>
+            </div>
+          </div>
+          <div class="panel-body docs-layout-container">
+            <!-- 左侧预览区域（A4布局） -->
+            <div class="card preview-card">
+              <div class="preview-header header-flex-wrapper">
+                <div class="preview-title">预览 (A4)</div>
+
+                <!-- 预览窗口表头布局按钮 -->
+                <div class="header-controls">
+                  <label class="control-label-wrapper">
+                    <input type="checkbox" id="pageDragToggle" class="control-checkbox" checked>
+                    页面拖动
+                  </label>
+                  <button class="btn btn-mini style-btn" data-style="ultra-compact" id="btnStyleUltraCompactHeader"
+                    title="超级紧凑">超紧</button>
+                  <button class="btn btn-mini style-btn" data-style="compact" id="btnStyleCompactHeader"
+                    title="紧凑">紧凑</button>
+                  <button class="btn btn-mini style-btn" data-style="standard" id="btnStyleStandardHeader"
+                    title="标准">标准</button>
+                  <button class="btn btn-mini style-btn" data-style="wide" id="btnStyleWideHeader"
+                    title="宽松">宽松</button>
+
+                  <!-- 分隔线 -->
+                  <div class="separator-vertical"></div>
+
+                  <!-- 缩放控制按钮 -->
+                  <button class="btn btn-mini" id="zoomOut" title="缩小">-</button>
+                  <span id="zoomLevel" class="zoom-level-text">100%</span>
+                  <button class="btn btn-mini" id="zoomIn" title="放大">+</button>
+                  <label class="control-label-wrapper-right">
+                    <input type="checkbox" id="fitToPageToggle" class="control-checkbox">
+                    适配
+                  </label>
+                </div>
+              </div>
+              <div class="preview-container">
+                <div class="preview-zoom-wrapper">
+                  <div class="preview-pages">
+                    <div id="preview" class="invoice-preview"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 右侧控制区域 -->
+            <div class="card controls-card">
+
+              <!-- 单据类型选择区域 -->
+              <div class="form-item doc-type-group">
+                <label class="form-label doc-type-label">单据类型</label>
+                <div class="doc-type-grid">
+                  <label class="radio-label radio-label-item">
+                    <input type="radio" name="docType" value="sales" checked class="radio-input-item" />
+                    <span class="radio-text-item">SALES CONFIRMATION</span>
+                  </label>
+                  <label class="radio-label radio-label-item">
+                    <input type="radio" name="docType" value="production" class="radio-input-item" />
+                    <span class="radio-text-item">生产通知单</span>
+                  </label>
+                  <label class="radio-label radio-label-item">
+                    <input type="radio" name="docType" value="invoice" class="radio-input-item" />
+                    <span class="radio-text-item">INVOICE</span>
+                  </label>
+                  <label class="radio-label radio-label-item">
+                    <input type="radio" name="docType" value="packing" class="radio-input-item" />
+                    <span class="radio-text-item">PACKING LIST</span>
+                  </label>
+                  <label class="radio-label radio-label-item">
+                    <input type="radio" name="docType" value="pickup" class="radio-input-item" />
+                    <span class="radio-text-item">拉货通知</span>
+                  </label>
+                </div>
+              </div>
+
+              <!-- 单据表头信息提示框 -->
+              <div class="form-item doc-header-info" id="docHeaderInfo" hidden>
+                <label class="form-label">
+                  <i class="info-icon">ℹ</i>
+                  表头信息汇总
+                </label>
+                <div id="docHeaderContent" class="doc-header-content">
+                  <!-- 动态显示选中单据类型的表头信息 -->
+                </div>
+              </div>
+
+              <!-- 单据表头内容配置已移除，统一采用固定表头渲染 -->
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+  <!-- 使用模块化入口（业务逻辑已迁移到 /src/pages/docs-page-init.js） -->
+  <script type="module" src="/src/entries/document-generator.js"></script>
+</body>
+
+</html>

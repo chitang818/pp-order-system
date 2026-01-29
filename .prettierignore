@@ -1,0 +1,62 @@
+# Dependencies
+node_modules/
+package-lock.json
+
+# Build outputs
+dist/
+build/
+*.min.js
+
+# Database files
+data/
+*.sqlite
+*.sqlite-*
+
+# Logs
+*.log
+npm-debug.log*
+
+# Temporary files
+temp_conversions/
+*.tmp
+*.temp
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Test coverage
+coverage/
+.nyc_output/
+
+# Git
+.git/
+.gitignore
+
+# Config files with sensitive data
+config/config.json
+.env
+.env.*
+
+# Images and assets
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.svg
+*.ico
+
+# Documentation
+*.md
+!README.md
+
+# Generated files
+*.min.css
+

@@ -1,0 +1,1564 @@
+<section id="view-document-center-template-editor" class="panel" data-view>
+  <div class="template-editor-wrapper">
+    <!-- 顶部工具栏 -->
+    <div class="editor-toolbar-top">
+      <div class="toolbar-left">
+        <h1 class="editor-title">模板编辑器</h1>
+        <div class="template-meta">
+          <input type="text" id="templateNameInput" placeholder="模板名称" class="meta-input">
+          <select id="templateTypeSelect" class="meta-select">
+            <option value="invoice">📄 发票（IV）</option>
+            <option value="packing">📦 装箱单（PL）</option>
+            <option value="sales">📋 销售确认书（S/C）</option>
+            <option value="production">🏭 生产通知单</option>
+            <option value="pickup">🚚 拉货通知</option>
+            <option value="custom">🎨 自定义</option>
+          </select>
+        </div>
+      </div>
+      <div class="toolbar-center">
+        <div class="toolbar-group">
+          <button class="toolbar-btn" id="btnUndo" title="撤销">
+            <span class="icon">↶</span>
+          </button>
+          <button class="toolbar-btn" id="btnRedo" title="重做">
+            <span class="icon">↷</span>
+          </button>
+        </div>
+        <div class="toolbar-divider"></div>
+        <div class="toolbar-group" id="editorZoomControls">
+          <button class="toolbar-btn" id="btnZoomOut" title="缩小">
+            <span class="icon">−</span>
+          </button>
+          <span class="zoom-display" id="zoomLevel">100%</span>
+          <button class="toolbar-btn" id="btnZoomIn" title="放大">
+            <span class="icon">+</span>
+          </button>
+          <button class="toolbar-btn" id="btnFitPage" title="适应页面">
+            <span class="icon">⤢</span>
+          </button>
+        </div>
+      </div>
+      <div class="toolbar-right">
+        <button class="action-btn secondary" id="btnExportTemplate">
+          <span class="icon">📤</span>导出
+        </button>
+        <button class="action-btn primary" id="btnSaveTemplate">
+          <span class="icon">💾</span>保存
+        </button>
+      </div>
+    </div>
+
+    <!-- 主编辑区域 -->
+    <div class="editor-main-area">
+      <!-- 左侧：组件库 -->
+      <div class="components-panel" id="componentsPanel">
+        <div class="panel-header">
+          <h3 class="panel-title">组件库</h3>
+          <button class="panel-toggle" id="toggleComponentsPanel" title="折叠/展开">
+            <span class="icon">◀</span>
+          </button>
+        </div>
+        <div class="panel-content" id="componentsContent">
+          <!-- 组件内容由JS动态生成 -->
+        </div>
+      </div>
+
+      <!-- 中间：画布编辑区 -->
+      <div class="canvas-area">
+        <div class="canvas-wrapper" id="canvasWrapper">
+          <div class="canvas-container" id="canvasContainer">
+            <div class="canvas-paper" id="canvasPaper">
+              <!-- WPS风格页边距L型标记 -->
+              <div class="margin-mark margin-mark-top-left"></div>
+              <div class="margin-mark margin-mark-top-right"></div>
+              <div class="margin-mark margin-mark-bottom-left"></div>
+              <div class="margin-mark margin-mark-bottom-right"></div>
+              <div class="canvas-content" id="canvasContent" contenteditable="false">
+                <!-- 画布内容 -->
+                <div class="canvas-empty-state">
+                  <div class="empty-icon">📄</div>
+                  <p class="empty-text">从左侧组件库拖拽组件到此处开始编辑</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 右侧：属性面板 -->
+      <div class="properties-panel" id="propertiesPanel">
+        <div class="panel-header">
+          <h3 class="panel-title">属性</h3>
+          <button class="panel-toggle" id="togglePropertiesPanel" title="折叠/展开">
+            <span class="icon">▶</span>
+          </button>
+        </div>
+        <div class="panel-content" id="propertiesContent">
+          <!-- HTML代码编辑 -->
+          <div class="property-card collapsible-card" id="htmlEditorSection">
+            <div class="property-card-header" data-toggle="htmlEditorSection">
+              <span class="property-card-icon">📝</span>
+              <span class="property-card-title">HTML代码</span>
+              <button class="card-toggle-btn" data-target="htmlEditorSection" title="展开/折叠">
+                <span class="toggle-icon">▼</span>
+              </button>
+            </div>
+            <div class="property-card-body" id="htmlEditorSectionBody" style="display: none;">
+              <div class="code-editor-toolbar">
+                <button class="code-toolbar-btn" id="btnEditHTML" title="编辑HTML代码">
+                  <span class="btn-icon">📝</span>
+                  <span class="btn-text">编辑HTML</span>
+                </button>
+                <button class="code-toolbar-btn code-toolbar-btn-primary" id="btnViewHTML" title="应用HTML代码" style="display:none;">
+                  <span class="btn-icon">✓</span>
+                  <span class="btn-text">应用</span>
+                </button>
+                <button class="code-toolbar-btn" id="btnFormatHTML" title="格式化代码" style="display:none;">
+                  <span class="btn-icon">✨</span>
+                  <span class="btn-text">格式化</span>
+                </button>
+                <button class="code-toolbar-btn" id="btnClearHTML" title="清空代码" style="display:none;">
+                  <span class="btn-icon">🗑️</span>
+                  <span class="btn-text">清空</span>
+                </button>
+              </div>
+              <div class="code-editor-wrapper" style="display:none;">
+                <textarea id="htmlEditor" class="code-editor-enhanced" placeholder="输入HTML代码，支持变量绑定和循环..."></textarea>
+                <div class="code-editor-stats" id="htmlEditorStats">
+                  <span class="stats-item">行数: <strong>0</strong></span>
+                  <span class="stats-item">字符: <strong>0</strong></span>
+                </div>
+              </div>
+              <div class="code-editor-hint">
+                <div class="hint-icon">💡</div>
+                <div class="hint-content">
+                  <div class="hint-title">使用提示</div>
+                  <div class="hint-text">
+                    • 变量绑定：<code>{{order.contractNo}}</code><br>
+                    • 循环：<code>{{#each order.items}}...{{/each}}</code><br>
+                    • 按 <kbd>Ctrl+Space</kbd> 触发自动补全
+                  </div>
+                </div>
+              </div>
+              <div class="template-validation-status" id="templateValidationStatus" style="display: none;">
+                <div class="validation-status-item">
+                  <span class="status-icon">✓</span>
+                  <span class="status-text">验证中...</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 变量帮助面板 -->
+          <div class="property-section" id="variablesHelpSection">
+            <h4 class="section-title">
+              <span>变量参考</span>
+              <button class="section-toggle" id="toggleVariablesHelp" title="展开/折叠" style="background: none; border: none; cursor: pointer; font-size: 14px; color: #64748b; margin-left: 8px;">▼</button>
+            </h4>
+            <div class="variables-help" id="variablesHelp" style="display: none; max-height: 400px; overflow-y: auto;">
+              <div class="variable-category">
+                <div class="category-header" style="font-weight: 600; color: #1e293b; margin-bottom: 8px; font-size: 13px;">订单变量 (order.*)</div>
+                <div class="variable-list" style="display: flex; flex-direction: column; gap: 4px; font-size: 12px;">
+                  <div class="variable-item" data-variable="order.contractNo" style="padding: 4px 8px; background: #f1f5f9; border-radius: 4px; cursor: pointer; transition: background 0.2s;">
+                    <code style="color: #3b82f6;">order.contractNo</code> <span style="color: #64748b;">合同号</span>
+                  </div>
+                  <div class="variable-item" data-variable="order.invoiceNo" style="padding: 4px 8px; background: #f1f5f9; border-radius: 4px; cursor: pointer;">
+                    <code style="color: #3b82f6;">order.invoiceNo</code> <span style="color: #64748b;">发票号</span>
+                  </div>
+                  <div class="variable-item" data-variable="order.shipmentDate" style="padding: 4px 8px; background: #f1f5f9; border-radius: 4px; cursor: pointer;">
+                    <code style="color: #3b82f6;">order.shipmentDate</code> <span style="color: #64748b;">发货日期</span>
+                  </div>
+                </div>
+              </div>
+              <div class="variable-category" style="margin-top: 12px;">
+                <div class="category-header" style="font-weight: 600; color: #1e293b; margin-bottom: 8px; font-size: 13px;">产品变量 (item.*)</div>
+                <div class="variable-list" style="display: flex; flex-direction: column; gap: 4px; font-size: 12px;">
+                  <div class="variable-item" data-variable="item.model" style="padding: 4px 8px; background: #f1f5f9; border-radius: 4px; cursor: pointer;">
+                    <code style="color: #3b82f6;">item.model</code> <span style="color: #64748b;">产品型号</span>
+                  </div>
+                  <div class="variable-item" data-variable="item.quantity" style="padding: 4px 8px; background: #f1f5f9; border-radius: 4px; cursor: pointer;">
+                    <code style="color: #3b82f6;">item.quantity</code> <span style="color: #64748b;">数量</span>
+                  </div>
+                  <div class="variable-item" data-variable="item.unitPrice" style="padding: 4px 8px; background: #f1f5f9; border-radius: 4px; cursor: pointer;">
+                    <code style="color: #3b82f6;">item.unitPrice</code> <span style="color: #64748b;">单价</span>
+                  </div>
+                </div>
+              </div>
+              <div class="variable-category" style="margin-top: 12px;">
+                <div class="category-header" style="font-weight: 600; color: #1e293b; margin-bottom: 8px; font-size: 13px;">客户变量 (customer.*)</div>
+                <div class="variable-list" style="display: flex; flex-direction: column; gap: 4px; font-size: 12px;">
+                  <div class="variable-item" data-variable="customer.name" style="padding: 4px 8px; background: #f1f5f9; border-radius: 4px; cursor: pointer;">
+                    <code style="color: #3b82f6;">customer.name</code> <span style="color: #64748b;">客户名称</span>
+                  </div>
+                  <div class="variable-item" data-variable="customer.address" style="padding: 4px 8px; background: #f1f5f9; border-radius: 4px; cursor: pointer;">
+                    <code style="color: #3b82f6;">customer.address</code> <span style="color: #64748b;">客户地址</span>
+                  </div>
+                  <div class="variable-item" data-variable="customer.tel" style="padding: 4px 8px; background: #f1f5f9; border-radius: 4px; cursor: pointer;">
+                    <code style="color: #3b82f6;">customer.tel</code> <span style="color: #64748b;">联系电话</span>
+                  </div>
+                  <div class="variable-item" data-variable="customer.fax" style="padding: 4px 8px; background: #f1f5f9; border-radius: 4px; cursor: pointer;">
+                    <code style="color: #3b82f6;">customer.fax</code> <span style="color: #64748b;">传真号码</span>
+                  </div>
+                </div>
+              </div>
+              <div class="variable-category" style="margin-top: 12px;">
+                <div class="category-header" style="font-weight: 600; color: #1e293b; margin-bottom: 8px; font-size: 13px;">公司变量 (company.*)</div>
+                <div class="variable-list" style="display: flex; flex-direction: column; gap: 4px; font-size: 12px;">
+                  <div class="variable-item" data-variable="company.companyNameCN" style="padding: 4px 8px; background: #f1f5f9; border-radius: 4px; cursor: pointer;">
+                    <code style="color: #3b82f6;">company.companyNameCN</code> <span style="color: #64748b;">公司中文名</span>
+                  </div>
+                  <div class="variable-item" data-variable="company.companyNameEN" style="padding: 4px 8px; background: #f1f5f9; border-radius: 4px; cursor: pointer;">
+                    <code style="color: #3b82f6;">company.companyNameEN</code> <span style="color: #64748b;">公司英文名</span>
+                  </div>
+                  <div class="variable-item" data-variable="company.companyAddressCN" style="padding: 4px 8px; background: #f1f5f9; border-radius: 4px; cursor: pointer;">
+                    <code style="color: #3b82f6;">company.companyAddressCN</code> <span style="color: #64748b;">地址(中文)</span>
+                  </div>
+                  <div class="variable-item" data-variable="company.companyAddressEN" style="padding: 4px 8px; background: #f1f5f9; border-radius: 4px; cursor: pointer;">
+                    <code style="color: #3b82f6;">company.companyAddressEN</code> <span style="color: #64748b;">地址(英文)</span>
+                  </div>
+                  <div class="variable-item" data-variable="company.companyTel" style="padding: 4px 8px; background: #f1f5f9; border-radius: 4px; cursor: pointer;">
+                    <code style="color: #3b82f6;">company.companyTel</code> <span style="color: #64748b;">公司电话</span>
+                  </div>
+                  <div class="variable-item" data-variable="company.companyFax" style="padding: 4px 8px; background: #f1f5f9; border-radius: 4px; cursor: pointer;">
+                    <code style="color: #3b82f6;">company.companyFax</code> <span style="color: #64748b;">公司传真</span>
+                  </div>
+                </div>
+              </div>
+              <div class="variable-category" style="margin-top: 12px;">
+                <div class="category-header" style="font-weight: 600; color: #1e293b; margin-bottom: 8px; font-size: 13px;">循环元数据 (meta.*)</div>
+                <div class="variable-list" style="display: flex; flex-direction: column; gap: 4px; font-size: 12px;">
+                  <div class="variable-item" data-variable="meta.index" style="padding: 4px 8px; background: #f1f5f9; border-radius: 4px; cursor: pointer;">
+                    <code style="color: #3b82f6;">meta.index</code> <span style="color: #64748b;">序号（从1开始）</span>
+                  </div>
+                  <div class="variable-item" data-variable="meta.count" style="padding: 4px 8px; background: #f1f5f9; border-radius: 4px; cursor: pointer;">
+                    <code style="color: #3b82f6;">meta.count</code> <span style="color: #64748b;">总数量</span>
+                  </div>
+                </div>
+              </div>
+              <div style="margin-top: 12px; padding: 8px; background: #fef3c7; border-radius: 4px; font-size: 11px; color: #92400e;">
+                💡 提示：点击变量可复制到剪贴板，在HTML编辑器中按 Ctrl+Space 可触发自动补全
+              </div>
+            </div>
+          </div>
+          
+          <!-- 样式编辑 -->
+          <div class="property-card collapsible-card" id="styleEditorSection">
+            <div class="property-card-header" data-toggle="styleEditorSection">
+              <span class="property-card-icon">🎨</span>
+              <span class="property-card-title">样式 (CSS)</span>
+              <button class="card-toggle-btn" data-target="styleEditorSection" title="展开/折叠">
+                <span class="toggle-icon">▼</span>
+              </button>
+            </div>
+            <div class="property-card-body" id="styleEditorSectionBody" style="display: none;">
+              <div class="code-editor-toolbar">
+                <button class="code-toolbar-btn" id="btnFormatCSS" title="格式化CSS">
+                  <span class="btn-icon">✨</span>
+                  <span class="btn-text">格式化</span>
+                </button>
+                <button class="code-toolbar-btn" id="btnClearCSS" title="清空CSS">
+                  <span class="btn-icon">🗑️</span>
+                  <span class="btn-text">清空</span>
+                </button>
+                <button class="code-toolbar-btn" id="btnCSSExamples" title="查看示例">
+                  <span class="btn-icon">📚</span>
+                  <span class="btn-text">示例</span>
+                </button>
+              </div>
+              <div class="code-editor-wrapper">
+                <textarea id="styleEditor" class="code-editor-enhanced" placeholder="输入CSS样式代码，将自动包装在 &lt;style&gt; 标签中..."></textarea>
+                <div class="code-editor-stats" id="styleEditorStats">
+                  <span class="stats-item">行数: <strong>0</strong></span>
+                  <span class="stats-item">字符: <strong>0</strong></span>
+                </div>
+              </div>
+              <div class="code-editor-hint">
+                <div class="hint-icon">💡</div>
+                <div class="hint-content">
+                  <div class="hint-title">使用提示</div>
+                  <div class="hint-text">
+                    • CSS代码将自动包装在 <code>&lt;style&gt;</code> 标签中<br>
+                    • 支持所有标准CSS属性<br>
+                    • 可以使用变量和计算值
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 计算规则配置面板 -->
+          <div class="property-card collapsible-card" id="calculationsEditorSection">
+            <div class="property-card-header" data-toggle="calculationsEditorSection">
+              <span class="property-card-icon">🔢</span>
+              <span class="property-card-title">计算规则配置</span>
+              <button class="card-toggle-btn" data-target="calculationsEditorSection" title="展开/折叠">
+                <span class="toggle-icon">▼</span>
+              </button>
+            </div>
+            <div class="property-card-body" id="calculationsEditorSectionBody" style="display: none;">
+              <div class="code-editor-toolbar">
+                <button class="code-toolbar-btn" id="btnAddCalculation" title="添加计算规则">
+                  <span class="btn-icon">➕</span>
+                  <span class="btn-text">添加规则</span>
+                </button>
+                <button class="code-toolbar-btn" id="btnFormatCalculations" title="格式化JSON">
+                  <span class="btn-icon">✨</span>
+                  <span class="btn-text">格式化</span>
+                </button>
+                <button class="code-toolbar-btn" id="btnCalculationsExamples" title="查看示例">
+                  <span class="btn-icon">📚</span>
+                  <span class="btn-text">示例</span>
+                </button>
+                <button class="code-toolbar-btn" id="btnValidateCalculations" title="验证JSON">
+                  <span class="btn-icon">✓</span>
+                  <span class="btn-text">验证</span>
+                </button>
+              </div>
+              <div class="code-editor-wrapper">
+                <textarea id="calculationsEditor" class="code-editor-enhanced" placeholder='[{"type":"sum","field":"items","formula":"sum + Number(it.quantity||0) * Number(it.unitPrice||0)","initial":"0","target":"totalAmount"}]'></textarea>
+                <div class="code-editor-stats" id="calculationsEditorStats">
+                  <span class="stats-item">行数: <strong>0</strong></span>
+                  <span class="stats-item">字符: <strong>0</strong></span>
+                </div>
+              </div>
+              <div class="code-editor-hint">
+                <div class="hint-icon">💡</div>
+                <div class="hint-content">
+                  <div class="hint-title">使用提示</div>
+                  <div class="hint-text">
+                    • JSON格式数组，定义计算规则<br>
+                    • <code>type</code>: 计算类型（sum, avg, max, min等）<br>
+                    • <code>field</code>: 数据字段（items等）<br>
+                    • <code>formula</code>: 计算公式，可使用 <code>it.字段名</code> 和 <code>sum</code><br>
+                    • <code>target</code>: 计算结果存储的目标变量
+                  </div>
+                </div>
+              </div>
+              <div class="calculation-validation-status" id="calculationValidationStatus" style="display: none;"></div>
+              <!-- CalculationConfigPanel 可视化面板（可选） -->
+              <div id="calculationConfigPanel" style="min-height:200px; margin-top: 12px;">
+                <!-- CalculationConfigPanel 将在这里渲染 -->
+              </div>
+            </div>
+          </div>
+          
+          <!-- 条件渲染编辑 -->
+          <div class="property-card collapsible-card" id="conditionsEditorSection">
+            <div class="property-card-header" data-toggle="conditionsEditorSection">
+              <span class="property-card-icon">🔀</span>
+              <span class="property-card-title">条件渲染</span>
+              <button class="card-toggle-btn" data-target="conditionsEditorSection" title="展开/折叠">
+                <span class="toggle-icon">▼</span>
+              </button>
+            </div>
+            <div class="property-card-body" id="conditionsEditorSectionBody" style="display: none;">
+              <div class="code-editor-toolbar">
+                <button class="code-toolbar-btn" id="btnAddCondition" title="添加条件规则">
+                  <span class="btn-icon">➕</span>
+                  <span class="btn-text">添加条件</span>
+                </button>
+                <button class="code-toolbar-btn" id="btnFormatConditions" title="格式化JSON">
+                  <span class="btn-icon">✨</span>
+                  <span class="btn-text">格式化</span>
+                </button>
+                <button class="code-toolbar-btn" id="btnConditionsExamples" title="查看示例">
+                  <span class="btn-icon">📚</span>
+                  <span class="btn-text">示例</span>
+                </button>
+                <button class="code-toolbar-btn" id="btnValidateConditions" title="验证JSON">
+                  <span class="btn-icon">✓</span>
+                  <span class="btn-text">验证</span>
+                </button>
+              </div>
+              <div class="code-editor-wrapper">
+                <textarea id="conditionsEditor" class="code-editor-enhanced" placeholder='{"elementId":{"condition":"order.totalAmount > 1000","show":true}}'></textarea>
+                <div class="code-editor-stats" id="conditionsEditorStats">
+                  <span class="stats-item">行数: <strong>0</strong></span>
+                  <span class="stats-item">字符: <strong>0</strong></span>
+                </div>
+              </div>
+              <div class="code-editor-hint">
+                <div class="hint-icon">💡</div>
+                <div class="hint-content">
+                  <div class="hint-title">使用提示</div>
+                  <div class="hint-text">
+                    • JSON格式对象，定义条件渲染规则<br>
+                    • <code>elementId</code>: 元素ID或选择器<br>
+                    • <code>condition</code>: 条件表达式（如 <code>order.totalAmount > 1000</code>）<br>
+                    • <code>show</code>: true显示，false隐藏
+                  </div>
+                </div>
+              </div>
+              <div class="condition-validation-status" id="conditionValidationStatus" style="display: none;"></div>
+            </div>
+          </div>
+          
+          <div class="properties-empty" id="propertiesEmpty">
+            <p>选中元素以编辑属性</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    .template-editor-wrapper {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      background: #f5f5f7;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+    }
+
+    /* ========== 顶部工具栏 ========== */
+    .editor-toolbar-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      height: 56px;
+      background: #fff;
+      border-bottom: 1px solid #e5e7eb;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+      flex-shrink: 0;
+    }
+
+    .toolbar-left {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      flex: 1;
+    }
+
+    .editor-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #111827;
+      margin: 0;
+    }
+
+    .template-meta {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .meta-input,
+    .meta-select {
+      height: 32px;
+      padding: 0 12px;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      font-size: 13px;
+      background: #fff;
+      transition: all 0.2s;
+    }
+
+    .meta-input {
+      width: 200px;
+    }
+
+    .meta-select {
+      width: 150px;
+      cursor: pointer;
+    }
+
+    .meta-input:focus,
+    .meta-select:focus {
+      outline: none;
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    .toolbar-center {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .toolbar-group {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px;
+      background: #f9fafb;
+      border-radius: 6px;
+    }
+
+    .toolbar-divider {
+      width: 1px;
+      height: 24px;
+      background: #e5e7eb;
+      margin: 0 4px;
+    }
+
+    .toolbar-btn {
+      width: 28px;
+      height: 28px;
+      border: none;
+      background: transparent;
+      border-radius: 4px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #6b7280;
+      transition: all 0.2s;
+      font-size: 16px;
+    }
+
+    .toolbar-btn:hover {
+      background: #e5e7eb;
+      color: #111827;
+    }
+
+    .toolbar-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .zoom-display {
+      min-width: 50px;
+      text-align: center;
+      font-size: 12px;
+      font-weight: 500;
+      color: #374151;
+      padding: 0 8px;
+    }
+
+    .toolbar-right {
+      display: flex;
+      gap: 8px;
+    }
+
+    .action-btn {
+      height: 32px;
+      padding: 0 16px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+
+    .action-btn .icon {
+      font-size: 14px;
+    }
+
+    .action-btn.secondary {
+      background: #f3f4f6;
+      color: #374151;
+    }
+
+    .action-btn.secondary:hover {
+      background: #e5e7eb;
+    }
+
+    .action-btn.primary {
+      background: #3b82f6;
+      color: #fff;
+    }
+
+    .action-btn.primary:hover {
+      background: #2563eb;
+    }
+
+    /* ========== 主编辑区域 ========== */
+    .editor-main-area {
+      flex: 1;
+      display: flex;
+      overflow: hidden;
+      min-height: 0;
+    }
+
+    /* ========== 左侧组件库 ========== */
+    .components-panel {
+      flex: 1;
+      min-width: 320px;
+      background: #fff;
+      border-right: 1px solid #e5e7eb;
+      display: flex;
+      flex-direction: column;
+      transition: width 0.3s;
+      position: relative;
+    }
+
+    .components-panel.collapsed {
+      flex: 0 0 0;
+      min-width: 0;
+      border-right: none;
+      overflow: visible;
+    }
+
+    .components-panel.collapsed .panel-content {
+      display: none;
+    }
+
+    .components-panel.collapsed .panel-header {
+      width: 40px;
+      padding: 12px 8px;
+      position: absolute;
+      left: 0;
+      top: 0;
+      z-index: 10;
+      background: #fff;
+      border-right: 1px solid #e5e7eb;
+      box-shadow: 2px 0 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .components-panel.collapsed .panel-title {
+      display: none;
+    }
+
+    .components-panel.collapsed .panel-toggle {
+      width: 100%;
+      height: 100%;
+    }
+
+    .components-panel.collapsed .panel-toggle .icon {
+      transform: rotate(180deg);
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      border-bottom: 1px solid #e5e7eb;
+      background: #f9fafb;
+    }
+
+    .panel-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: #111827;
+      margin: 0;
+    }
+
+    .panel-toggle {
+      width: 24px;
+      height: 24px;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #6b7280;
+      border-radius: 4px;
+      transition: all 0.2s;
+      flex-shrink: 0;
+    }
+
+    .panel-toggle:hover {
+      background: #e5e7eb;
+      color: #111827;
+    }
+
+    .panel-toggle .icon {
+      transition: transform 0.3s;
+      font-size: 14px;
+    }
+
+    .panel-content {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding: 8px;
+      background: #fafbfc;
+    }
+
+    .panel-content::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .panel-content::-webkit-scrollbar-track {
+      background: #f1f5f9;
+      border-radius: 3px;
+    }
+
+    .panel-content::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 3px;
+    }
+
+    .panel-content::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+
+    /* ========== 中间画布区 ========== */
+    .canvas-area {
+      flex: 0 0 900px; /* 固定宽度900px，参考单据生成页面 */
+      overflow: auto;
+      background: #d4d4d4; /* WPS预览背景灰色 */
+      position: relative;
+    }
+
+    .canvas-wrapper {
+      padding: 30px;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      min-height: 100%;
+      box-sizing: border-box;
+      width: 100%;
+      position: relative;
+    }
+
+    .canvas-container {
+      transform-origin: top center;
+      transition: transform 0.2s;
+    }
+
+    .canvas-paper {
+      width: 210mm;
+      height: 297mm;
+      aspect-ratio: 210 / 297;
+      background: #fff;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+      border: 2px solid #3b82f6; /* 蓝色边框 */
+      position: relative;
+      overflow: visible; /* 允许显示页边距标记 */
+    }
+
+    /* WPS风格页边距灰色直角标记 - 从外部指向文档四个角 */
+    .margin-mark {
+      position: absolute;
+      z-index: 10;
+      pointer-events: none;
+    }
+
+    /* L型标记基础样式 - 使用边框创建灰色直角 */
+    .margin-mark::before,
+    .margin-mark::after {
+      content: '';
+      position: absolute;
+      background: #9ca3af; /* 灰色，类似WPS风格 */
+    }
+
+    /* 左上角L型标记 - 位于页边距位置，开口向内（向右向下） */
+    .margin-mark-top-left {
+      top: 20mm; /* 默认值，将通过JavaScript动态更新 */
+      left: 20mm; /* 默认值，将通过JavaScript动态更新 */
+    }
+    .margin-mark-top-left::before {
+      top: 0;
+      left: 0;
+      width: 12px;
+      height: 1.5px;
+    }
+    .margin-mark-top-left::after {
+      top: 0;
+      left: 0;
+      width: 1.5px;
+      height: 12px;
+    }
+
+    /* 右上角L型标记 - 位于页边距位置，开口向内（向左向下） */
+    .margin-mark-top-right {
+      top: 20mm; /* 默认值，将通过JavaScript动态更新 */
+      right: 20mm; /* 默认值，将通过JavaScript动态更新 */
+    }
+    .margin-mark-top-right::before {
+      top: 0;
+      right: 0;
+      width: 12px;
+      height: 1.5px;
+    }
+    .margin-mark-top-right::after {
+      top: 0;
+      right: 0;
+      width: 1.5px;
+      height: 12px;
+    }
+
+    /* 左下角L型标记 - 位于页边距位置，开口向内（向右向上） */
+    .margin-mark-bottom-left {
+      bottom: 20mm; /* 默认值，将通过JavaScript动态更新 */
+      left: 20mm; /* 默认值，将通过JavaScript动态更新 */
+    }
+    .margin-mark-bottom-left::before {
+      bottom: 0;
+      left: 0;
+      width: 12px;
+      height: 1.5px;
+    }
+    .margin-mark-bottom-left::after {
+      bottom: 0;
+      left: 0;
+      width: 1.5px;
+      height: 12px;
+    }
+
+    /* 右下角L型标记 - 位于页边距位置，开口向内（向左向上） */
+    .margin-mark-bottom-right {
+      bottom: 20mm; /* 默认值，将通过JavaScript动态更新 */
+      right: 20mm; /* 默认值，将通过JavaScript动态更新 */
+    }
+    .margin-mark-bottom-right::before {
+      bottom: 0;
+      right: 0;
+      width: 12px;
+      height: 1.5px;
+    }
+    .margin-mark-bottom-right::after {
+      bottom: 0;
+      right: 0;
+      width: 1.5px;
+      height: 12px;
+    }
+
+    .canvas-content {
+      width: 100%;
+      height: 100%;
+      padding: 20mm;
+      font-family: SimSun, 宋体, serif;
+      font-size: 10pt;
+      line-height: 1.6;
+      color: #111827;
+      position: relative;
+      box-sizing: border-box;
+      overflow-y: auto;
+    }
+
+    .canvas-content.drag-over {
+      background: rgba(59, 130, 246, 0.05);
+    }
+
+    .template-component,
+    .template-field {
+      position: relative;
+      margin: 4px 0;
+      transition: all 0.2s;
+      cursor: move;
+    }
+
+    .template-component[draggable="true"],
+    .template-field[draggable="true"] {
+      cursor: grab;
+    }
+
+    .template-component[draggable="true"]:active,
+    .template-field[draggable="true"]:active {
+      cursor: grabbing;
+    }
+
+    .template-component.dragging,
+    .template-field.dragging {
+      opacity: 0.5;
+    }
+
+    .template-component.selected,
+    .template-field.selected {
+      outline: 2px solid #3b82f6;
+      outline-offset: 2px;
+      box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+    }
+
+    .template-field {
+      display: inline-block;
+      padding: 2px 6px;
+      background: #eff6ff;
+      color: #3b82f6;
+      border-radius: 3px;
+      font-family: 'Courier New', monospace;
+      font-size: 10pt;
+      cursor: pointer;
+    }
+
+    .template-field:hover {
+      background: #dbeafe;
+    }
+
+    .canvas-empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      min-height: 400px;
+      color: #9ca3af;
+      pointer-events: none;
+      user-select: none;
+    }
+
+    .empty-icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+      opacity: 0.5;
+    }
+
+    .empty-text {
+      font-size: 14px;
+      margin: 0;
+    }
+
+    /* ========== 右侧属性面板 ========== */
+    .properties-panel {
+      flex: 1;
+      min-width: 360px;
+      background: #fff;
+      border-left: 1px solid #e5e7eb;
+      display: flex;
+      flex-direction: column;
+      transition: width 0.3s;
+      position: relative;
+    }
+
+    .properties-panel.collapsed {
+      flex: 0 0 0;
+      min-width: 0;
+      border-left: none;
+      overflow: visible;
+    }
+
+    .properties-panel.collapsed .panel-content {
+      display: none;
+    }
+
+    .properties-panel.collapsed .panel-header {
+      width: 40px;
+      padding: 12px 8px;
+      position: absolute;
+      right: 0;
+      top: 0;
+      z-index: 10;
+      background: #fff;
+      border-left: 1px solid #e5e7eb;
+      box-shadow: -2px 0 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .properties-panel.collapsed .panel-title {
+      display: none;
+    }
+
+    .properties-panel.collapsed .panel-toggle {
+      width: 100%;
+      height: 100%;
+    }
+
+    .properties-panel.collapsed .panel-toggle .icon {
+      transform: rotate(180deg);
+    }
+
+    .properties-empty {
+      padding: 40px 20px;
+      text-align: center;
+      color: #9ca3af;
+      font-size: 13px;
+    }
+
+    /* 页边距设置样式 */
+    .property-section {
+      padding: 16px;
+      border-bottom: 1px solid #e5e7eb;
+    }
+
+    .section-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: #111827;
+      margin: 0 0 12px 0;
+    }
+
+    .margin-controls {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .margin-control-item {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .margin-label {
+      font-size: 12px;
+      color: #6b7280;
+      font-weight: 500;
+    }
+
+    .margin-input {
+      width: 100%;
+      padding: 6px 8px;
+      border: 1px solid #d1d5db;
+      border-radius: 4px;
+      font-size: 13px;
+      transition: all 0.2s;
+    }
+
+    .margin-input:focus {
+      outline: none;
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    .margin-apply-btn {
+      width: 100%;
+      padding: 8px 16px;
+      background: #3b82f6;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-top: 8px;
+    }
+
+    .margin-apply-btn:hover {
+      background: #2563eb;
+    }
+
+    .margin-apply-btn:active {
+      transform: scale(0.98);
+    }
+
+    /* ========== 滚动条样式 ========== */
+    .panel-content::-webkit-scrollbar,
+    .canvas-area::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+
+    .panel-content::-webkit-scrollbar-track,
+    .canvas-area::-webkit-scrollbar-track {
+      background: #f3f4f6;
+    }
+
+    .panel-content::-webkit-scrollbar-thumb,
+    .canvas-area::-webkit-scrollbar-thumb {
+      background: #d1d5db;
+      border-radius: 4px;
+    }
+
+    .panel-content::-webkit-scrollbar-thumb:hover,
+    .canvas-area::-webkit-scrollbar-thumb:hover {
+      background: #9ca3af;
+    }
+
+    /* ========== 响应式设计 - 笔记本优化 ========== */
+    /* 中等屏幕（笔记本，1366px - 1600px） */
+    @media (max-width: 1600px) {
+      .components-panel {
+        min-width: 280px;
+      }
+
+      .properties-panel {
+        min-width: 320px;
+      }
+
+      .canvas-area {
+        flex: 0 0 800px;
+      }
+
+      .canvas-wrapper {
+        padding: 20px;
+      }
+
+      .template-name-input {
+        width: 160px;
+      }
+
+      .template-type-select {
+        width: 130px;
+      }
+    }
+
+    /* 小屏幕笔记本（1366px及以下） */
+    @media (max-width: 1400px) {
+      .components-panel {
+        min-width: 260px;
+      }
+
+      .properties-panel {
+        min-width: 300px;
+      }
+
+      .canvas-area {
+        flex: 0 0 700px;
+      }
+
+      .editor-toolbar-top {
+        padding: 0 12px;
+        height: 50px;
+      }
+
+      .toolbar-left {
+        gap: 12px;
+      }
+
+      .editor-title {
+        font-size: 15px;
+      }
+
+      .meta-input {
+        width: 140px;
+        font-size: 12px;
+      }
+
+      .meta-select {
+        width: 120px;
+        font-size: 12px;
+      }
+
+      .action-btn {
+        height: 30px;
+        padding: 0 12px;
+        font-size: 12px;
+      }
+
+      .toolbar-btn {
+        width: 26px;
+        height: 26px;
+        font-size: 14px;
+      }
+
+      .zoom-display {
+        min-width: 44px;
+        font-size: 11px;
+      }
+    }
+
+    /* 更小屏幕（1280px及以下） */
+    @media (max-width: 1280px) {
+      .components-panel {
+        min-width: 240px;
+      }
+
+      .properties-panel {
+        min-width: 280px;
+      }
+
+      .canvas-area {
+        flex: 0 0 600px;
+      }
+
+      .canvas-wrapper {
+        padding: 15px;
+      }
+
+      .panel-header {
+        padding: 10px 12px;
+      }
+
+      .panel-content {
+        padding: 10px;
+      }
+
+      .meta-input {
+        width: 120px;
+      }
+
+      .meta-select {
+        width: 110px;
+      }
+
+      .toolbar-center {
+        gap: 6px;
+      }
+
+      .toolbar-group {
+        padding: 3px;
+        gap: 3px;
+      }
+    }
+
+    /* 平板/小屏幕（1024px及以下） */
+    @media (max-width: 1024px) {
+      .editor-main-area {
+        flex-direction: column;
+      }
+
+      .components-panel {
+        width: 100%;
+        height: 200px;
+        border-right: none;
+        border-bottom: 1px solid #e5e7eb;
+      }
+
+      .canvas-area {
+        width: 100%;
+        max-width: 100%;
+        flex: 1;
+      }
+
+      .properties-panel {
+        width: 100%;
+        height: 250px;
+        border-left: none;
+        border-top: 1px solid #e5e7eb;
+      }
+
+      .editor-toolbar-top {
+        flex-wrap: wrap;
+        height: auto;
+        min-height: 50px;
+        padding: 8px 12px;
+      }
+
+      .toolbar-left {
+        width: 100%;
+        margin-bottom: 8px;
+      }
+
+      .toolbar-center {
+        width: 100%;
+        justify-content: center;
+      }
+
+      .toolbar-right {
+        width: 100%;
+        justify-content: flex-end;
+        margin-top: 8px;
+      }
+    }
+
+    /* 移动设备（768px及以下） */
+    @media (max-width: 768px) {
+      .editor-toolbar-top {
+        padding: 8px;
+      }
+
+      .template-info {
+        flex-direction: column;
+        width: 100%;
+        gap: 8px;
+      }
+
+      .meta-input,
+      .meta-select {
+        width: 100%;
+      }
+
+      .toolbar-center {
+        flex-wrap: wrap;
+      }
+
+      .action-btn {
+        flex: 1;
+      }
+    }
+
+    /* 代码编辑器样式 */
+    .code-editor-toolbar {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
+    }
+
+    .code-toolbar-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 6px 12px;
+      border: 1px solid #d1d5db;
+      background: #fff;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      color: #374151;
+    }
+
+    .code-toolbar-btn:hover {
+      background: #f3f4f6;
+      border-color: #3b82f6;
+      color: #3b82f6;
+    }
+
+    .code-toolbar-btn-primary {
+      background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+      color: #fff;
+      border-color: #3b82f6;
+    }
+
+    .code-toolbar-btn-primary:hover {
+      background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+    }
+
+    .code-toolbar-btn .btn-icon {
+      font-size: 14px;
+      line-height: 1;
+    }
+
+    .code-toolbar-btn .btn-text {
+      line-height: 1;
+    }
+
+    .code-editor-wrapper {
+      position: relative;
+      margin-bottom: 10px;
+      padding-bottom: 32px;
+    }
+
+    .code-editor-enhanced {
+      width: 100%;
+      min-height: 200px;
+      padding: 12px;
+      padding-bottom: 36px;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      font-family: 'Courier New', 'Monaco', 'Consolas', monospace;
+      font-size: 13px;
+      line-height: 1.6;
+      resize: vertical;
+      background: #fafbfc;
+      transition: all 0.2s;
+      box-sizing: border-box;
+    }
+
+    .code-editor-enhanced:focus {
+      outline: none;
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+      background: #fff;
+    }
+
+    .code-editor-stats {
+      position: absolute;
+      bottom: 8px;
+      right: 12px;
+      display: flex;
+      gap: 12px;
+      font-size: 11px;
+      color: #9ca3af;
+      background: rgba(255, 255, 255, 0.95);
+      padding: 4px 8px;
+      border-radius: 4px;
+      pointer-events: none;
+      z-index: 10;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .stats-item {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .stats-item strong {
+      color: #374151;
+      font-weight: 600;
+    }
+
+    .code-editor-hint {
+      display: flex;
+      gap: 10px;
+      padding: 10px 12px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      margin-top: 8px;
+    }
+
+    .hint-icon {
+      font-size: 18px;
+      line-height: 1;
+      flex-shrink: 0;
+    }
+
+    .hint-content {
+      flex: 1;
+    }
+
+    .hint-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: #374151;
+      margin-bottom: 4px;
+    }
+
+    .hint-text {
+      font-size: 11px;
+      color: #6b7280;
+      line-height: 1.6;
+    }
+
+    .hint-text code {
+      background: #e5e7eb;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-family: 'Courier New', monospace;
+      font-size: 10px;
+      color: #1f2937;
+    }
+
+    .hint-text kbd {
+      background: #fff;
+      border: 1px solid #d1d5db;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-family: 'Courier New', monospace;
+      font-size: 10px;
+      color: #374151;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    }
+
+    .template-validation-status {
+      margin-top: 12px;
+      padding: 10px 12px;
+      border-radius: 6px;
+      border: 1px solid #e2e8f0;
+      position: relative;
+      z-index: 1;
+    }
+
+    .template-validation-status.validation-success {
+      background: #f0fdf4;
+      border-color: #86efac;
+    }
+
+    .template-validation-status.validation-error {
+      background: #fef2f2;
+      border-color: #fca5a5;
+    }
+
+    .template-validation-status.validation-warning {
+      background: #fffbeb;
+      border-color: #fde047;
+    }
+
+    .validation-status-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+    }
+
+    .validation-status-item .status-icon {
+      font-size: 16px;
+      line-height: 1;
+    }
+
+    .validation-status-item .status-text {
+      flex: 1;
+    }
+
+    .calculation-validation-status,
+    .condition-validation-status {
+      margin-top: 10px;
+      padding: 10px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+    }
+
+    .calculation-validation-status.validation-success,
+    .condition-validation-status.validation-success {
+      background: #f0fdf4;
+      border: 1px solid #86efac;
+    }
+
+    .calculation-validation-status.validation-error,
+    .condition-validation-status.validation-error {
+      background: #fef2f2;
+      border: 1px solid #fca5a5;
+    }
+
+    /* 属性卡片样式 */
+    .property-card {
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      overflow: hidden;
+      transition: all 0.2s;
+      margin-bottom: 12px;
+    }
+
+    .property-card:hover {
+      border-color: #d1d5db;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    }
+
+    .property-card-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 14px;
+      background: #f9fafb;
+      border-bottom: 1px solid #e5e7eb;
+      font-size: 13px;
+      font-weight: 600;
+      color: #111827;
+    }
+
+    .property-card-icon {
+      font-size: 16px;
+      line-height: 1;
+    }
+
+    .property-card-title {
+      flex: 1;
+    }
+
+    .property-card-body {
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    /* 折叠卡片样式 */
+    .collapsible-card {
+      transition: all 0.2s ease;
+    }
+
+    .collapsible-card .property-card-header {
+      cursor: pointer;
+      user-select: none;
+      transition: background-color 0.2s;
+    }
+
+    .collapsible-card .property-card-header:hover {
+      background: #f3f4f6;
+    }
+
+    .card-toggle-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 4px 8px;
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #6b7280;
+      transition: all 0.2s;
+      border-radius: 4px;
+    }
+
+    .card-toggle-btn:hover {
+      background: #e5e7eb;
+      color: #374151;
+    }
+
+    .toggle-icon {
+      font-size: 12px;
+      line-height: 1;
+      transition: transform 0.2s;
+      display: inline-block;
+    }
+
+    .collapsible-card.expanded .toggle-icon {
+      transform: rotate(180deg);
+    }
+
+    .collapsible-card .property-card-body {
+      transition: all 0.3s ease;
+      overflow: hidden;
+    }
+  </style>
+</section>

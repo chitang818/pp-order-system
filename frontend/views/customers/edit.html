@@ -1,0 +1,39 @@
+<section id="view-customers-edit" class="panel" data-view>
+  <style>
+    /* 为客户编辑页面添加绿色装饰线 */
+    #view-customers-edit .panel-header {
+      border-top: 3px solid var(--accent-2) !important; /* 绿色装饰线 */
+      border-radius: 12px 12px 0 0 !important; /* 顶部圆角 */
+    }
+  </style>
+  <div class="panel-header">
+    <div class="panel-title">客户信息</div>
+    <div class="panel-actions">
+      <a class="btn ghost" href="#/customers" id="backLink">返回</a>
+    </div>
+  </div>
+  <div class="panel-body">
+    <div class="form-vertical" style="max-width: 600px; display: flex; flex-direction: column; gap: 24px;">
+      <div class="form-item">
+        <label>客户名称 <span style="color: #e74c3c;">*</span></label>
+        <input class="input" id="cusName" placeholder="例如 ACME Corp" style="height: 44px; font-size: 16px; margin-top: 8px;" />
+      </div>
+      <div class="form-item">
+        <label>公司地址</label>
+        <textarea class="input" id="cusAddress" placeholder="街道、城市、国家" style="height: 80px; font-size: 16px; margin-top: 8px; resize: vertical; min-height: 80px;"></textarea>
+      </div>
+      <div class="form-item">
+        <label>电话号码</label>
+        <input class="input" id="cusTel" placeholder="例如 +86-21-12345678" style="height: 44px; font-size: 16px; margin-top: 8px;" />
+      </div>
+      <div class="form-item">
+        <label>传真号码</label>
+        <input class="input" id="cusFax" placeholder="例如 +86-21-87654321" style="height: 44px; font-size: 16px; margin-top: 8px;" />
+      </div>
+      <div class="form-item" style="margin-top: 32px; text-align: center;">
+        <button class="btn primary" id="btnSaveCustomer" style="padding: 12px 32px; font-size: 16px; min-width: 120px;">保存客户</button>
+      </div>
+    </div>
+  </div>
+</section>
+

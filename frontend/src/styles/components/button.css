@@ -1,0 +1,194 @@
+/* 统一按钮尺寸标准 - PP外贸订单管理系统 */
+
+/* 基础按钮样式 */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 20px;
+    border-radius: 6px;
+    border: 1px solid transparent;
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1.4;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-sizing: border-box;
+    min-height: 40px;
+    white-space: nowrap;
+    position: relative;
+    overflow: hidden;
+}
+
+/* 按钮尺寸变体 */
+.btn.large {
+    padding: 14px 28px;
+    font-size: 16px;
+    min-height: 48px;
+}
+
+.btn.small {
+    padding: 6px 12px;
+    font-size: 13px;
+    min-height: 32px;
+}
+
+.btn.mini {
+    padding: 4px 8px;
+    font-size: 12px;
+    min-height: 28px;
+}
+
+/* 按钮颜色变体 */
+.btn.primary {
+    background: #3498db;
+    border-color: #3498db;
+    color: #ffffff;
+}
+
+.btn.primary:hover {
+    background: #2980b9;
+    border-color: #2980b9;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
+}
+
+.btn.secondary {
+    background: #95a5a6;
+    border-color: #95a5a6;
+    color: #ffffff;
+}
+
+.btn.secondary:hover {
+    background: #7f8c8d;
+    border-color: #7f8c8d;
+}
+
+.btn.success {
+    background: #27ae60;
+    border-color: #27ae60;
+    color: #ffffff;
+}
+
+.btn.success:hover {
+    background: #229954;
+    border-color: #229954;
+}
+
+.btn.danger {
+    background: #e74c3c;
+    border-color: #e74c3c;
+    color: #ffffff;
+}
+
+.btn.danger:hover {
+    background: #c0392b;
+    border-color: #c0392b;
+}
+
+.btn.warning {
+    background: #f39c12;
+    border-color: #f39c12;
+    color: #ffffff;
+}
+
+.btn.warning:hover {
+    background: #e67e22;
+    border-color: #e67e22;
+}
+
+.btn.ghost {
+    background: transparent;
+    border-color: #bdc3c7;
+    color: #2c3e50;
+}
+
+.btn.ghost:hover {
+    background: #ecf0f1;
+    border-color: #95a5a6;
+}
+
+/* 按钮状态 */
+.btn:disabled,
+.btn.disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+.btn:active {
+    transform: translateY(0);
+}
+
+/* 按钮组 */
+.btn-group {
+    display: inline-flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.btn-group .btn {
+    margin: 0;
+}
+
+/* 全宽按钮 */
+.btn.full-width {
+    width: 100%;
+}
+
+/* 图标按钮 */
+.btn.icon-only {
+    padding: 10px;
+    min-width: 40px;
+}
+
+.btn.icon-only.small {
+    padding: 6px;
+    min-width: 32px;
+}
+
+.btn.icon-only.large {
+    padding: 14px;
+    min-width: 48px;
+}
+
+/* 涟漪效果 */
+.btn .ripple {
+    position: absolute;
+    border-radius: 50%;
+    transform: scale(0);
+    animation: ripple 0.6s linear;
+    background-color: rgba(255, 255, 255, 0.5);
+    pointer-events: none;
+}
+
+@keyframes ripple {
+    to {
+        transform: scale(4);
+        opacity: 0;
+    }
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+    .btn {
+        padding: 8px 16px;
+        font-size: 13px;
+        min-height: 36px;
+    }
+    
+    .btn.large {
+        padding: 12px 24px;
+        font-size: 15px;
+        min-height: 44px;
+    }
+    
+    .btn.small {
+        padding: 5px 10px;
+        font-size: 12px;
+        min-height: 30px;
+    }
+}

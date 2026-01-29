@@ -1,0 +1,204 @@
+/* 间距标准规范 */
+/* 用于统一各页面的元素间距，提升视觉协调性和美观度 */
+
+/* 基础间距设置 */
+:root {
+    --spacing-xs: 4px;      /* 极小间距 - 紧密元素 */
+    --spacing-sm: 8px;      /* 小间距 - 相关元素 */
+    --spacing-md: 12px;     /* 中等间距 - 表单元素 */
+    --spacing-lg: 16px;     /* 大间距 - 组件间距 */
+    --spacing-xl: 20px;     /* 特大间距 - 区块间距 */
+    --spacing-2xl: 24px;    /* 超大间距 - 主要区块 */
+    --spacing-3xl: 32px;    /* 巨大间距 - 页面区域 */
+    --spacing-4xl: 40px;    /* 超巨大间距 - 页面分割 */
+    --spacing-5xl: 48px;    /* 最大间距 - 特殊分割 */
+    --spacing-6xl: 64px;    /* 超级间距 - 页面顶部 */
+}
+
+/* 内边距工具类 */
+.p-xs { padding: var(--spacing-xs); }
+.p-sm { padding: var(--spacing-sm); }
+.p-md { padding: var(--spacing-md); }
+.p-lg { padding: var(--spacing-lg); }
+.p-xl { padding: var(--spacing-xl); }
+.p-2xl { padding: var(--spacing-2xl); }
+.p-3xl { padding: var(--spacing-3xl); }
+.p-4xl { padding: var(--spacing-4xl); }
+
+/* 垂直内边距 */
+.py-xs { padding-top: var(--spacing-xs); padding-bottom: var(--spacing-xs); }
+.py-sm { padding-top: var(--spacing-sm); padding-bottom: var(--spacing-sm); }
+.py-md { padding-top: var(--spacing-md); padding-bottom: var(--spacing-md); }
+.py-lg { padding-top: var(--spacing-lg); padding-bottom: var(--spacing-lg); }
+.py-xl { padding-top: var(--spacing-xl); padding-bottom: var(--spacing-xl); }
+.py-2xl { padding-top: var(--spacing-2xl); padding-bottom: var(--spacing-2xl); }
+.py-3xl { padding-top: var(--spacing-3xl); padding-bottom: var(--spacing-3xl); }
+
+/* 水平内边距 */
+.px-xs { padding-left: var(--spacing-xs); padding-right: var(--spacing-xs); }
+.px-sm { padding-left: var(--spacing-sm); padding-right: var(--spacing-sm); }
+.px-md { padding-left: var(--spacing-md); padding-right: var(--spacing-md); }
+.px-lg { padding-left: var(--spacing-lg); padding-right: var(--spacing-lg); }
+.px-xl { padding-left: var(--spacing-xl); padding-right: var(--spacing-xl); }
+.px-2xl { padding-left: var(--spacing-2xl); padding-right: var(--spacing-2xl); }
+.px-3xl { padding-left: var(--spacing-3xl); padding-right: var(--spacing-3xl); }
+
+/* 外边距工具类 */
+.m-xs { margin: var(--spacing-xs); }
+.m-sm { margin: var(--spacing-sm); }
+.m-md { margin: var(--spacing-md); }
+.m-lg { margin: var(--spacing-lg); }
+.m-xl { margin: var(--spacing-xl); }
+.m-2xl { margin: var(--spacing-2xl); }
+.m-3xl { margin: var(--spacing-3xl); }
+.m-4xl { margin: var(--spacing-4xl); }
+
+/* 垂直外边距 */
+.my-xs { margin-top: var(--spacing-xs); margin-bottom: var(--spacing-xs); }
+.my-sm { margin-top: var(--spacing-sm); margin-bottom: var(--spacing-sm); }
+.my-md { margin-top: var(--spacing-md); margin-bottom: var(--spacing-md); }
+.my-lg { margin-top: var(--spacing-lg); margin-bottom: var(--spacing-lg); }
+.my-xl { margin-top: var(--spacing-xl); margin-bottom: var(--spacing-xl); }
+.my-2xl { margin-top: var(--spacing-2xl); margin-bottom: var(--spacing-2xl); }
+.my-3xl { margin-top: var(--spacing-3xl); margin-bottom: var(--spacing-3xl); }
+
+/* 水平外边距 */
+.mx-xs { margin-left: var(--spacing-xs); margin-right: var(--spacing-xs); }
+.mx-sm { margin-left: var(--spacing-sm); margin-right: var(--spacing-sm); }
+.mx-md { margin-left: var(--spacing-md); margin-right: var(--spacing-md); }
+.mx-lg { margin-left: var(--spacing-lg); margin-right: var(--spacing-lg); }
+.mx-xl { margin-left: var(--spacing-xl); margin-right: var(--spacing-xl); }
+.mx-2xl { margin-left: var(--spacing-2xl); margin-right: var(--spacing-2xl); }
+.mx-auto { margin-left: auto; margin-right: auto; }
+
+/* 顶部外边距 */
+.mt-xs { margin-top: var(--spacing-xs); }
+.mt-sm { margin-top: var(--spacing-sm); }
+.mt-md { margin-top: var(--spacing-md); }
+.mt-lg { margin-top: var(--spacing-lg); }
+.mt-xl { margin-top: var(--spacing-xl); }
+.mt-2xl { margin-top: var(--spacing-2xl); }
+.mt-3xl { margin-top: var(--spacing-3xl); }
+
+/* 底部外边距 */
+.mb-xs { margin-bottom: var(--spacing-xs); }
+.mb-sm { margin-bottom: var(--spacing-sm); }
+.mb-md { margin-bottom: var(--spacing-md); }
+.mb-lg { margin-bottom: var(--spacing-lg); }
+.mb-xl { margin-bottom: var(--spacing-xl); }
+.mb-2xl { margin-bottom: var(--spacing-2xl); }
+.mb-3xl { margin-bottom: var(--spacing-3xl); }
+
+/* 左侧外边距 */
+.ml-xs { margin-left: var(--spacing-xs); }
+.ml-sm { margin-left: var(--spacing-sm); }
+.ml-md { margin-left: var(--spacing-md); }
+.ml-lg { margin-left: var(--spacing-lg); }
+.ml-xl { margin-left: var(--spacing-xl); }
+
+/* 右侧外边距 */
+.mr-xs { margin-right: var(--spacing-xs); }
+.mr-sm { margin-right: var(--spacing-sm); }
+.mr-md { margin-right: var(--spacing-md); }
+.mr-lg { margin-right: var(--spacing-lg); }
+.mr-xl { margin-right: var(--spacing-xl); }
+
+/* 间隙工具类 */
+.gap-xs { gap: var(--spacing-xs); }
+.gap-sm { gap: var(--spacing-sm); }
+.gap-md { gap: var(--spacing-md); }
+.gap-lg { gap: var(--spacing-lg); }
+.gap-xl { gap: var(--spacing-xl); }
+.gap-2xl { gap: var(--spacing-2xl); }
+.gap-3xl { gap: var(--spacing-3xl); }
+
+/* 组件特定间距 */
+.card-spacing {
+    padding: var(--spacing-2xl);
+    margin-bottom: var(--spacing-2xl);
+}
+
+.form-spacing {
+    margin-bottom: var(--spacing-lg);
+}
+
+.form-item-spacing {
+    margin-bottom: var(--spacing-md);
+}
+
+.section-spacing {
+    margin-bottom: var(--spacing-3xl);
+}
+
+.button-group-spacing {
+    gap: var(--spacing-md);
+}
+
+.nav-item-spacing {
+    margin-bottom: var(--spacing-xs);
+}
+
+.table-cell-spacing {
+    padding: var(--spacing-md) var(--spacing-lg);
+}
+
+.header-spacing {
+    padding: var(--spacing-lg) var(--spacing-xl);
+    margin-bottom: var(--spacing-xl);
+}
+
+.content-spacing {
+    padding: var(--spacing-xl);
+}
+
+.sidebar-spacing {
+    padding: var(--spacing-lg) var(--spacing-md);
+}
+
+/* 响应式间距调整 */
+@media (max-width: 768px) {
+    :root {
+        --spacing-xs: 3px;
+        --spacing-sm: 6px;
+        --spacing-md: 10px;
+        --spacing-lg: 14px;
+        --spacing-xl: 18px;
+        --spacing-2xl: 20px;
+        --spacing-3xl: 24px;
+        --spacing-4xl: 32px;
+        --spacing-5xl: 40px;
+        --spacing-6xl: 48px;
+    }
+    
+    .card-spacing {
+        padding: var(--spacing-lg);
+        margin-bottom: var(--spacing-lg);
+    }
+    
+    .content-spacing {
+        padding: var(--spacing-md);
+    }
+    
+    .header-spacing {
+        padding: var(--spacing-md) var(--spacing-lg);
+        margin-bottom: var(--spacing-lg);
+    }
+}
+
+/* 特殊间距重置 */
+.no-margin { margin: 0 !important; }
+.no-padding { padding: 0 !important; }
+.no-gap { gap: 0 !important; }
+
+/* 垂直节奏 */
+.vertical-rhythm > * + * {
+    margin-top: var(--spacing-lg);
+}
+
+.tight-vertical-rhythm > * + * {
+    margin-top: var(--spacing-sm);
+}
+
+.loose-vertical-rhythm > * + * {
+    margin-top: var(--spacing-2xl);
+}

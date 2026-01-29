@@ -1,0 +1,369 @@
+/* 合同号选择对话框 - 使用统一的背景模糊和变暗方案（使用CSS变量） */
+.contract-no-modal {
+  /* 使用 ModalDialog 模块定义的统一背景样式变量 */
+  background: var(--modal-overlay-bg-color, rgba(0, 0, 0, 0.4));
+  backdrop-filter: blur(var(--modal-overlay-blur, 6px));
+  -webkit-backdrop-filter: blur(var(--modal-overlay-blur, 6px));
+}
+
+.contract-no-dialog {
+  max-width: 520px;
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25),
+              0 0 0 1px rgba(0, 0, 0, 0.05),
+              inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+.contract-modal-header {
+  padding: 28px 28px 20px;
+  text-align: center;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 16px 16px 0 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.contract-modal-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: url('data:image/svg+xml,<svg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"><g fill="none" fill-rule="evenodd"><g fill="%23ffffff" fill-opacity="0.1"><circle cx="30" cy="30" r="2"/></g></svg>');
+  opacity: 0.3;
+}
+
+.contract-modal-icon {
+  font-size: 48px;
+  margin-bottom: 12px;
+  position: relative;
+  z-index: 1;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+}
+
+.contract-modal-title {
+  margin: 0 0 8px 0;
+  font-size: 22px;
+  font-weight: 700;
+  color: #ffffff;
+  position: relative;
+  z-index: 1;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.contract-modal-subtitle {
+  margin: 0;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 400;
+  position: relative;
+  z-index: 1;
+  line-height: 1.5;
+}
+
+.contract-modal-body {
+  padding: 28px;
+  background: #ffffff;
+}
+
+.contract-input-section {
+  margin-bottom: 20px;
+}
+
+.contract-input-section:last-of-type {
+  margin-bottom: 0;
+}
+
+.contract-input-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.contract-label-icon {
+  font-size: 16px;
+}
+
+.contract-select-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.contract-select {
+  width: 100%;
+  padding: 14px 40px 14px 16px;
+  border: 2px solid #e5e7eb;
+  border-radius: 10px;
+  font-size: 15px;
+  color: #111827;
+  background: #ffffff;
+  appearance: none;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  background-image: none;
+}
+
+.contract-select:hover {
+  border-color: #d1d5db;
+  background: #f9fafb;
+}
+
+.contract-select:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+  background: #ffffff;
+}
+
+.contract-select-arrow {
+  position: absolute;
+  right: 16px;
+  pointer-events: none;
+  color: #6b7280;
+  transition: transform 0.2s ease;
+}
+
+.contract-select-wrapper:hover .contract-select-arrow,
+.contract-select:focus + .contract-select-arrow {
+  color: #667eea;
+}
+
+.contract-input {
+  width: 100%;
+  padding: 14px 16px;
+  border: 2px solid #e5e7eb;
+  border-radius: 10px;
+  font-size: 15px;
+  color: #111827;
+  background: #ffffff;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-sizing: border-box;
+}
+
+.contract-input::placeholder {
+  color: #9ca3af;
+}
+
+.contract-input:hover {
+  border-color: #d1d5db;
+  background: #f9fafb;
+}
+
+.contract-input:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+  background: #ffffff;
+}
+
+.contract-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 24px 0;
+}
+
+.contract-divider-line {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #e5e7eb, transparent);
+}
+
+.contract-divider-text {
+  font-size: 13px;
+  color: #9ca3af;
+  font-weight: 500;
+  padding: 0 8px;
+  background: #ffffff;
+}
+
+.contract-modal-footer {
+  padding: 20px 28px 28px;
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  background: #f9fafb;
+  border-top: 1px solid #e5e7eb;
+  border-radius: 0 0 16px 16px;
+}
+
+.contract-btn {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 100px;
+  position: relative;
+  overflow: hidden;
+}
+
+.contract-btn::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
+}
+
+.contract-btn:active::before {
+  width: 300px;
+  height: 300px;
+}
+
+.contract-btn span {
+  position: relative;
+  z-index: 1;
+}
+
+.contract-btn-cancel {
+  background: #ffffff;
+  color: #6b7280;
+  border: 2px solid #e5e7eb;
+}
+
+.contract-btn-cancel:hover {
+  background: #f9fafb;
+  border-color: #d1d5db;
+  color: #374151;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.contract-btn-cancel:active {
+  transform: translateY(0);
+}
+
+.contract-btn-confirm {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #ffffff;
+  border: 2px solid transparent;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.contract-btn-confirm:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+  background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
+}
+
+.contract-btn-confirm:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+}
+
+/* 响应式设计 */
+@media (max-width: 640px) {
+  .contract-no-dialog {
+    width: 95%;
+    margin: 20px;
+  }
+  
+  .contract-modal-header {
+    padding: 24px 20px 16px;
+  }
+  
+  .contract-modal-icon {
+    font-size: 40px;
+  }
+  
+  .contract-modal-title {
+    font-size: 20px;
+  }
+  
+  .contract-modal-subtitle {
+    font-size: 12px;
+  }
+  
+  .contract-modal-body {
+    padding: 24px 20px;
+  }
+  
+  .contract-modal-footer {
+    padding: 16px 20px 24px;
+    flex-direction: column;
+  }
+  
+  .contract-btn {
+    width: 100%;
+  }
+}
+
+/* 深色模式支持 */
+@media (prefers-color-scheme: dark) {
+  .contract-no-dialog {
+    background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+  
+  .contract-modal-body {
+    background: #1f2937;
+  }
+  
+  .contract-input-label {
+    color: #f3f4f6;
+  }
+  
+  .contract-select,
+  .contract-input {
+    background: #374151;
+    border-color: #4b5563;
+    color: #f9fafb;
+  }
+  
+  .contract-select:hover,
+  .contract-input:hover {
+    background: #4b5563;
+    border-color: #6b7280;
+  }
+  
+  .contract-select:focus,
+  .contract-input:focus {
+    border-color: #818cf8;
+    box-shadow: 0 0 0 4px rgba(129, 140, 248, 0.2);
+  }
+  
+  .contract-divider-line {
+    background: linear-gradient(90deg, transparent, #4b5563, transparent);
+  }
+  
+  .contract-divider-text {
+    color: #9ca3af;
+    background: #1f2937;
+  }
+  
+  .contract-modal-footer {
+    background: #111827;
+    border-top-color: #374151;
+  }
+  
+  .contract-btn-cancel {
+    background: #374151;
+    color: #f3f4f6;
+    border-color: #4b5563;
+  }
+  
+  .contract-btn-cancel:hover {
+    background: #4b5563;
+    border-color: #6b7280;
+  }
+}
+

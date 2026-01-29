@@ -1,0 +1,176 @@
+{
+  "id": "template_pickup_default",
+  "name": "拉货通知-标准模板",
+  "type": "pickup",
+  "applicability": {
+    "isDefault": true,
+    "productTypes": [],
+    "customerIds": [],
+    "customerNames": [],
+    "priority": 0
+  },
+  "blocks": [
+    {
+      "id": "block_company_header",
+      "type": "company-header",
+      "config": {
+        "style": {
+          "titleFontSize": 22,
+          "borderBottom": true
+        }
+      }
+    },
+    {
+      "id": "block_document_title",
+      "type": "document-title",
+      "config": {
+        "text": "拉货通知",
+        "style": {
+          "fontSize": 18,
+          "fontWeight": "bold",
+          "textAlign": "center",
+          "marginTop": 15,
+          "marginBottom": 15
+        }
+      }
+    },
+    {
+      "id": "block_order_info",
+      "type": "order-info",
+      "config": {
+        "layout": "two-column",
+        "fields": [
+          {
+            "position": "left",
+            "label": "合同号:",
+            "binding": "order.contractNo"
+          },
+          {
+            "position": "right",
+            "label": "日期:",
+            "binding": "order.invoiceDate"
+          },
+          {
+            "position": "left",
+            "label": "客户:",
+            "binding": "customer.name"
+          },
+          {
+            "position": "right",
+            "label": "发货日期:",
+            "binding": "order.shipmentDate"
+          }
+        ],
+        "style": {
+          "fontSize": 11
+        }
+      }
+    },
+    {
+      "id": "block_product_table",
+      "type": "product-table",
+      "config": {
+        "columns": [
+          {
+            "header": "序号",
+            "binding": "@index",
+            "width": "8%",
+            "align": "center"
+          },
+          {
+            "header": "型号",
+            "binding": "model",
+            "width": "30%",
+            "align": "left"
+          },
+          {
+            "header": "数量",
+            "binding": "quantity",
+            "width": "15%",
+            "align": "center",
+            "suffix": "PCS"
+          },
+          {
+            "header": "件数",
+            "binding": "packages",
+            "width": "12%",
+            "align": "center"
+          },
+          {
+            "header": "单位",
+            "binding": "unit",
+            "width": "10%",
+            "align": "center"
+          },
+          {
+            "header": "包装",
+            "binding": "packing",
+            "width": "25%",
+            "align": "left"
+          }
+        ],
+        "descriptionFormat": "standard",
+        "showProductCategory": false,
+        "showHeader": true,
+        "headerStyle": {
+          "background": "#f1f5f9",
+          "fontWeight": "bold",
+          "borderColor": "#333",
+          "fontSize": 12
+        },
+        "rowStyle": {
+          "borderColor": "#333",
+          "fontSize": 11,
+          "minHeight": 30
+        },
+        "showFooter": true,
+        "footerConfig": {
+          "labelColumn": 0,
+          "labelColspan": 1,
+          "label": "合计:",
+          "showTotalQuantity": true,
+          "totalQuantityColumn": 2,
+          "showTotalPackages": true,
+          "totalPackagesColumn": 3
+        }
+      }
+    },
+    {
+      "id": "block_terms",
+      "type": "terms-block",
+      "config": {
+        "layout": "single-column",
+        "fields": [
+          {
+            "position": "left",
+            "label": "备注:",
+            "binding": "order.remarks"
+          }
+        ]
+      }
+    },
+    {
+      "id": "block_signature",
+      "type": "signature-area",
+      "config": {
+        "layout": "right",
+        "label": "QINGDAO SHENGCHI PACKAGING PRODUCT CO.,LTD"
+      }
+    }
+  ],
+  "pageSettings": {
+    "margin": {
+      "top": 15,
+      "bottom": 15,
+      "left": 15,
+      "right": 15
+    }
+  },
+  "globalStyles": {
+    "fontFamily": "Arial, \"Microsoft YaHei\", sans-serif",
+    "fontSize": 11,
+    "lineHeight": 1.4,
+    "color": "#000"
+  }
+}
+

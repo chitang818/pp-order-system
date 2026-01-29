@@ -1,0 +1,27 @@
+{
+    "name": "pp-order-backend",
+    "version": "2.0.0",
+    "private": true,
+    "description": "Backend service for PP Order System",
+    "main": "app.js",
+    "dependencies": {
+        "body-parser": "^2.2.0",
+        "cheerio": "^1.1.2",
+        "compression": "^1.8.1",
+        "cookie-parser": "^1.4.7",
+        "cors": "^2.8.5",
+        "docx": "^9.5.1",
+        "exceljs": "^4.4.0",
+        "express": "^5.1.0",
+        "express-rate-limit": "^8.2.1",
+        "express-validator": "^7.3.0",
+        "html-to-docx": "^1.8.0",
+        "jszip": "^3.10.1",
+        "node-cron": "^4.2.1",
+        "puppeteer-core": "^21.0.0",
+        "sqlite3": "^5.1.7",
+        "winston": "^3.19.0",
+        "winston-daily-rotate-file": "^5.0.0",
+        "xlsx": "^0.18.5"
+    }
+}

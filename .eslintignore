@@ -1,0 +1,42 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+build/
+
+# Database files
+data/
+*.sqlite
+
+# Temporary files
+temp_conversions/
+*.tmp
+*.temp
+
+# Test coverage
+coverage/
+.nyc_output/
+
+# Generated files
+*.min.js
+frontend/js/docx.min.js
+
+# Config files
+config/config.json
+*.config.js
+
+# Documentation
+*.md
+
+# Git
+.git/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+

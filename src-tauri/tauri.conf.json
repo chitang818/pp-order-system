@@ -1,0 +1,76 @@
+{
+    "$schema": "https://schema.tauri.app/config/2.0.0",
+    "identifier": "com.pp.ordermanagement",
+    "productName": "PP订单管理系统",
+    "version": "2.0.3",
+    "build": {
+        "beforeDevCommand": "npm run dev",
+        "devUrl": "http://localhost:5173",
+        "beforeBuildCommand": "npm run build",
+        "frontendDist": "../dist/frontend"
+    },
+    "bundle": {
+        "active": true,
+        "targets": "nsis",
+        "externalBin": [
+            "binaries/node"
+        ],
+        "icon": [
+            "icons/32x32.png",
+            "icons/128x128.png",
+            "icons/128x128@2x.png",
+            "icons/icon.icns",
+            "icons/icon.ico"
+        ],
+        "resources": {
+            "../backend/app.js": "backend/app.js",
+            "../backend/config": "backend/config",
+            "../backend/db": "backend/db",
+            "../backend/middleware": "backend/middleware",
+            "../backend/routes": "backend/routes",
+            "../backend/services": "backend/services",
+            "../backend/utils": "backend/utils",
+            "../backend/node_modules": "backend/node_modules",
+            "resources/init.sql": "resources/init.sql"
+        },
+        "windows": {
+            "certificateThumbprint": null,
+            "digestAlgorithm": "sha256",
+            "timestampUrl": "",
+            "wix": {
+                "language": "zh-CN"
+            },
+            "nsis": {
+                "installMode": "currentUser",
+                "languages": [
+                    "SimpChinese"
+                ],
+                "displayLanguageSelector": false
+            }
+        }
+    },
+    "app": {
+        "windows": [
+            {
+                "label": "main",
+                "fullscreen": false,
+                "resizable": true,
+                "title": "PP订单管理系统",
+                "width": 1400,
+                "height": 900,
+                "minWidth": 1200,
+                "minHeight": 700,
+                "center": true,
+                "decorations": true,
+                "transparent": false,
+                "devtools": true,
+                "maximized": true
+            }
+        ],
+        "security": {
+            "csp": "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: http://127.0.0.1:3000; connect-src 'self' http://127.0.0.1:3000 https://ipc.localhost http://ipc.localhost https://ipapi.co; font-src 'self' data:"
+        },
+        "withGlobalTauri": true
+    },
+    "plugins": {}
+}

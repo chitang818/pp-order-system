@@ -1,0 +1,921 @@
+/* Extracted from docs.html */
+.panel-body {
+    display: flex;
+    gap: 20px;
+    padding: 20px;
+}
+
+.left-panel {
+    flex: 1;
+    min-width: 400px;
+}
+
+.right-panel {
+    flex: 1;
+    min-width: 400px;
+}
+
+/* 🎨 重构的预览容器设计 - 移除滚动条，通过缩放适配内容 */
+.preview-container {
+    flex: 1;
+    overflow: hidden;
+    /* 隐藏滚动条，通过缩放适配内容 */
+    padding: 15px !important;
+    /* 上下左右都是15px，确保间距一致 */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    /* 始终居中显示 */
+    min-height: 0;
+    position: relative;
+    background: #d4d4d4;
+    /* WPS预览背景灰色 */
+    box-sizing: border-box;
+    /* 确保padding包含在宽度计算中 */
+}
+
+/* 🔍 重构的缩放包裹层 - 通过缩放适配，确保居中显示 */
+.preview-zoom-wrapper {
+    /* 关键：从中心缩放，确保居中显示 */
+    transform-origin: center center;
+    /* 从中心缩放，确保居中显示 */
+    transition: transform 0.2s ease-out;
+    /* 在flexbox父容器中，父容器的justify-content: center已经居中 */
+    margin: 0 auto !important;
+    /* 强制水平居中 */
+    padding: 0;
+    /* 移除padding，间距由容器padding提供 */
+    /* 确保占满宽度以实现真正居中 */
+    width: fit-content;
+    /* 与新页面一致 */
+    height: fit-content;
+    /* 与新页面一致 */
+    /* 防止内容溢出 */
+    box-sizing: content-box;
+    /* 与新页面一致 */
+    flex-shrink: 0;
+    /* 使用display flex确保布局正确 */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    /* 页面之间的间距，与新页面一致 */
+    min-width: 0;
+    /* 与新页面一致 */
+    min-height: 0;
+    /* 与新页面一致 */
+}
+
+/* 📄 预览页面容器 - 参照新页面效果 */
+.preview-pages {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    /* 页面之间的间距 */
+    margin: 0;
+    /* 移除所有margin */
+    padding: 0 0 15px 0;
+    /* 底部padding 15px，与顶部间距一致 */
+}
+
+/* 📄 A4纸张容器 - 参照新页面效果，添加蓝色边框和页边距标记 */
+#preview {
+    /* A4标准尺寸：210mm x 297mm */
+    width: 210mm !important;
+    /* A4标准宽度 */
+    height: 297mm !important;
+    /* A4标准高度 */
+    min-height: 297mm !important;
+    /* A4标准高度 */
+    background: #FFFFFF;
+    /* 纯白背景 */
+    /* 现代化的纸张阴影：更简洁优雅 */
+    box-shadow:
+        0 4px 20px rgba(0, 0, 0, 0.15),
+        /* 主阴影，与新页面一致 */
+        0 0 0 1px rgba(0, 0, 0, 0.05);
+    /* 细边框，与新页面一致 */
+    padding: 10mm;
+    /* 页边距 */
+    box-sizing: border-box;
+    position: relative;
+    /* 纸张周围留白，增强边界感 - 确保居中 */
+    margin: 0;
+    /* 移除所有margin，与新页面一致 */
+    /* 添加蓝色边框，与新页面一致 */
+    border: 2px solid #3b82f6;
+    /* 蓝色边框，与新页面一致 */
+    border-radius: 0;
+    /* 移除圆角，与新页面一致 */
+    /* 确保在缩放时保持清晰 */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    /* 防止flex子元素拉伸 */
+    flex-shrink: 0;
+    /* 确保文档居中显示 */
+    display: block;
+    /* 纸张内容溢出时隐藏，确保每页都是A4尺寸 */
+    overflow: visible;
+    /* 改为visible以显示页边距标记 */
+    /* 页面分隔效果 */
+    page-break-after: always;
+}
+
+/* 页边距限制符号（L型标记）- 参照新页面效果 */
+#preview::before,
+#preview::after {
+    content: '';
+    position: absolute;
+    background: #3b82f6;
+    z-index: 10;
+}
+
+/* 左上角L型标记 */
+#preview::before {
+    top: 0;
+    left: 0;
+    width: 12px;
+    height: 2px;
+    box-shadow: 0 12px 0 0 #3b82f6;
+}
+
+/* 右上角L型标记 */
+#preview::after {
+    top: 0;
+    right: 0;
+    width: 12px;
+    height: 2px;
+    box-shadow: 0 12px 0 0 #3b82f6;
+}
+
+/* 左下角和右下角L型标记 */
+#preview .margin-mark-bottom-left,
+#preview .margin-mark-bottom-right {
+    position: absolute;
+    bottom: 0;
+    width: 12px;
+    height: 2px;
+    background: #3b82f6;
+    box-shadow: 0 -12px 0 0 #3b82f6;
+    z-index: 10;
+}
+
+#preview .margin-mark-bottom-left {
+    left: 0;
+}
+
+#preview .margin-mark-bottom-right {
+    right: 0;
+}
+
+.form-item {
+    margin-bottom: 12px;
+    background-color: #fff;
+    border-radius: 6px;
+    padding: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.form-item label {
+    display: block;
+    margin-bottom: 8px;
+}
+
+.form-label {
+    color: #333;
+    font-weight: 600;
+    font-size: 14px;
+    margin-bottom: 12px;
+}
+
+.radio-group {
+    display: flex;
+    gap: 20px;
+}
+
+/* 精简的紧凑型按钮样式 */
+.btn-mini {
+    padding: 2px 4px;
+    font-size: 10px;
+    line-height: 1.2;
+    border-radius: 3px;
+    border: 1px solid #ddd;
+    background: #fff;
+    color: #333;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-height: 18px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-mini:hover {
+    background: #f8f9fa;
+    border-color: #adb5bd;
+}
+
+.btn-mini.active {
+    background: #007bff;
+    color: white;
+    border-color: #007bff;
+}
+
+/* 精简的预览控制区域 */
+.preview-controls {
+    min-height: 20px;
+}
+
+/* 预览窗口表头优化 */
+.preview-header {
+    margin-bottom: 6px !important;
+    padding-bottom: 4px !important;
+}
+
+/* 面板标题区域紧凑优化 */
+.panel-header {
+    border-top: 3px solid var(--primary) !important;
+    /* 添加蓝色装饰线 */
+    border-radius: 12px 12px 0 0 !important;
+    /* 添加顶部圆角 */
+    /* 移除padding设置，使用erp.css中的统一基础样式 */
+}
+
+.panel-title {
+    font-size: 16px !important;
+    /* 稍微减小字体 */
+    margin: 0 !important;
+}
+
+.panel-actions {
+    gap: 6px !important;
+    /* 从 8px 减少到 6px */
+}
+
+.panel-actions .btn.small {
+    padding: 4px 8px !important;
+    /* 减小按钮内边距 */
+    font-size: 12px !important;
+    /* 减小按钮字体 */
+    min-height: 28px !important;
+    /* 减小按钮高度 */
+    line-height: 1.2 !important;
+    /* 优化行高 */
+    border-radius: 4px !important;
+    /* 稍微减小圆角 */
+}
+
+/* 预览控制区域高度压缩优化 */
+.preview-controls {
+    gap: 4px !important;
+    /* 从 8px 减少到 4px */
+    padding: 0 !important;
+    /* 移除内边距 */
+    margin: 0 !important;
+    /* 移除外边距 */
+}
+
+.layout-controls-compact,
+.zoom-controls-compact {
+    gap: 2px !important;
+    /* 保持紧凑间距 */
+}
+
+/* 预览标题区域压缩 */
+.preview-container>div:first-child {
+    margin-bottom: 3px !important;
+    /* 从 6px 减少到 3px */
+    padding-bottom: 2px !important;
+    /* 从 4px 减少到 2px */
+}
+
+.preview-container .panel-title {
+    font-size: 13px !important;
+    /* 从 14px 减少到 13px */
+    line-height: 1.2 !important;
+    /* 优化行高 */
+}
+
+/* 预览控制按钮尺寸恢复 - 保持合理大小 */
+.btn-mini {
+    padding: 2px 4px !important;
+    /* 恢复到合理的内边距 */
+    font-size: 11px !important;
+    /* 恢复到可读的字体大小 */
+    min-height: 20px !important;
+    /* 恢复到合理的最小高度 */
+    line-height: 1.2 !important;
+    /* 恢复行高 */
+    border-radius: 4px !important;
+    /* 恢复圆角 */
+}
+
+/* 缩放控制按钮恢复 */
+#zoomOut,
+#zoomIn {
+    min-width: 20px !important;
+    /* 恢复到合理宽度 */
+    padding: 2px 4px !important;
+    /* 恢复内边距 */
+    font-size: 11px !important;
+    /* 恢复字体大小 */
+}
+
+/* 预览窗口表头布局优化 - 确保不遮挡内容 */
+.preview-header {
+    background: #ffffff;
+    border-radius: 8px 8px 0 0;
+    padding: 10px 16px;
+    border-bottom: 1px solid #e0e0e0;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    margin-bottom: 0;
+    /* 确保控制栏不会覆盖内容 */
+    position: relative;
+    z-index: 1;
+    /* 确保控制栏和预览容器分离 */
+    flex-shrink: 0;
+}
+
+.preview-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #2c3e50;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.preview-title::before {
+    content: "📄";
+    font-size: 18px;
+}
+
+/* 功能控制区域分组优化 */
+/* 预览控制区域整体优化 */
+.preview-controls {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    background: #f8f9fa;
+    padding: 8px 14px;
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.control-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    position: relative;
+}
+
+.control-group:not(:last-child)::after {
+    content: "";
+    position: absolute;
+    right: -14px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 1px;
+    height: 20px;
+    background: #dee2e6;
+}
+
+.control-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #495057;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    margin-right: 4px;
+    min-width: 32px;
+    text-align: left;
+}
+
+/* 布局按钮样式优化 */
+.style-btn {
+    position: relative;
+    transition: all 0.2s ease;
+    border: 1px solid #dee2e6 !important;
+    background: #ffffff !important;
+    color: #495057 !important;
+    font-weight: 500 !important;
+    font-size: 13px !important;
+    min-height: 28px !important;
+    padding: 4px 8px !important;
+    line-height: 1.3 !important;
+}
+
+.style-btn:hover {
+    background: #f8f9fa !important;
+    border-color: #007bff !important;
+    color: #007bff !important;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 123, 255, 0.15);
+}
+
+.style-btn.active {
+    background: #007bff !important;
+    border-color: #0056b3 !important;
+    color: white !important;
+    font-weight: 600 !important;
+    box-shadow: 0 2px 4px rgba(0, 123, 255, 0.3);
+}
+
+.style-btn.active::before {
+    content: "✓";
+    position: absolute;
+    top: -3px;
+    right: -3px;
+    width: 14px;
+    height: 14px;
+    background: #28a745;
+    border-radius: 50%;
+    font-size: 9px;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    border: 2px solid white;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+/* 缩放控制按钮优化 */
+.zoom-btn {
+    min-width: 24px !important;
+    padding: 4px 6px !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    border-radius: 4px !important;
+    background: #ffffff !important;
+    border: 1px solid #dee2e6 !important;
+    color: #495057 !important;
+    min-height: 28px !important;
+}
+
+.zoom-btn:hover {
+    background: #f8f9fa !important;
+    border-color: #007bff !important;
+    color: #007bff !important;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 123, 255, 0.15);
+}
+
+/* 适配复选框样式优化 */
+#fitToPageToggle {
+    accent-color: #007bff;
+    transform: scale(1.2) !important;
+    cursor: pointer;
+}
+
+#fitToPageToggle:checked {
+    background: #007bff;
+    border-color: #0056b3;
+}
+
+/* 缩放百分比显示优化 */
+#zoomLevel {
+    background: #ffffff;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-family: 'Consolas', 'Monaco', monospace;
+    letter-spacing: 0.5px;
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05);
+    min-height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 600;
+    color: #495057;
+}
+
+@media (max-width: 1200px) {
+    .preview-controls {
+        gap: 6px !important;
+    }
+
+    .layout-controls-compact,
+    .zoom-controls-compact {
+        gap: 2px !important;
+    }
+}
+
+@media (max-width: 900px) {
+    .preview-controls {
+        flex-direction: column;
+        align-items: flex-start !important;
+        gap: 4px !important;
+    }
+}
+
+/* 布局控制区域样式优化 */
+.layout-controls .btn {
+    font-size: 12px;
+    padding: 8px 12px;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+
+.layout-controls .btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.zoom-controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.fit-page-control {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: #555;
+    cursor: pointer;
+}
+
+.fit-page-control input[type="checkbox"] {
+    transform: scale(1.1);
+}
+
+/* 单据类型选择区域样式优化 */
+.radio-label:hover {
+    border-color: #007bff !important;
+    box-shadow: 0 2px 8px rgba(0, 123, 255, 0.15);
+    transform: translateY(-1px);
+}
+
+.radio-label input[type="radio"]:checked+span {
+    color: #007bff !important;
+}
+
+.radio-label:has(input[type="radio"]:checked) {
+    border-color: #007bff !important;
+    background: linear-gradient(135deg, #f8f9ff 0%, #e3f2fd 100%) !important;
+}
+
+/* 响应式布局优化 */
+@media (max-width: 1200px) {
+    .panel-body {
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .card {
+        min-width: auto !important;
+    }
+
+    .layout-controls .btn {
+        font-size: 11px;
+        padding: 6px 10px;
+    }
+}
+
+@media (max-width: 768px) {
+    .panel-body {
+        padding: 12px;
+    }
+
+    .form-item {
+        padding: 12px;
+        margin-bottom: 16px;
+    }
+
+    .layout-controls div {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .zoom-controls div {
+        flex-direction: row;
+    }
+
+    .zoom-controls {
+        margin: 10px 0;
+    }
+}
+
+/* 单据类型选择样式 */
+.radio-label:hover {
+    border-color: #3498db !important;
+    box-shadow: 0 2px 8px rgba(52, 152, 219, 0.15) !important;
+    transform: translateY(-1px) !important;
+}
+
+.radio-label:has(input:checked) {
+    border-color: #2980b9 !important;
+    background: linear-gradient(135deg, #3498db 0%, #2980b9 100%) !important;
+    box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3) !important;
+    transform: translateY(-1px) !important;
+}
+
+.radio-label:has(input:checked) span {
+    color: white !important;
+    font-weight: 600 !important;
+}
+
+.radio-label:has(input:checked) input {
+    accent-color: white !important;
+}
+
+.radio-label {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    padding: 5px 0;
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    padding: 4px 0;
+    transition: background-color 0.2s;
+    border-radius: 4px;
+}
+
+.checkbox-label:hover {
+    background-color: #f5f5f5;
+}
+
+input[type="checkbox"] {
+    margin-right: 8px;
+    cursor: pointer;
+}
+
+input[type="radio"] {
+    margin-right: 8px;
+    cursor: pointer;
+}
+
+.btn.primary {
+    background-color: #1890ff;
+    border-color: #1890ff;
+    padding: 8px 16px;
+    border-radius: 4px;
+    transition: all 0.3s;
+}
+
+.btn.primary:hover {
+    background-color: #40a9ff;
+    border-color: #40a9ff;
+}
+
+.template-config {
+    transition: all 0.3s ease;
+}
+
+/* 风格按钮统一尺寸样式（全局） - 针对1920*1080优化 */
+.style-btn {
+    min-width: 88px;
+    padding: 8px 16px;
+    font-size: 14px;
+    border-radius: 6px;
+    margin: 0 4px;
+    font-weight: 500;
+}
+
+/* 预览控制区域布局优化 */
+.preview-controls-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.layout-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.zoom-controls {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-left: 12px;
+}
+
+/* 适配页面复选框样式 */
+.fit-page-control {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-left: 8px;
+    font-size: 13px;
+    color: #666;
+}
+
+/* 单据表头信息提示框样式 */
+.doc-header-info {
+    animation: fadeIn 0.3s ease-in-out;
+    border-left: 4px solid #3498db;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+}
+
+.doc-header-info .form-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #2c3e50;
+    font-weight: 600;
+}
+
+.info-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    background: #3498db;
+    color: white;
+    border-radius: 50%;
+    font-size: 12px;
+    font-weight: bold;
+    font-style: normal;
+}
+
+.doc-header-content {
+    padding: 8px;
+    background: #ffffff;
+    border-radius: 4px;
+    border: 1px solid #dee2e6;
+    font-size: 13px;
+    line-height: 1.5;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    margin-top: 4px;
+}
+
+.doc-header-content strong {
+    color: #2c3e50;
+    font-weight: 600;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Utility classes to replace inline styles */
+.breadcrumbs {
+    margin-left: 20px;
+}
+
+.sticky-panel-header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.docs-layout-container {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+    height: calc(100vh - 120px);
+    min-height: 600px;
+}
+
+.preview-card {
+    flex: 1.4;
+    min-width: 500px;
+    padding: 0;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+}
+
+.header-flex-wrapper {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.header-controls {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+}
+
+.control-label-wrapper {
+    display: flex;
+    align-items: center;
+    margin-right: 6px;
+    font-size: 11px;
+    color: #666;
+}
+
+.control-checkbox {
+    margin-right: 4px;
+    transform: scale(0.8);
+}
+
+.separator-vertical {
+    width: 1px;
+    height: 20px;
+    background: #dee2e6;
+    margin: 0 4px;
+}
+
+.zoom-level-text {
+    font-size: 11px;
+    color: #666;
+    min-width: 35px;
+    text-align: center;
+}
+
+.control-label-wrapper-right {
+    display: flex;
+    align-items: center;
+    margin-left: 6px;
+    font-size: 11px;
+    color: #666;
+}
+
+.controls-card {
+    flex: 1;
+    min-width: 420px;
+    padding: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.doc-type-group {
+    margin-bottom: 6px;
+}
+
+.doc-type-label {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 3px;
+}
+
+.doc-type-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
+    margin-top: 2px;
+    padding: 6px;
+    background: #f8f9fa;
+    border-radius: 4px;
+    border: 1px solid #e9ecef;
+}
+
+.radio-label-item {
+    display: flex;
+    align-items: center;
+    padding: 10px 8px;
+    min-height: 36px;
+    background: white;
+    border-radius: 4px;
+    border: 2px solid #e9ecef;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-weight: 500;
+}
+
+.radio-input-item {
+    margin-right: 6px;
+    transform: scale(1.0);
+}
+
+.radio-text-item {
+    color: #2c3e50;
+    font-weight: bold;
+    font-size: 12px;
+}
+
+.export-btn-editable {
+    background: #28a745 !important;
+    color: white !important;
+    border-color: #28a745 !important;
+}
+
+.export-btn-editable:hover {
+    background: #218838 !important;
+    border-color: #1e7e34 !important;
+}
+
+.export-btn-editable:disabled {
+    background: #6c757d !important;
+    border-color: #6c757d !important;
+    cursor: not-allowed;
+}

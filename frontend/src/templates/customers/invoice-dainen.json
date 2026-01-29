@@ -1,0 +1,203 @@
+{
+  "id": "template_invoice_dainen",
+  "name": "商业发票-DAINEN专用",
+  "type": "invoice",
+  "applicability": {
+    "isDefault": false,
+    "productTypes": [],
+    "customerIds": [],
+    "customerNames": ["DAINEN TRADING", "DAINEN"],
+    "priority": 20
+  },
+  "blocks": [
+    {
+      "id": "block_company_header",
+      "type": "company-header",
+      "config": {
+        "style": {
+          "titleFontSize": 22,
+          "borderBottom": true
+        }
+      }
+    },
+    {
+      "id": "block_document_title",
+      "type": "document-title",
+      "config": {
+        "text": "INVOICE",
+        "style": {
+          "fontSize": 18,
+          "fontWeight": "bold",
+          "textAlign": "center",
+          "marginTop": 15,
+          "marginBottom": 15
+        }
+      }
+    },
+    {
+      "id": "block_order_info",
+      "type": "order-info",
+      "config": {
+        "layout": "two-column",
+        "fields": [
+          {
+            "position": "left",
+            "label": "CONTRACT No:",
+            "binding": "order.contractNoSpecial",
+            "fallback": "order.contractNo"
+          },
+          {
+            "position": "right",
+            "label": "INVOICE NO:",
+            "binding": "order.invoiceNo"
+          },
+          {
+            "position": "left",
+            "label": "DATE:",
+            "binding": "order.invoiceDate"
+          },
+          {
+            "position": "right",
+            "label": "SHIPMENT DATE:",
+            "binding": "order.shipmentDate"
+          },
+          {
+            "position": "left",
+            "label": "FROM:",
+            "binding": "order.shipFrom"
+          },
+          {
+            "position": "right",
+            "label": "TO:",
+            "binding": "order.shipTo"
+          },
+          {
+            "position": "left",
+            "label": "B/L NO:",
+            "binding": "order.blNo"
+          },
+          {
+            "position": "right",
+            "label": "SHIPPED PER S.S:",
+            "binding": "order.shippedPerSs"
+          }
+        ],
+        "style": {
+          "fontSize": 11
+        }
+      }
+    },
+    {
+      "id": "block_customer_info",
+      "type": "customer-info",
+      "config": {
+        "title": "ACCOUNT AND RISK OF:",
+        "showAddress": true,
+        "showContact": true
+      }
+    },
+    {
+      "id": "block_product_table",
+      "type": "product-table",
+      "config": {
+        "columns": [
+          {
+            "header": "MARKS & NOS.",
+            "binding": "",
+            "width": "14%",
+            "align": "center"
+          },
+          {
+            "header": "DESCRIPTION & QUANTITY",
+            "binding": "model",
+            "width": "48%",
+            "align": "left"
+          },
+          {
+            "header": "UNIT PRICE",
+            "binding": "unitPrice",
+            "width": "16%",
+            "align": "right",
+            "prefix": "USD",
+            "format": "currency"
+          },
+          {
+            "header": "AMOUNT",
+            "binding": "amount",
+            "width": "22%",
+            "align": "right",
+            "prefix": "USD",
+            "format": "currency"
+          }
+        ],
+        "descriptionFormat": "invoice",
+        "showProductCategory": true,
+        "productCategory": "PP CONTAINER BAG",
+        "showHeader": true,
+        "headerStyle": {
+          "background": "#f1f5f9",
+          "fontWeight": "bold",
+          "borderColor": "#333",
+          "fontSize": 12
+        },
+        "rowStyle": {
+          "borderColor": "#333",
+          "fontSize": 11,
+          "minHeight": 30
+        },
+        "showFooter": true,
+        "footerConfig": {
+          "labelColumn": 1,
+          "labelColspan": 1,
+          "label": "TOTAL:",
+          "showTotalQuantity": true,
+          "totalQuantityColumn": 1,
+          "showTotalAmount": true,
+          "totalAmountColumn": 3
+        }
+      }
+    },
+    {
+      "id": "block_summary_info",
+      "type": "summary-info",
+      "config": {
+        "layout": "two-column",
+        "fields": [
+          {
+            "position": "left",
+            "label": "PAYMENT:",
+            "binding": "order.payment"
+          },
+          {
+            "position": "right",
+            "label": "INSURANCE:",
+            "binding": "order.insurance"
+          }
+        ]
+      }
+    },
+    {
+      "id": "block_signature",
+      "type": "signature-area",
+      "config": {
+        "layout": "right",
+        "label": "QINGDAO SHENGCHI PACKAGING PRODUCT CO.,LTD"
+      }
+    }
+  ],
+  "pageSettings": {
+    "margin": {
+      "top": 15,
+      "bottom": 15,
+      "left": 15,
+      "right": 15
+    }
+  },
+  "globalStyles": {
+    "fontFamily": "Arial, \"Microsoft YaHei\", sans-serif",
+    "fontSize": 11,
+    "lineHeight": 1.4,
+    "color": "#000"
+  }
+}
+

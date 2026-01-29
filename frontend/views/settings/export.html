@@ -1,0 +1,101 @@
+<section id="settingsExportPage" data-view class="panel" style="display: none;">
+  <div class="settings-single-column">
+
+    <!-- 可编辑 PDF 导出引擎 -->
+    <div class="settings-card">
+      <div class="settings-card-header">
+        <div class="settings-card-icon primary">🖨️</div>
+        <div class="settings-card-title-group">
+          <h3 class="settings-card-title">可编辑 PDF 导出引擎</h3>
+          <p class="settings-card-subtitle">优先自动识别 Edge；失败时可手动指定浏览器路径</p>
+        </div>
+      </div>
+      <div class="settings-card-body">
+        <div class="settings-info-box warning" style="margin-bottom: 14px;">
+          <span class="settings-info-icon">⚠️</span>
+          <div class="settings-info-content">
+            <p class="settings-info-text" style="font-size: 12px;">
+              “可编辑 PDF”依赖系统浏览器（Edge/Chrome）作为渲染引擎。若生产环境导出失败，通常是浏览器路径未找到或权限被拦截。
+            </p>
+          </div>
+        </div>
+
+        <div class="settings-form-group">
+          <label class="settings-label">
+            <span class="settings-label-icon">🎯</span>
+            手动指定浏览器路径（可选）
+          </label>
+          <div class="settings-path-input-group">
+            <input type="text" class="settings-input" id="pdfBrowserPathInput" placeholder="例如：C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe" />
+            <button class="settings-btn secondary" id="btnSelectPdfBrowser">
+              <span class="settings-btn-icon">📂</span>
+              选择...
+            </button>
+          </div>
+          <span class="settings-input-help">不填写则使用自动探测；建议选择 Edge 的 msedge.exe。</span>
+        </div>
+
+        <div class="settings-actions" style="justify-content: flex-start; gap: 10px; border-top: none; padding-top: 0;">
+          <button class="settings-btn primary" id="btnSavePdfBrowser">
+            <span class="settings-btn-icon">💾</span>
+            保存
+          </button>
+          <button class="settings-btn secondary" id="btnClearPdfBrowser">
+            <span class="settings-btn-icon">🧹</span>
+            清除手动配置
+          </button>
+          <button class="settings-btn secondary" id="btnTestPdfExportEngine">
+            <span class="settings-btn-icon">🧪</span>
+            测试导出服务
+          </button>
+        </div>
+
+        <div class="settings-divider" style="margin: 16px 0;"></div>
+
+        <ul class="settings-list">
+          <li class="settings-list-item">
+            <span class="settings-list-icon">🧭</span>
+            <span class="settings-list-text" id="pdfDetectedPathLabel">系统自动识别：加载中...</span>
+          </li>
+          <li class="settings-list-item">
+            <span class="settings-list-icon">✅</span>
+            <span class="settings-list-text" id="pdfEffectivePathLabel">实际生效路径：加载中...</span>
+          </li>
+          <li class="settings-list-item">
+            <span class="settings-list-icon">🗂️</span>
+            <span class="settings-list-text" id="pdfConfigPathLabel">配置文件：加载中...</span>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- 说明 -->
+    <div class="settings-card">
+      <div class="settings-card-header">
+        <div class="settings-card-icon info">💡</div>
+        <div class="settings-card-title-group">
+          <h3 class="settings-card-title">排障建议</h3>
+          <p class="settings-card-subtitle">导出失败时如何快速定位与修复</p>
+        </div>
+      </div>
+      <div class="settings-card-body">
+        <ul class="settings-list" style="background: transparent;">
+          <li class="settings-list-item" style="background: transparent;">
+            <span class="settings-list-icon">1️⃣</span>
+            <span class="settings-list-text">优先安装/启用 Microsoft Edge（Windows 10/11 默认自带）。</span>
+          </li>
+          <li class="settings-list-item" style="background: transparent;">
+            <span class="settings-list-icon">2️⃣</span>
+            <span class="settings-list-text">若自动识别失败，在上方“手动指定路径”选择 msedge.exe。</span>
+          </li>
+          <li class="settings-list-item" style="background: transparent;">
+            <span class="settings-list-icon">3️⃣</span>
+            <span class="settings-list-text">保存后点击“测试导出服务”，再回到单据页面重新导出。</span>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+  </div>
+</section>
+

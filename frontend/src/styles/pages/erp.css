@@ -1,0 +1,2178 @@
+/* 导入标准样式 */
+@import url('../standards/typography.css');
+@import url('../standards/spacing.css');
+@import url('../components/button.css');
+
+/* 现代化ERP风格基础样式（明快主题） */
+:root {
+  --bg: #ffffff;
+  /* 纯白背景，减少视觉疲劳 */
+  --panel: #ffffff;
+  /* 面板背景 */
+  --muted: #4b5563;
+  /* 次级文字（稍深以对比） */
+  --text: #0f172a;
+  /* 主文字（更有对比） */
+  --primary: #4a90e2;
+  /* 主色（明快蓝色） */
+  --primary-600: #357abd;
+  /* 主色深阶 */
+  --success: #10b981;
+  /* 成功（明快绿色） */
+  --warning: #f59e0b;
+  /* 警告（明快橙色） */
+  --danger: #ef4444;
+  /* 错误（明快红色） */
+  --border: #e2e8f0;
+  /* 边框颜色（稍亮） */
+  /* 多样化辅助配色（明快版） */
+  --accent-1: #4a90e2;
+  /* 蓝 */
+  --accent-2: #10b981;
+  /* 绿 */
+  --accent-3: #f59e0b;
+  /* 橙 */
+  --accent-4: #f093fb;
+  /* 粉紫 */
+  --accent-5: #06b6d4;
+  /* 青 */
+  --surface: #f8fafc;
+  /* 次级面板 */
+  --shadow: 0 10px 28px rgba(17, 24, 39, 0.12);
+
+  /* 表头高度统一管理变量 */
+  --panel-header-padding: 8px 12px;
+  --panel-header-min-height: 40px;
+  --panel-header-font-size: 14px;
+  --panel-header-line-height: 1.4;
+  --panel-header-border: 0.5px solid var(--border);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  min-height: 100%;
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family:
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    Segoe UI,
+    Roboto,
+    Helvetica,
+    Arial,
+    'Apple Color Emoji',
+    'Segoe UI Emoji';
+  overflow: hidden;
+  /* 页面级禁止滚动，仅主内容区滚动 */
+}
+
+/* 全局过渡与科技感背景微元素 */
+* {
+  transition:
+    background-color 0.22s ease,
+    color 0.22s ease,
+    border-color 0.22s ease,
+    box-shadow 0.22s ease;
+}
+
+/* 为表格行专门禁用transform过渡效果 */
+.table tbody tr {
+  transition:
+    background-color 0.22s ease,
+    color 0.22s ease,
+    border-color 0.22s ease,
+    box-shadow 0.22s ease;
+}
+
+/* 移除背景光晕效果，保持纯净背景 */
+.app-shell::before {
+  content: none;
+}
+
+/* 布局 - 三部分结构：顶部导航栏 + 内容区域（左侧菜单 + 主内容） */
+.app-shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* 顶部固定导航栏 - 现代高级设计 */
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  height: 44px;
+  min-height: 44px;
+  max-height: 44px;
+  background: linear-gradient(180deg, #fafbfc 0%, #f8f9fa 100%);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow:
+    0 1px 0 rgba(0, 0, 0, 0.04),
+    0 2px 8px rgba(0, 0, 0, 0.03);
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  transition: all 0.2s ease;
+}
+
+.topbar .brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  position: relative;
+  z-index: 1;
+}
+
+.topbar .brand .brand-logo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  border-radius: 6px;
+  font-size: 16px;
+  color: #ffffff;
+  flex-shrink: 0;
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
+  transition: all 0.2s ease;
+}
+
+.topbar .brand:hover .brand-logo {
+  /* 取消悬停位移效果 */
+  transform: none;
+  box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3);
+}
+
+.topbar .brand .title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #111827;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  letter-spacing: -0.01em;
+}
+
+.topbar .brand .title .brand-name {
+  font-weight: 700;
+  color: #111827;
+  letter-spacing: -0.02em;
+}
+
+.topbar .brand .title .brand-separator {
+  color: #d1d5db;
+  font-weight: 400;
+  margin: 0 2px;
+}
+
+.topbar .brand .title .brand-subtitle {
+  font-weight: 500;
+  color: #6b7280;
+  letter-spacing: -0.01em;
+}
+
+.topbar .actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+/* 统一topbar按钮样式 */
+.topbar .actions .btn {
+  padding: 4px 12px;
+  font-size: 13px;
+  font-weight: 500;
+  min-height: 28px;
+  min-width: 70px;
+  border-radius: 6px;
+  border-width: 1px;
+  line-height: 1.4;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  position: relative;
+  z-index: 1;
+  background: rgba(255, 255, 255, 0.6);
+  border-color: rgba(44, 62, 80, 0.2);
+  color: #2c3e50;
+}
+
+.topbar .actions .btn:hover {
+  background: rgba(255, 255, 255, 0.8);
+  border-color: rgba(44, 62, 80, 0.3);
+  /* 取消悬停位移效果 */
+  transform: none;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+/* topbar按钮点击效果 */
+.topbar .actions .btn:active {
+  /* 取消点击位移效果 */
+  transform: none;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+}
+
+/* 确保不同类型按钮的颜色保持一致 */
+.topbar .actions .btn.primary {
+  background: rgba(255, 255, 255, 0.7);
+  border-color: rgba(44, 62, 80, 0.3);
+  color: #2c3e50;
+}
+
+.topbar .actions .btn.primary:hover {
+  background: rgba(255, 255, 255, 0.9);
+  border-color: rgba(44, 62, 80, 0.4);
+}
+
+.topbar .actions .btn.danger {
+  background: rgba(239, 68, 68, 0.9);
+  border-color: rgba(239, 68, 68, 1);
+  color: white;
+}
+
+.topbar .actions .btn.danger:hover {
+  background: rgba(220, 38, 38, 1);
+  border-color: rgba(220, 38, 38, 1);
+}
+
+.topbar .actions .btn.ghost {
+  background: rgba(255, 255, 255, 0.4);
+  border-color: rgba(44, 62, 80, 0.2);
+  color: #2c3e50;
+}
+
+.topbar .actions .btn.ghost:hover {
+  background: rgba(255, 255, 255, 0.6);
+  border-color: rgba(44, 62, 80, 0.3);
+}
+
+/* 响应式布局优化 */
+@media (max-width: 768px) {
+  .topbar {
+    padding: 0 12px;
+    height: 40px;
+    min-height: 40px;
+    max-height: 40px;
+  }
+
+  .topbar .brand .title {
+    font-size: 16px;
+  }
+
+  .topbar .actions {
+    gap: 6px;
+  }
+
+  .topbar .actions .btn {
+    padding: 4px 10px;
+    font-size: 12px;
+    min-width: 60px;
+    min-height: 28px;
+  }
+
+  .user-name {
+    display: none;
+    /* 移动端隐藏用户名 */
+  }
+
+  .hamburger-menu {
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+    min-height: 32px;
+    padding: 6px;
+  }
+}
+
+@media (max-width: 480px) {
+  .topbar {
+    padding: 0 16px;
+    height: 44px;
+    min-height: 44px;
+    max-height: 44px;
+  }
+
+  .topbar .brand .title {
+    font-size: 14px;
+  }
+
+  .topbar .brand .brand-logo {
+    width: 24px;
+    height: 24px;
+    font-size: 14px;
+  }
+
+  .topbar .actions {
+    gap: 8px;
+  }
+
+  .topbar .actions .btn {
+    padding: 4px 10px;
+    font-size: 12px;
+    min-width: 60px;
+    min-height: 28px;
+  }
+
+  .main {
+    padding: 16px;
+  }
+}
+
+.user-pill {
+  padding: 3px 6px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  font-size: var(--font-size-xs);
+  color: var(--muted);
+}
+
+/* 用户信息显示样式 */
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 12px;
+  min-height: 40px;
+  height: 40px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  position: relative;
+  z-index: 1;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+}
+
+.user-info:hover {
+  background-color: #f3f4f6;
+  border-color: #d1d5db;
+}
+
+.user-avatar-wrapper {
+  position: relative;
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  min-height: 28px;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.user-avatar-wrapper:hover {
+  /* 取消悬停放大效果 */
+  transform: none;
+}
+
+.user-avatar,
+.user-avatar-default {
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  min-height: 28px;
+  border-radius: 50%;
+  border: 2px solid #e5e7eb;
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  font-weight: 600;
+  font-size: 12px;
+  text-transform: uppercase;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.user-avatar {
+  object-fit: cover;
+}
+
+.user-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+  max-width: 100px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 用户下拉菜单 */
+.user-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+  min-width: 220px;
+  z-index: 1000;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-10px);
+  transition: all 0.3s ease;
+}
+
+.user-avatar-wrapper:hover .user-dropdown,
+.user-dropdown:hover {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.dropdown-header {
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.dropdown-avatar {
+  position: relative;
+}
+
+.dropdown-avatar-img,
+.dropdown-avatar-default {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+}
+
+.dropdown-avatar-default {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 600;
+  font-size: 20px;
+  text-transform: uppercase;
+}
+
+.dropdown-avatar-img {
+  object-fit: cover;
+}
+
+.dropdown-user-info {
+  flex: 1;
+}
+
+.dropdown-username {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 2px;
+}
+
+.dropdown-role {
+  font-size: 12px;
+  color: var(--muted);
+  padding: 2px 8px;
+  background: var(--surface);
+  border-radius: 4px;
+  display: inline-block;
+}
+
+.dropdown-divider {
+  height: 1px;
+  background: var(--border);
+  margin: 8px 0;
+}
+
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  color: var(--text);
+  text-decoration: none;
+  transition: all 0.2s;
+  font-size: 14px;
+}
+
+.dropdown-item:hover {
+  background: var(--surface);
+}
+
+.dropdown-item.logout {
+  color: var(--danger);
+}
+
+.dropdown-item.logout:hover {
+  background: rgba(239, 68, 68, 0.1);
+}
+
+.dropdown-icon {
+  font-size: 18px;
+  width: 20px;
+  text-align: center;
+}
+
+/* 内容区域：包含左侧菜单和主内容 */
+.content {
+  display: flex;
+  flex: 1;
+  margin-top: 44px;
+  min-height: calc(100vh - 44px);
+  height: calc(100vh - 44px);
+  overflow: hidden;
+}
+
+/* 左侧固定功能栏 */
+.sidebar {
+  width: 200px;
+  min-width: 200px;
+  max-width: 200px;
+  border-right: 1px solid var(--border);
+  background: linear-gradient(to bottom, #fafbfc 0%, #ffffff 100%);
+  padding: 16px 10px;
+  position: fixed;
+  left: 0;
+  top: 44px;
+  bottom: 0;
+  height: calc(100vh - 44px);
+  overflow-y: auto;
+  overflow-x: hidden;
+  z-index: 100;
+  transition:
+    transform 0.3s ease,
+    width 0.3s ease;
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.02);
+}
+
+.sidebar .group-title {
+  color: #6b7280;
+  font-size: 11px;
+  padding: 8px 16px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 12px;
+  margin-top: 4px;
+}
+
+.nav {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.nav a {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+  color: #374151;
+  padding: 0 16px;
+  min-height: 44px;
+  height: 44px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  justify-content: flex-start;
+  width: 100%;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  margin-bottom: 2px;
+}
+
+.nav a {
+  position: relative;
+}
+
+.nav a .caret {
+  margin-left: 8px;
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 6px solid var(--muted);
+  transition:
+    transform 0.2s ease,
+    border-top-color 0.2s ease;
+}
+
+.nav a.active .caret {
+  border-top-color: var(--primary);
+}
+
+.nav-submenu {
+  position: relative;
+}
+
+.nav-submenu::before {
+  content: '';
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  top: 0;
+  height: 1px;
+  background: var(--border);
+  opacity: 0.9;
+}
+
+.nav-submenu a {
+  position: relative;
+}
+
+.nav-submenu a::before {
+  content: '';
+  position: absolute;
+  left: 16px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #cbd5e1;
+  transform: translateY(-50%);
+  top: 50%;
+  transition: background-color 0.2s ease;
+}
+
+.nav-submenu a.active::before {
+  background: var(--primary);
+}
+
+.nav a.expanded .caret {
+  transform: rotate(180deg);
+}
+
+.nav-submenu {
+  display: block;
+  width: 100%;
+  margin-top: 4px;
+  padding-left: 0;
+  padding-right: 0;
+  text-align: center;
+  overflow: visible;
+  max-height: 0;
+  opacity: 0;
+  transform: translateY(-4px);
+  transition:
+    max-height 0.25s ease,
+    opacity 0.25s ease,
+    transform 0.18s ease;
+}
+
+.nav-submenu.open {
+  max-height: 320px;
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.nav-submenu a {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  width: calc(100% - 4px);
+  padding: 0 14px 0 36px;
+  min-height: 45px;
+  height: 45px;
+  border-radius: 8px;
+  color: #4b5563;
+  text-decoration: none;
+  border: 1px solid transparent;
+  margin: 1px 2px;
+  font-size: 13px;
+  background: transparent;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  box-sizing: border-box;
+}
+
+.nav-submenu a.active {
+  background: linear-gradient(to right, rgba(59, 130, 246, 0.22) 0%, rgba(59, 130, 246, 0.12) 100%);
+  color: var(--primary-600);
+  border-color: rgba(59, 130, 246, 0.3);
+  border-left: 2px solid transparent;
+  font-weight: 700;
+  animation: submenuSelect 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow:
+    0 2px 6px rgba(59, 130, 246, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  transform: translateX(0);
+  margin-right: 0;
+}
+
+.nav-submenu a.active::before {
+  background: var(--primary);
+  width: 8px;
+  height: 8px;
+  box-shadow: 0 0 6px rgba(59, 130, 246, 0.5);
+  transform: translateY(-50%) scale(1.2);
+}
+
+.nav-submenu a:hover {
+  background: #f9fafb;
+  color: #1f2937;
+  transform: translateX(2px);
+}
+
+.nav-submenu a:hover::before {
+  background: #94a3b8;
+  transform: translateY(-50%) scale(1.1);
+}
+
+@keyframes submenuSelect {
+  from {
+    background: rgba(59, 130, 246, 0.04);
+    transform: scale(0.98) translateX(-2px);
+    opacity: 0.8;
+    box-shadow: 0 1px 2px rgba(59, 130, 246, 0.05);
+  }
+
+  to {
+    background: linear-gradient(
+      to right,
+      rgba(59, 130, 246, 0.22) 0%,
+      rgba(59, 130, 246, 0.12) 100%
+    );
+    transform: scale(1) translateX(2px);
+    opacity: 1;
+    box-shadow:
+      0 2px 6px rgba(59, 130, 246, 0.15),
+      inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  }
+}
+
+.nav a::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 4px;
+  height: 60%;
+  border-radius: 0 4px 4px 0;
+  opacity: 0.9;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.nav a[data-route='orders']::before {
+  background: var(--accent-1);
+}
+
+.nav a[data-route='home']::before {
+  background: var(--primary);
+}
+
+.nav a[data-route='customers']::before {
+  background: var(--accent-2);
+}
+
+.nav a[data-route='analytics']::before {
+  background: var(--accent-3);
+}
+
+.nav a[data-route='settings']::before {
+  background: var(--accent-5);
+}
+
+.nav a[data-route='document-center']::before {
+  background: #8b5cf6;
+}
+
+.nav a[data-route='products']::before {
+  background: #f59e0b;
+}
+
+.nav a[data-route='partners']::before {
+  background: #10b981;
+}
+
+.nav a {
+  position: relative;
+  overflow: visible;
+}
+
+.nav a::after {
+  content: '';
+  position: absolute;
+  left: 16px;
+  bottom: 6px;
+  width: 0;
+  height: 2px;
+  background: var(--primary);
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 1px;
+}
+
+.nav a:hover {
+  background: #f8fafc;
+  color: #1f2937;
+  transform: translateX(2px);
+}
+
+.nav a:hover::after {
+  width: calc(100% - 32px);
+}
+
+.nav a.active {
+  background: linear-gradient(to right, rgba(59, 130, 246, 0.22) 0%, rgba(59, 130, 246, 0.12) 100%);
+  border-color: rgba(59, 130, 246, 0.35);
+  border-left: 3px solid transparent;
+  color: var(--primary);
+  font-weight: 700;
+  box-shadow:
+    0 2px 8px rgba(59, 130, 246, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  transform: translateX(2px);
+}
+
+.nav a.active::before {
+  opacity: 1;
+  width: 5px;
+  height: 75%;
+  box-shadow: 0 0 8px rgba(59, 130, 246, 0.4);
+}
+
+/* 右侧主内容区域 */
+.main {
+  flex: 1;
+  margin-left: 200px;
+  padding: 24px;
+  background: var(--surface);
+  height: calc(100vh - 44px);
+  overflow-y: auto;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: margin-left 0.3s ease;
+}
+
+/* 订单列表页面：禁用主内容区域滚动，只让表格滚动 */
+.main.orders-list-active {
+  overflow: hidden !important;
+  padding: 0 !important;
+}
+
+.main.orders-list-active #view-container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* 统一主要页面：移除padding，使表头紧贴顶部和左侧 */
+.main:has(#view-home.view-active),
+.main:has(#view-customers.view-active),
+.main:has(#view-analytics.view-active),
+.main:has(#view-analytics-export.view-active),
+.main:has(#view-analytics-order-analysis.view-active),
+.main:has(#productsListPage.view-active),
+.main:has(#productAddPage.view-active),
+.main:has(#view-document-center-generate.view-active),
+.main:has(#view-document-center-templates.view-active),
+.main:has(#view-document-center-template-editor.view-active) {
+  padding: 0 !important;
+  overflow: hidden !important;
+}
+
+.main:has(#view-home.view-active) #view-container,
+.main:has(#view-customers.view-active) #view-container,
+.main:has(#view-analytics.view-active) #view-container,
+.main:has(#view-analytics-export.view-active) #view-container,
+.main:has(#view-analytics-order-analysis.view-active) #view-container,
+.main:has(#productsListPage.view-active) #view-container,
+.main:has(#productAddPage.view-active) #view-container,
+.main:has(#view-document-center-generate.view-active) #view-container,
+.main:has(#view-document-center-templates.view-active) #view-container,
+.main:has(#view-document-center-template-editor.view-active) #view-container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  /* 预设最小高度，避免切换时的布局重排 */
+  min-height: calc(100vh - 100px);
+  /* 使用 will-change 优化渲染性能 */
+  will-change: contents;
+}
+
+/* 兼容不支持 :has() 的浏览器 - 使用类名方式 */
+.main.home-active,
+.main.customers-active,
+.main.analytics-active,
+.main.analytics-export-active,
+.main.analytics-order-analysis-active,
+.main.products-list-active,
+.main.product-add-active,
+.main.document-center-generate-active,
+.main.document-center-templates-active,
+.main.document-center-template-editor-active {
+  padding: 0 !important;
+  overflow: hidden !important;
+}
+
+.main.home-active #view-container,
+.main.customers-active #view-container,
+.main.analytics-active #view-container,
+.main.analytics-export-active #view-container,
+.main.analytics-order-analysis-active #view-container,
+.main.products-list-active #view-container,
+.main.product-add-active #view-container,
+.main.document-center-generate-active #view-container,
+.main.document-center-templates-active #view-container,
+.main.document-center-template-editor-active #view-container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  /* 预设最小高度，避免切换时的布局重排 */
+  min-height: calc(100vh - 100px);
+  /* 使用 will-change 优化渲染性能 */
+  will-change: contents;
+}
+
+/* 订单编辑页面：禁用主内容区域滚动，让视图内部滚动 */
+.main:has(#view-orders-edit.view-active) {
+  overflow: hidden !important;
+  padding: 0 !important;
+}
+
+.main:has(#view-orders-edit.view-active) #view-container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.main:has(#view-orders-edit.view-active) #view-container #view-orders-edit {
+  flex: 1;
+  min-height: 0;
+  height: 100%;
+}
+
+/* 兼容不支持 :has() 的浏览器 */
+.main.orders-edit-active {
+  overflow: hidden !important;
+  padding: 0 !important;
+}
+
+.main.orders-edit-active #view-container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.main.orders-edit-active #view-container #view-orders-edit {
+  flex: 1;
+  min-height: 0;
+  height: 100%;
+}
+
+.utility-bar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #fff;
+  border: 0.5px solid var(--border);
+  border-radius: 6px;
+  padding: 1px 4px;
+  margin-bottom: 2px;
+  box-shadow: var(--shadow);
+  min-height: 22px;
+}
+
+/* 添加按钮区域间距控制 */
+.utility-bar .right-actions {
+  display: flex;
+  gap: 4px;
+  /* 进一步缩小按钮之间的间距 */
+  align-items: center;
+}
+
+.utility-bar .left-actions {
+  display: flex;
+  align-items: center;
+}
+
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.breadcrumb a {
+  color: var(--text);
+  text-decoration: none;
+  padding: 2px 6px;
+  border-radius: 6px;
+}
+
+.breadcrumb a:hover {
+  background: #f3f4f6;
+}
+
+.breadcrumb .sep {
+  color: var(--muted);
+}
+
+.utility-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* 面板和容器 */
+.panel {
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  margin-bottom: var(--spacing-2xl);
+}
+
+/* 确保所有带有 data-view 的面板默认隐藏 */
+/* 使用类 .view-active 来控制显示/隐藏，比内联样式更可靠 */
+[data-view].panel {
+  display: none !important;
+  /* 预设最小高度，避免切换时的布局重排 */
+  min-height: calc(100vh - 100px);
+  /* 使用 will-change 优化渲染性能 */
+  will-change: opacity, transform;
+}
+
+/* 首页特殊处理：允许滚动 */
+#view-home.panel.view-active .panel-body {
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  max-height: calc(100vh - 60px) !important;
+}
+
+/* 激活的视图显示 */
+[data-view].panel.view-active {
+  display: block !important;
+  /* 使用平滑过渡，避免抖动 */
+  animation: viewFadeIn 0.2s ease-out;
+}
+
+/* 只为订单管理页面应用 flex 布局，其他页面使用默认布局 */
+/* 只在面板激活时应用 flex 布局 */
+#view-orders-list.panel.view-active,
+#view-orders-list.panel {
+  display: flex !important;
+  flex-direction: column !important;
+  height: 100% !important;
+  flex: 1 !important;
+}
+
+/* 统一主要页面的面板样式 - 无圆角、无阴影、紧贴边缘的矩形框，使用flex布局 */
+#view-home.panel,
+#view-customers.panel,
+#view-analytics.panel,
+#view-analytics-export.panel,
+#view-analytics-order-analysis.panel,
+#productsListPage.panel,
+#productAddPage.panel,
+#view-document-center-generate.panel,
+#view-document-center-templates.panel,
+#view-document-center-template-editor.panel {
+  margin: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  display: flex !important;
+  flex-direction: column !important;
+  height: 100% !important;
+  flex: 1 !important;
+  /* 预设最小高度，避免切换时的布局重排 */
+  min-height: calc(100vh - 100px);
+  /* 使用 will-change 优化渲染性能 */
+  will-change: opacity, transform;
+}
+
+/* 首页特殊处理：移除白色背景，使用灰色背景 */
+#view-home.panel {
+  background: transparent !important;
+}
+
+#view-home.panel.view-active,
+#view-customers.panel.view-active,
+#view-analytics.panel.view-active,
+#view-analytics-export.panel.view-active,
+#view-analytics-order-analysis.panel.view-active,
+#productsListPage.panel.view-active,
+#productAddPage.panel.view-active,
+#view-document-center-generate.panel.view-active,
+#view-document-center-templates.panel.view-active,
+#view-document-center-template-editor.panel.view-active {
+  margin: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  display: flex !important;
+  flex-direction: column !important;
+  height: 100% !important;
+  flex: 1 !important;
+  /* 使用平滑过渡，避免抖动 */
+  animation: viewFadeIn 0.2s ease-out;
+}
+
+.panel-header {
+  padding: 16px 20px !important;
+  /* 统一的表头内边距 */
+  border-bottom: var(--panel-header-border);
+  /* 使用统一变量 */
+  background: #ffffff;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  /* 垂直居中对齐 */
+  min-height: 56px;
+  /* 统一的最小高度 */
+  flex-shrink: 0;
+  /* 不收缩，保持固定 */
+  height: 56px;
+  /* 固定高度，确保对齐 */
+  box-sizing: border-box;
+  /* 确保padding包含在高度内 */
+}
+
+/* 产品明细表头保持原始高度 */
+#panel-products .panel-header {
+  padding: var(--panel-header-padding) !important;
+  /* 使用统一变量 */
+  min-height: var(--panel-header-min-height);
+  /* 使用统一变量 */
+}
+
+#panel-products .panel-title {
+  font-size: var(--panel-header-font-size);
+  /* 使用统一变量 */
+  line-height: var(--panel-header-line-height);
+  /* 使用统一变量 */
+}
+
+/* 订单与发票信息和生产通知信息表头与产品明细保持一致 */
+#panel-order .panel-header,
+#panel-production .panel-header {
+  padding: var(--panel-header-padding) !important;
+  /* 使用统一变量 */
+  min-height: var(--panel-header-min-height);
+  /* 使用统一变量 */
+}
+
+#panel-order .panel-title,
+#panel-production .panel-title {
+  font-size: var(--panel-header-font-size);
+  /* 使用统一变量 */
+  line-height: var(--panel-header-line-height);
+  /* 使用统一变量 */
+}
+
+/* 表头标题样式 - 统一大标题风格 */
+.panel-title {
+  font-size: var(--font-size-2xl);
+  font-weight: 700;
+  color: var(--text);
+  margin: 0;
+  padding: 0;
+  /* 确保没有额外的padding */
+  line-height: 24px;
+  /* 固定行高，确保文字垂直位置一致 */
+  display: block;
+  /* 块级元素 */
+  height: 24px;
+  /* 固定高度，与line-height一致 */
+  box-sizing: border-box;
+  /* 确保padding包含在高度内 */
+}
+
+.panel-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.panel-body {
+  padding: var(--spacing-xl);
+  /* 预设最小高度，避免内容加载时的布局重排 */
+  min-height: 0;
+  /* 使用 will-change 优化滚动性能 */
+  will-change: scroll-position;
+}
+
+/* 首页特殊处理：允许滚动，移除默认背景和padding */
+#view-home.panel.view-active .panel-body,
+#view-home.panel .panel-body {
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  max-height: calc(100vh - 60px) !important;
+  background: transparent !important;
+  /* 移除白色背景，使用dashboard-container的灰色背景 */
+  padding: 0 !important;
+  /* 移除默认padding，由dashboard-container控制 */
+}
+
+/* 只为订单管理页面和出口统计页面应用 flex 布局的 panel-body */
+/* 只在面板激活时应用 */
+#view-orders-list.panel.view-active .panel-body,
+#view-orders-list.panel .panel-body,
+#view-analytics-export.panel.view-active .panel-body,
+#view-analytics-export.panel .panel-body,
+#view-document-center-generate.panel.view-active .panel-body,
+#view-document-center-generate.panel .panel-body,
+#view-document-center-templates.panel.view-active .panel-body,
+#view-document-center-templates.panel .panel-body,
+#view-document-center-template-editor.panel.view-active .panel-body,
+#view-document-center-template-editor.panel .panel-body {
+  display: flex !important;
+  flex-direction: column !important;
+  flex: 1 !important;
+  min-height: 0 !important;
+  /* 允许 flex 子元素缩小 */
+  overflow: hidden !important;
+  /* 防止 panel-body 本身滚动 */
+}
+
+/* 卡片布局 */
+.card {
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  padding: var(--spacing-2xl);
+  margin-bottom: var(--spacing-2xl);
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: var(--spacing-xl);
+  gap: var(--spacing-md);
+}
+
+.card-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.card-content {
+  flex: 1;
+}
+
+.card-title {
+  margin: 0;
+  color: #2c3e50;
+  font-size: var(--font-size-xl);
+  font-weight: 600;
+}
+
+.card-description {
+  margin: 0;
+  color: #7f8c8d;
+  font-size: var(--font-size-sm);
+}
+
+/* 网格布局 */
+.grid {
+  display: grid;
+  gap: var(--spacing-lg);
+}
+
+.grid-2 {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.grid-3 {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.grid-4 {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+@media (max-width: 768px) {
+  .grid-2,
+  .grid-3,
+  .grid-4 {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* 模块级配色强调条 - 移除顶部边框和圆角，统一为矩形表头 */
+#view-home .panel-header,
+#view-customers .panel-header,
+#view-analytics .panel-header,
+#view-analytics-export .panel-header,
+#view-analytics-order-analysis .panel-header,
+#view-orders-list .panel-header,
+#productsListPage .panel-header,
+#productAddPage .panel-header,
+#view-document-center-generate .panel-header,
+#view-document-center-templates .panel-header {
+  border-top: none !important;
+  border-radius: 0 !important;
+  background: #ffffff !important;
+  /* 确保背景为白色 */
+}
+
+/* 单据中心页面：移除顶部边框和圆角 */
+#view-document-center-generate .panel,
+#view-document-center-templates .panel {
+  border-top: none !important;
+  border-radius: 0 !important;
+}
+
+/* 设置页面的表头保持圆角和顶部边框（如果需要的话） */
+#view-settings .panel-header {
+  border-top: 3px solid var(--accent-5);
+  border-radius: 12px 12px 0 0;
+  background: #ffffff !important;
+  /* 确保背景为白色 */
+}
+
+/* 视图切换动画 */
+.view-enter {
+  animation: viewFade 0.22s ease-out;
+}
+
+@keyframes viewFade {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 视图淡入动画（用于 view-active 类） */
+@keyframes viewFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 表单布局 */
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: var(--spacing-md);
+  /* 减少间距从lg到md */
+}
+
+.form-item {
+  display: grid;
+  gap: var(--spacing-xs);
+  /* 减少间距从sm到xs */
+  margin-bottom: var(--spacing-sm);
+  /* 减少间距从md到sm */
+}
+
+.form-item label {
+  color: var(--muted);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+}
+
+/* 订单与发票信息区域的紧凑布局 */
+#panel-order .form-grid {
+  gap: var(--spacing-sm);
+  /* 进一步减少网格间距 */
+}
+
+#panel-order .form-item {
+  margin-bottom: var(--spacing-xs);
+  /* 最小化表单项间距 */
+}
+
+#panel-order .form-item label {
+  margin-bottom: var(--spacing-xs);
+  /* 减少标签与输入框间距 */
+}
+
+#panel-order .input,
+#panel-order .select {
+  padding: 6px 8px;
+  /* 减少输入框内边距 */
+  font-size: 13px;
+  /* 稍微减小字体 */
+}
+
+.input,
+.select,
+.textarea {
+  width: 100%;
+  background: #ffffff;
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: var(--font-size-base);
+}
+
+.input:focus,
+.select:focus,
+.textarea:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
+}
+
+.textarea {
+  min-height: 80px;
+  resize: vertical;
+}
+
+/* 统一按钮样式标准 */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.4;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+  min-height: 40px;
+  white-space: nowrap;
+  position: relative;
+  overflow: hidden;
+  background: #ffffff;
+  color: var(--text);
+  border-color: var(--border);
+}
+
+.btn:hover {
+  background: #eef2ff;
+  transform: translateY(-1px);
+}
+
+/* 明快色按钮优化 */
+.btn.primary {
+  background: #4a90e2;
+  /* 明快蓝色 */
+  border-color: #4a90e2;
+  color: #fff;
+}
+
+.btn.primary:hover {
+  background: #357abd;
+  border-color: #357abd;
+  box-shadow: 0 4px 14px rgba(74, 144, 226, 0.4);
+  transform: translateY(-1px);
+}
+
+.btn.success {
+  background: #10b981;
+  /* 明快绿色 */
+  border-color: #10b981;
+  color: #fff;
+}
+
+.btn.success:hover {
+  background: #059669;
+  border-color: #059669;
+  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4);
+}
+
+.btn.warning {
+  background: var(--warning);
+  border-color: var(--warning);
+  color: #fff;
+}
+
+.btn.warning:hover {
+  background: #e67e22;
+  border-color: #e67e22;
+}
+
+.btn.danger {
+  background: #e74c3c;
+  border-color: #e74c3c;
+  color: #fff;
+}
+
+.btn.danger:hover {
+  background: #c0392b;
+  border-color: #c0392b;
+}
+
+.btn.ghost {
+  background: transparent;
+  border-color: #bdc3c7;
+  color: var(--text);
+}
+
+.btn.ghost:hover {
+  background: #ecf0f1;
+  border-color: #95a5a6;
+}
+
+.btn.small {
+  padding: 6px 12px;
+  /* 与status-pill保持一致的padding */
+  font-size: 12px;
+  /* 与status-pill保持一致的字体大小 */
+  min-height: 32px;
+  /* 与status-pill保持一致的高度 */
+  line-height: 1.2;
+  /* 紧凑行高 */
+  border-width: 1px;
+  /* 标准边框宽度 */
+  font-weight: 500;
+  /* 与status-pill保持一致的字重 */
+}
+
+.btn.large {
+  padding: 14px 28px;
+  font-size: 16px;
+  min-height: 48px;
+}
+
+.btn:disabled,
+.btn.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+/* 按钮涟漪效果 */
+.ripple {
+  position: absolute;
+  border-radius: 50%;
+  transform: scale(0);
+  animation: ripple 0.5s ease-out;
+  background: rgba(255, 255, 255, 0.5);
+  pointer-events: none;
+}
+
+@keyframes ripple {
+  to {
+    transform: scale(12);
+    opacity: 0;
+  }
+}
+
+/* 表格 */
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  /* 固定表格布局，确保列宽一致 */
+}
+
+.table th,
+.table td {
+  border-bottom: 1px solid var(--border);
+  padding: 10px;
+  font-size: 13px;
+  text-align: center;
+  /* 水平居中 */
+  vertical-align: middle;
+  /* 垂直居中 */
+  word-wrap: break-word;
+  /* 长文本换行 */
+  overflow: hidden;
+  /* 隐藏溢出内容 */
+}
+
+.table th {
+  color: var(--muted);
+  font-weight: 600;
+  text-align: center;
+  /* 表头水平居中 */
+}
+
+/* 订单管理表格列宽优化 */
+#ordersTable th:nth-child(1),
+/* 复选框列 */
+#ordersTable td:nth-child(1) {
+  width: 5%;
+  min-width: 40px;
+}
+
+#ordersTable th:nth-child(2),
+/* 订单日期列 */
+#ordersTable td:nth-child(2) {
+  width: 12%;
+  min-width: 100px;
+}
+
+#ordersTable th:nth-child(3),
+/* 合同号列 */
+#ordersTable td:nth-child(3) {
+  width: 15%;
+  min-width: 120px;
+}
+
+#ordersTable th:nth-child(4),
+/* 客户列 */
+#ordersTable td:nth-child(4) {
+  width: 18%;
+  min-width: 140px;
+}
+
+#ordersTable th:nth-child(5),
+/* 金额列 */
+#ordersTable td:nth-child(5) {
+  width: 12%;
+  min-width: 100px;
+}
+
+#ordersTable th:nth-child(6),
+/* 发货日期列 */
+#ordersTable td:nth-child(6) {
+  width: 12%;
+  min-width: 100px;
+}
+
+#ordersTable th:nth-child(7),
+/* 目的地列 */
+#ordersTable td:nth-child(7) {
+  width: 15%;
+  min-width: 120px;
+}
+
+#ordersTable th:nth-child(8),
+/* 订单状态列 */
+#ordersTable td:nth-child(8) {
+  width: 11%;
+  min-width: 90px;
+}
+
+#ordersTable th:nth-child(9),
+/* 操作列 */
+#ordersTable td:nth-child(9) {
+  width: 20%;
+  min-width: 160px;
+}
+
+.table .status-pill {
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+  display: inline-block;
+  text-align: center;
+  min-width: 60px;
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.table .status-pill:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.table .status-pill::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  transition: left 0.5s ease;
+}
+
+.table .status-pill:hover::before {
+  left: 100%;
+}
+
+/* ===== 骨架屏（表格通用）===== */
+.skeleton-line {
+  height: 12px;
+  width: 160px;
+  border-radius: 6px;
+  background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 37%, #f3f4f6 63%);
+  background-size: 400% 100%;
+  animation: shimmer 1.2s ease-in-out infinite;
+}
+
+.skeleton-line.short {
+  width: 80px;
+}
+
+.skeleton-box.small {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 37%, #f3f4f6 63%);
+  background-size: 400% 100%;
+  animation: shimmer 1.2s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 100% 0;
+  }
+
+  100% {
+    background-position: 0 0;
+  }
+}
+
+/* 订单状态样式 - 优化版本 - 柔和协调的颜色方案 */
+.status-created {
+  background: linear-gradient(135deg, #7c9dff 0%, #5b8fe8 100%);
+  border: 1px solid #5b8fe8;
+  color: white;
+  font-weight: 500;
+  box-shadow: 0 1px 3px rgba(124, 157, 255, 0.3);
+}
+
+.status-scheduled {
+  background: linear-gradient(135deg, #a78bfa 0%, #8b5cf6 100%);
+  border: 1px solid #8b5cf6;
+  color: white;
+  font-weight: 500;
+  box-shadow: 0 1px 3px rgba(167, 139, 250, 0.3);
+}
+
+.status-shipped {
+  background: linear-gradient(135deg, #818cf8 0%, #6366f1 100%);
+  border: 1px solid #6366f1;
+  color: white;
+  font-weight: 500;
+  box-shadow: 0 1px 3px rgba(129, 140, 248, 0.3);
+}
+
+.status-completed {
+  background: linear-gradient(135deg, #6ee7b7 0%, #34d399 100%);
+  border: 1px solid #34d399;
+  color: white;
+  font-weight: 500;
+  box-shadow: 0 1px 3px rgba(110, 231, 183, 0.3);
+}
+
+.table tbody tr:hover {
+  background: rgba(59, 130, 246, 0.06);
+  box-shadow: inset 0 0 0 1px var(--border);
+  transition: all 0.2s ease;
+}
+
+/* 未选中行的悬停效果增强 */
+.table tbody tr:not(.selected):hover {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.16) 0%, rgba(37, 99, 235, 0.14) 100%);
+  box-shadow:
+    0 1px 4px rgba(59, 130, 246, 0.2),
+    inset 0 0 0 1px rgba(59, 130, 246, 0.25);
+  border-left: 2px solid rgba(59, 130, 246, 0.5);
+}
+
+/* 复选框悬停效果 */
+.table tbody tr input[type='checkbox']:hover {
+  transition: transform 0.15s ease;
+}
+
+/* 操作按钮悬停效果增强 */
+.table tbody tr:hover .btn {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* 订单管理界面选中行的增强样式 */
+.table tbody tr.selected {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.4) 0%, rgba(37, 99, 235, 0.35) 100%);
+  box-shadow:
+    0 2px 8px rgba(59, 130, 246, 0.35),
+    inset 0 0 0 1px rgba(59, 130, 246, 0.5),
+    inset 4px 0 0 var(--primary);
+  position: relative;
+}
+
+/* 选中行的动画效果 - 已删除，避免移动效果 */
+
+/* 选中行悬停时的增强效果 */
+.table tbody tr.selected:hover {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.5) 0%, rgba(37, 99, 235, 0.45) 100%);
+  box-shadow:
+    0 4px 12px rgba(59, 130, 246, 0.45),
+    inset 0 0 0 1px rgba(59, 130, 246, 0.6);
+}
+
+/* 选中行内文字的增强对比度 */
+.table tbody tr.selected td {
+  color: var(--text);
+  font-weight: 500;
+}
+
+/* 任意行悬停时，合同编号列（第3列）加粗显示 */
+#ordersTable tbody tr:hover td:nth-child(3) {
+  font-weight: 700 !important;
+  transition: font-weight 0.2s ease;
+}
+
+/* 选中行内的复选框样式增强 */
+.table tbody tr.selected input[type='checkbox'] {
+  accent-color: var(--primary);
+}
+
+/* 提示容器与消息样式 - 已迁移到notification.css，保留兼容性 */
+/* Toast样式已统一到notification.css文件中 */
+
+/* 汉堡菜单按钮 - 现代样式 */
+.hamburger-menu {
+  display: none;
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  min-height: 40px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  margin-right: 8px;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
+  transition: all 0.2s ease;
+  border-radius: 8px;
+  position: relative;
+  z-index: 1;
+}
+
+.hamburger-menu:hover {
+  background: #f3f4f6;
+}
+
+.hamburger-menu span {
+  display: block;
+  width: 20px;
+  height: 2px;
+  background: #374151;
+  border-radius: 2px;
+  transition: all 0.3s ease;
+}
+
+.hamburger-menu.active span:nth-child(1) {
+  transform: rotate(45deg) translate(7px, 7px);
+}
+
+.hamburger-menu.active span:nth-child(2) {
+  opacity: 0;
+}
+
+.hamburger-menu.active span:nth-child(3) {
+  transform: rotate(-45deg) translate(7px, -7px);
+}
+
+/* 侧边栏遮罩层 */
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  top: 44px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 99;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.sidebar-overlay.active {
+  opacity: 1;
+}
+
+/* 响应式设计 */
+@media (max-width: 1024px) {
+  .form-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  /* 响应式表格样式 */
+  .table th,
+  .table td {
+    padding: 8px;
+    font-size: 12px;
+    text-align: center;
+    /* 保持居中 */
+    vertical-align: middle;
+    /* 保持垂直居中 */
+  }
+
+  /* 小屏幕下的列宽调整 */
+  #ordersTable th:nth-child(1),
+  #ordersTable td:nth-child(1) {
+    width: 6%;
+    min-width: 35px;
+  }
+
+  #ordersTable th:nth-child(2),
+  #ordersTable td:nth-child(2) {
+    width: 14%;
+    min-width: 90px;
+  }
+
+  #ordersTable th:nth-child(3),
+  #ordersTable td:nth-child(3) {
+    width: 16%;
+    min-width: 100px;
+  }
+
+  #ordersTable th:nth-child(4),
+  #ordersTable td:nth-child(4) {
+    width: 20%;
+    min-width: 120px;
+  }
+
+  #ordersTable th:nth-child(5),
+  #ordersTable td:nth-child(5) {
+    width: 14%;
+    min-width: 80px;
+  }
+
+  #ordersTable th:nth-child(6),
+  #ordersTable td:nth-child(6) {
+    width: 14%;
+    min-width: 80px;
+  }
+
+  #ordersTable th:nth-child(7),
+  #ordersTable td:nth-child(7) {
+    width: 16%;
+    min-width: 100px;
+  }
+
+  #ordersTable th:nth-child(8),
+  #ordersTable td:nth-child(8) {
+    width: 12%;
+    min-width: 70px;
+  }
+
+  #ordersTable th:nth-child(9),
+  #ordersTable td:nth-child(9) {
+    width: 24%;
+    min-width: 140px;
+  }
+}
+
+@media (max-width: 768px) {
+  /* 显示汉堡菜单 */
+  .hamburger-menu {
+    display: flex;
+  }
+
+  /* 侧边栏在移动端隐藏 */
+  .sidebar {
+    transform: translateX(-100%);
+    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+  }
+
+  .sidebar.mobile-open {
+    transform: translateX(0);
+  }
+
+  /* 显示遮罩层 */
+  .sidebar-overlay {
+    display: block;
+  }
+
+  /* 主内容区域全宽 */
+  .main {
+    margin-left: 0;
+    padding: 16px;
+  }
+
+  /* 更小屏幕下的表格优化 */
+  .table th,
+  .table td {
+    padding: 6px;
+    font-size: 11px;
+    text-align: center;
+    /* 保持居中 */
+    vertical-align: middle;
+    /* 保持垂直居中 */
+  }
+
+  /* 超小屏幕下隐藏部分列或调整显示 */
+  #ordersTable th:nth-child(6),
+  #ordersTable td:nth-child(6),
+  /* 发货日期 */
+  #ordersTable th:nth-child(7),
+  #ordersTable td:nth-child(7) {
+    /* 目的地 */
+    display: none;
+  }
+
+  /* 重新分配剩余列的宽度 */
+  #ordersTable th:nth-child(1),
+  #ordersTable td:nth-child(1) {
+    width: 8%;
+    min-width: 30px;
+  }
+
+  #ordersTable th:nth-child(2),
+  #ordersTable td:nth-child(2) {
+    width: 18%;
+    min-width: 80px;
+  }
+
+  #ordersTable th:nth-child(3),
+  #ordersTable td:nth-child(3) {
+    width: 20%;
+    min-width: 90px;
+  }
+
+  #ordersTable th:nth-child(4),
+  #ordersTable td:nth-child(4) {
+    width: 25%;
+    min-width: 100px;
+  }
+
+  #ordersTable th:nth-child(5),
+  #ordersTable td:nth-child(5) {
+    width: 17%;
+    min-width: 70px;
+  }
+
+  #ordersTable th:nth-child(8),
+  #ordersTable td:nth-child(8) {
+    width: 15%;
+    min-width: 60px;
+  }
+
+  #ordersTable th:nth-child(9),
+  #ordersTable td:nth-child(9) {
+    width: 30%;
+    min-width: 120px;
+  }
+}
+
+/* 设置页二级菜单与内容布局 */
+.settings-layout {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  gap: 16px;
+}
+
+.settings-subnav {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.settings-subnav a {
+  display: block;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  text-decoration: none;
+  background: #fff;
+}
+
+.settings-subnav a:hover {
+  background: #f6f7f9;
+}
+
+.settings-subnav a.active {
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
+}
+
+.settings-content {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px;
+}
+
+@media (max-width: 900px) {
+  .settings-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .settings-subnav {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .settings-subnav a {
+    flex: 1 1 auto;
+  }
+}
+
+/* 生产通知单底部布局（紧凑型设计） */
+.production-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 6px;
+  font-size: inherit;
+  line-height: 1.3;
+}
+
+/* 单行布局（箱型、唛头、备注） */
+.production-footer .footer-line-single {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  min-height: 1.2em;
+}
+
+/* 双列布局行（目的港+交货期） */
+.production-footer .footer-line-double {
+  display: flex;
+  gap: 20px;
+  align-items: baseline;
+  min-height: 1.2em;
+}
+
+.production-footer .footer-item {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+/* 标签样式 */
+.production-footer .footer-label {
+  font-weight: 600;
+  white-space: nowrap;
+  margin: 0;
+}
+
+/* 内容样式 */
+.production-footer .footer-content {
+  white-space: pre-wrap;
+  word-break: break-word;
+  margin: 0;
+}

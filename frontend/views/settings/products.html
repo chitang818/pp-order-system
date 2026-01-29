@@ -1,0 +1,283 @@
+<section id="settingsProductsPage" data-view class="panel" style="height: 100%;">
+  <style>
+    /* 产品页面专用样式 */
+    #settingsProductsPage .products-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 16px;
+    }
+    
+    #settingsProductsPage .products-table td {
+      padding: 12px;
+      text-align: left;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    
+    #settingsProductsPage .products-table th {
+      background-color: #f8f9fa;
+      font-weight: 600;
+      color: #374151;
+      padding: 6px 12px !important;
+      line-height: 1.3 !important;
+      font-size: 13px !important;
+      text-align: left;
+      border-bottom: 2px solid #e5e7eb;
+    }
+    
+    #settingsProductsPage .products-table th:first-child,
+    #settingsProductsPage .products-table td:first-child {
+      text-align: center;
+      width: 50px;
+    }
+    
+    #settingsProductsPage .products-table tbody tr {
+      transition: all 0.2s ease;
+    }
+    
+    #settingsProductsPage .products-table tbody tr:hover {
+      background-color: #f0f9ff;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    
+    #settingsProductsPage .products-table tbody tr.selected {
+      background-color: #eff6ff !important;
+    }
+    
+    #settingsProductsPage .product-checkbox {
+      cursor: pointer;
+      width: 18px;
+      height: 18px;
+    }
+    
+    #settingsProductsPage #checkAllProducts {
+      cursor: pointer;
+      width: 18px;
+      height: 18px;
+    }
+    
+    #settingsProductsPage .source-badge {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+    
+    #settingsProductsPage .source-badge.source-manual {
+      background-color: #dbeafe;
+      color: #1e40af;
+    }
+    
+    #settingsProductsPage .source-badge.source-order {
+      background-color: #dcfce7;
+      color: #166534;
+    }
+    
+    /* 产品类型标签样式 - 沿用订单编辑页面按钮颜色 */
+    #settingsProductsPage .product-type-a {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      background-color: #3b82f6;
+      color: #ffffff;
+      border: 1px solid #3b82f6;
+    }
+    
+    #settingsProductsPage .product-type-b {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      background-color: #f59e0b;
+      color: #ffffff;
+      border: 1px solid #f59e0b;
+    }
+    
+    #settingsProductsPage .product-type-c {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      background-color: #f9a8d4;
+      color: #ffffff;
+      border: 1px solid #f9a8d4;
+    }
+    
+    #settingsProductsPage .alert {
+      padding: 12px 16px;
+      border-radius: 6px;
+      margin-bottom: 16px;
+      transition: all 0.3s ease;
+    }
+    
+    #settingsProductsPage .alert-success {
+      background-color: #dcfce7;
+      color: #166534;
+      border: 1px solid #bbf7d0;
+    }
+    
+    #settingsProductsPage .alert-danger {
+      background-color: #fef2f2;
+      color: #dc2626;
+      border: 1px solid #fecaca;
+    }
+    
+    #settingsProductsPage .alert-info {
+      color: #0c5460;
+      background-color: #d1ecf1;
+      border: 1px solid #bee5eb;
+    }
+    
+    #settingsProductsPage .alert-warning {
+      color: #856404;
+      background-color: #fff3cd;
+      border: 1px solid #ffeaa7;
+    }
+  </style>
+  <div class="panel-body" style="padding: 20px; overflow-y: auto;">
+    <!-- 产品设置表单 -->
+    <div class="products-container" style="width: 100%; max-width: 100%;">
+
+      <!-- 添加产品卡片 -->
+      <div class="products-card">
+        <div class="products-card-header">
+          <div class="products-card-icon primary">+</div>
+          <div class="products-card-title-group">
+            <h3>添加新产品</h3>
+            <p>快速添加产品到库存中</p>
+          </div>
+        </div>
+        <form id="addProductForm" class="add-product-form">
+          <div class="form-item">
+            <label>型号 <span style="color: #e74c3c;">*</span></label>
+            <input class="input" id="productModel" name="model" required placeholder="产品型号" />
+          </div>
+          <div class="form-item">
+            <label>描述</label>
+            <input class="input" id="productDescription" name="description" placeholder="产品描述" />
+          </div>
+          <div class="form-item">
+            <label>预估重量(kg)</label>
+            <input class="input" id="productEstimatedWeight" name="estimatedWeight" type="number" step="0.01" min="0" placeholder="0.00" />
+          </div>
+          <div class="form-item">
+            <label>标签重量(kg)</label>
+            <input class="input" id="productLabelWeight" name="labelWeight" type="number" step="1" min="0" placeholder="0" />
+          </div>
+          <div class="form-item">
+            <label>安全系数</label>
+            <select class="input" id="productSafetyFactor" name="safetyFactor">
+              <option value="">请选择</option>
+              <option value="不写">不写</option>
+              <option value="5:1">5:1</option>
+              <option value="6:1">6:1</option>
+            </select>
+          </div>
+          <div class="form-item">
+            <label>清洁度</label>
+            <select class="input" id="productCleanliness" name="cleanliness">
+              <option value="">请选择</option>
+              <option value="A">A</option>
+              <option value="B">B</option>
+              <option value="B+">B+</option>
+            </select>
+          </div>
+          <div class="form-item">
+            <label>件数单位</label>
+            <select class="input" id="productUnit" name="unit">
+              <option value="">请选择</option>
+              <option value="件">件</option>
+              <option value="托盘">托盘</option>
+              <option value="捆包">捆包</option>
+            </select>
+          </div>
+          <div class="form-item">
+            <label>标签批号</label>
+            <input class="input" id="productLabelBatchNo" name="labelBatchNo" placeholder="标签批号" />
+          </div>
+          <div class="form-item">
+            <label>标签说明</label>
+            <input class="input" id="productLabel" name="label" placeholder="标签说明" />
+          </div>
+          <div class="form-item">
+            <label>&nbsp;</label>
+            <button type="submit" class="products-btn primary">添加</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- 统计信息卡片 -->
+      <div class="products-card">
+        <div class="products-card-header">
+          <div class="products-card-icon info">📊</div>
+          <div class="products-card-title-group">
+            <h3>产品统计</h3>
+            <p>查看产品库存概况</p>
+          </div>
+        </div>
+        <div class="products-stats-grid">
+          <div class="products-stat-item" style="border-left-color: #3498db;">
+            <div class="products-stat-value" id="totalProducts">0</div>
+            <div class="products-stat-label">总产品数</div>
+          </div>
+          <div class="products-stat-item" style="border-left-color: #27ae60;">
+            <div class="products-stat-value" style="color: #27ae60;" id="manualProducts">0</div>
+            <div class="products-stat-label">手动添加</div>
+          </div>
+          <div class="products-stat-item" style="border-left-color: #8e44ad;">
+            <div class="products-stat-value" style="color: #8e44ad;" id="orderProducts">0</div>
+            <div class="products-stat-label">订单同步</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 产品列表卡片 -->
+      <div class="products-card">
+        <div class="list-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px;">
+          <div class="products-card-header" style="margin-bottom: 0; padding-bottom: 0; border-bottom: none;">
+            <div class="products-card-icon warning">📋</div>
+            <div class="products-card-title-group">
+              <h3>产品列表</h3>
+              <p>管理所有产品信息</p>
+            </div>
+          </div>
+          <div class="products-btn-group">
+            <input type="text" class="products-search-input" id="searchInput" placeholder="搜索产品型号..." />
+            <button class="products-btn primary small" id="btnEditSelected" disabled>编辑</button>
+            <button class="products-btn danger small" id="btnDeleteSelected" disabled>删除</button>
+            <button class="products-btn secondary small" id="btnRefreshProducts">刷新</button>
+            <button class="products-btn primary small" id="btnSyncProducts">同步</button>
+            <button class="products-btn danger small" id="btnClearAllProducts">清空</button>
+          </div>
+        </div>
+        
+        <!-- 消息提示 -->
+        <div id="messageContainer" style="margin-bottom: 16px;"></div>
+        
+        <!-- 产品表格容器 -->
+        <div id="tableContainer">
+          <div class="loading-state">
+            <div class="loading-icon">📦</div>
+            <div class="loading-text">正在加载产品数据...</div>
+            <div class="loading-subtext">请稍候片刻</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 帮助信息 -->
+      <div class="products-help-card">
+        <div style="display: flex; align-items: flex-start;">
+          <div class="products-help-icon">?</div>
+          <div class="products-help-content">
+            <h4>使用说明</h4>
+            <p>产品库支持手动添加和订单自动同步两种方式。手动添加的产品可以编辑和删除，订单同步的产品会自动更新重量信息。清空操作将删除所有产品数据，请谨慎使用。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

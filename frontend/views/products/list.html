@@ -1,0 +1,268 @@
+<section id="productsListPage" data-view class="panel" style="height: 100%; display: flex; flex-direction: column;">
+  <div class="panel-header">
+    <div class="panel-title">产品列表</div>
+    <div class="panel-actions">
+      <!-- 产品列表的操作按钮在内容区域 -->
+    </div>
+  </div>
+  <style>
+    /* 产品页面专用样式 */
+    /* 产品表格容器：可滚动 */
+    #productsListPage .products-table-container {
+      flex: 1 !important;
+      min-height: 0 !important;
+      overflow-y: auto !important;
+      overflow-x: auto !important;
+      position: relative !important;
+      max-height: 100% !important;
+    }
+    
+    #productsListPage .products-table-container #tableContainer {
+      width: 100%;
+      height: 100%;
+    }
+    
+    #productsListPage .products-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 0;
+      table-layout: fixed;
+      position: relative;
+    }
+    
+    #productsListPage .products-table thead {
+      display: table-header-group !important;
+      background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    
+    #productsListPage .products-table tbody {
+      display: table-row-group !important;
+    }
+    
+    #productsListPage .products-table tr {
+      display: table-row !important;
+    }
+    
+    #productsListPage .products-table td {
+      padding: 12px;
+      text-align: center !important;
+      border-bottom: 1px solid #e5e7eb;
+      display: table-cell !important;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      word-wrap: break-word;
+    }
+    
+    #productsListPage .products-table th {
+      background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%) !important;
+      font-weight: 600;
+      color: #374151;
+      padding: 6px 12px !important;
+      line-height: 1.3 !important;
+      font-size: 13px !important;
+      text-align: center !important;
+      border-bottom: 2px solid #e5e7eb;
+      display: table-cell !important;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    
+    #productsListPage .products-table th:first-child,
+    #productsListPage .products-table td:first-child {
+      text-align: center;
+      width: 50px;
+    }
+    
+    #productsListPage .products-table tbody tr {
+      transition: all 0.2s ease;
+    }
+    
+    #productsListPage .products-table tbody tr:hover {
+      background-color: #f0f9ff;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    
+    #productsListPage .products-table tbody tr.selected {
+      background-color: #eff6ff !important;
+    }
+    
+    #productsListPage .product-checkbox {
+      cursor: pointer;
+      width: 18px;
+      height: 18px;
+    }
+    
+    #productsListPage #checkAllProducts {
+      cursor: pointer;
+      width: 18px;
+      height: 18px;
+    }
+    
+    #productsListPage .source-badge {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+    
+    #productsListPage .source-badge.source-manual {
+      background-color: #dbeafe;
+      color: #1e40af;
+    }
+    
+    #productsListPage .source-badge.source-order {
+      background-color: #dcfce7;
+      color: #166534;
+    }
+    
+    /* 产品类型标签样式 - 沿用订单编辑页面按钮颜色 */
+    #productsListPage .product-type-a {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      background-color: #3b82f6;
+      color: #ffffff;
+      border: 1px solid #3b82f6;
+    }
+    
+    #productsListPage .product-type-b {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      background-color: #f59e0b;
+      color: #ffffff;
+      border: 1px solid #f59e0b;
+    }
+    
+    #productsListPage .product-type-c {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      background-color: #f9a8d4;
+      color: #ffffff;
+      border: 1px solid #f9a8d4;
+    }
+    
+    #productsListPage .alert {
+      padding: 12px 16px;
+      border-radius: 6px;
+      margin-bottom: 16px;
+      transition: all 0.3s ease;
+    }
+    
+    #productsListPage .alert-success {
+      background-color: #dcfce7;
+      color: #166534;
+      border: 1px solid #bbf7d0;
+    }
+    
+    #productsListPage .alert-danger {
+      background-color: #fef2f2;
+      color: #dc2626;
+      border: 1px solid #fecaca;
+    }
+    
+    #productsListPage .alert-info {
+      color: #0c5460;
+      background-color: #d1ecf1;
+      border: 1px solid #bee5eb;
+    }
+    
+    #productsListPage .alert-warning {
+      color: #856404;
+      background-color: #fff3cd;
+      border: 1px solid #ffeaa7;
+    }
+  </style>
+  <div class="panel-body" style="padding: 12px 24px 24px 24px; display: flex; flex-direction: column; flex: 1; min-height: 0; overflow: hidden;">
+    <!-- 产品设置表单 -->
+    <div class="products-container" style="width: 100%; max-width: 100%; display: flex; flex-direction: column; flex: 1; min-height: 0;">
+
+      <!-- 统计卡片区域 -->
+      <div class="stats-overview" style="margin-bottom: 12px; margin-top: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; flex-shrink: 0;">
+        <!-- 总产品数 -->
+        <div class="stat-card" style="background: linear-gradient(135deg, #7C9DFF 0%, #5B8FE8 100%); border-radius: 6px; padding: 8px 12px; color: white; box-shadow: 0 3px 10px rgba(124, 157, 255, 0.3); transition: transform 0.2s ease, box-shadow 0.2s ease; cursor: pointer; display: flex; align-items: center; justify-content: space-between; min-height: 42px;">
+          <div style="font-size: 20px; opacity: 0.4; line-height: 1; margin-right: 10px;">📦</div>
+          <div style="flex: 1; display: flex; align-items: baseline; gap: 8px;">
+            <span style="font-size: 13px; opacity: 0.95; font-weight: 500;">总产品数</span>
+            <span style="font-size: 24px; font-weight: 700; line-height: 1;" id="totalProducts">0</span>
+          </div>
+        </div>
+        
+        <!-- 订单同步 -->
+        <div class="stat-card" style="background: linear-gradient(135deg, #A78BFA 0%, #8B5CF6 100%); border-radius: 6px; padding: 8px 12px; color: white; box-shadow: 0 3px 10px rgba(167, 139, 250, 0.3); transition: transform 0.2s ease, box-shadow 0.2s ease; cursor: pointer; display: flex; align-items: center; justify-content: space-between; min-height: 42px;">
+          <div style="font-size: 20px; opacity: 0.4; line-height: 1; margin-right: 10px;">🔄</div>
+          <div style="flex: 1; display: flex; align-items: baseline; gap: 8px;">
+            <span style="font-size: 13px; opacity: 0.95; font-weight: 500;">订单同步</span>
+            <span style="font-size: 24px; font-weight: 700; line-height: 1;" id="orderProducts">0</span>
+          </div>
+        </div>
+        
+        <!-- 手动添加 -->
+        <div class="stat-card" style="background: linear-gradient(135deg, #6EE7B7 0%, #34D399 100%); border-radius: 6px; padding: 8px 12px; color: white; box-shadow: 0 3px 10px rgba(110, 231, 183, 0.3); transition: transform 0.2s ease, box-shadow 0.2s ease; cursor: pointer; display: flex; align-items: center; justify-content: space-between; min-height: 42px;">
+          <div style="font-size: 20px; opacity: 0.4; line-height: 1; margin-right: 10px;">✏️</div>
+          <div style="flex: 1; display: flex; align-items: baseline; gap: 8px;">
+            <span style="font-size: 13px; opacity: 0.95; font-weight: 500;">手动添加</span>
+            <span style="font-size: 24px; font-weight: 700; line-height: 1;" id="manualProducts">0</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 产品列表卡片 -->
+      <div class="products-card" style="display: flex; flex-direction: column; flex: 1; min-height: 0; margin-top: 16px;">
+        <div class="list-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px; flex-shrink: 0;">
+          <div class="products-card-header" style="margin-bottom: 0; padding-bottom: 0; border-bottom: none;">
+            <div class="products-card-icon warning">📋</div>
+            <div class="products-card-title-group">
+              <h3>产品列表</h3>
+              <p>管理所有产品信息</p>
+            </div>
+          </div>
+          <div class="products-btn-group">
+            <input type="text" class="products-search-input" id="searchInput" placeholder="搜索产品型号..." />
+            <button class="products-btn primary small" id="btnEditSelected" disabled>编辑</button>
+            <button class="products-btn danger small" id="btnDeleteSelected" disabled>删除</button>
+            <button class="products-btn secondary small" id="btnRefreshProducts">刷新</button>
+            <button class="products-btn primary small" id="btnSyncProducts">同步</button>
+            <button class="products-btn danger small" id="btnClearAllProducts">清空</button>
+          </div>
+        </div>
+        
+        <!-- 消息提示 -->
+        <div id="messageContainer" style="margin-bottom: 16px; flex-shrink: 0;"></div>
+        
+        <!-- 产品表格容器 -->
+        <div class="products-table-container" style="background: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+          <div id="tableContainer">
+            <div class="loading-state">
+              <div class="loading-icon">📦</div>
+              <div class="loading-text">正在加载产品数据...</div>
+              <div class="loading-subtext">请稍候片刻</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 帮助信息 -->
+      <div class="products-help-card" style="flex-shrink: 0; margin-top: 8px; padding: 8px 12px; border-radius: 6px;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <div class="products-help-icon" style="width: 20px; height: 20px; font-size: 12px; flex-shrink: 0;">?</div>
+          <span style="font-size: 12px; font-weight: 600; white-space: nowrap;">使用说明：</span>
+          <span style="font-size: 11px; line-height: 1.4; color: #5a6c7d;">产品库支持手动添加和订单自动同步两种方式。手动添加的产品可以编辑和删除，订单同步的产品会自动更新重量信息。清空操作将删除所有产品数据，请谨慎使用。新增产品请前往"新增产品"页面。</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+

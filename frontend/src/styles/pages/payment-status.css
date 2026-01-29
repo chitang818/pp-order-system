@@ -1,0 +1,50 @@
+/**
+ * 货款状态相关样式
+ */
+
+/* 订单金额链接样式 */
+.order-amount-link {
+  cursor: pointer;
+  color: #3b82f6;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  position: relative;
+  display: inline-block;
+}
+
+.order-amount-link:hover {
+  color: #2563eb;
+  text-decoration: underline;
+}
+
+/* 货款状态弹窗样式增强（补充内联样式） */
+.payment-status-dialog .form-group {
+  margin-bottom: 16px;
+}
+
+.payment-status-dialog .form-group label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+  font-weight: 600;
+  color: #111827;
+  font-size: 14px;
+}
+
+.payment-status-dialog input[readonly],
+.payment-status-dialog input[readonly]:focus {
+  background: #f3f4f6 !important;
+  color: #6b7280 !important;
+  cursor: not-allowed !important;
+  border-color: #d1d5db !important;
+}
+
+/* 响应式布局 */
+@media (max-width: 768px) {
+  .payment-status-dialog .form-group {
+    grid-column: 1 / -1;
+  }
+}
+

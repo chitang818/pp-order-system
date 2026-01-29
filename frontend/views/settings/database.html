@@ -1,0 +1,124 @@
+<section id="settingsDbPage" data-view class="panel">
+  <!-- 主要内容区 -->
+  <div class="settings-single-column">
+
+    <!-- 数据库自动备份策略 -->
+    <div class="settings-card">
+      <div class="settings-card-header">
+        <div class="settings-card-icon success">🤖</div>
+        <div class="settings-card-title-group">
+          <h3 class="settings-card-title">自动备份策略</h3>
+          <p class="settings-card-subtitle">配置全自动的后台数据备份方案</p>
+        </div>
+      </div>
+      <div class="settings-card-body">
+        <div class="settings-form-group">
+          <div class="settings-control-row" style="background: #f8fafb; padding: 12px; border-radius: 8px; border: 1px solid #edf2f7;">
+            <div class="settings-toggle-group">
+              <label class="switch">
+                <input type="checkbox" id="autoBackupEnabled">
+                <span class="slider round"></span>
+              </label>
+              <div style="display: flex; flex-direction: column; margin-left: 8px;">
+                <span class="settings-toggle-label" style="font-weight: 700;">启用全自动后台备份</span>
+                <span style="font-size: 11px; color: #718096;">推荐开启，保护数据不丢失</span>
+              </div>
+            </div>
+          </div>
+
+          <div id="autoBackupConfigArea" style="margin-top: 15px; background: #fff; border: 1px dashed #e2e8f0; border-radius: 10px; padding: 20px; display: none;">
+            <div class="settings-form-group">
+              <label class="settings-label">备份保存目录</label>
+              <div class="settings-path-input-group">
+                <input type="text" class="settings-input" id="autoBackupPathInput" placeholder="例如：D:\PP订单管理系统数据备份\" />
+                <button class="settings-btn secondary" id="btnSelectBackupPath">
+                  <span class="settings-btn-icon">📂</span>
+                  选择目录
+                </button>
+              </div>
+              <p class="settings-input-help">程序会自动在此目录下按时间戳创建备份文件。</p>
+            </div>
+
+            <div class="settings-form-group" style="margin-top: 20px;">
+              <label class="settings-label">执行频率</label>
+              <select class="settings-input" id="autoBackupIntervalSelect" style="background: #fff;">
+                <option value="6">每 6 小时 (高频保护 - 适合业务量大)</option>
+                <option value="12">每 12 小时 (标准保护 - 推荐)</option>
+                <option value="24" selected>每 24 小时 (每日快照)</option>
+                <option value="72">每 3 天 (归档模式)</option>
+                <option value="168">每 7 天 (归档模式)</option>
+              </select>
+            </div>
+
+            <div class="settings-actions" style="margin-top: 15px; border-top: none; padding-top: 0;">
+              <button class="settings-btn primary" id="btnSaveBackupConfig" style="width: 100%; justify-content: center;">
+                <span class="settings-btn-icon">💾</span>
+                保存自动备份配置
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 存储位置管理 -->
+    <div class="settings-card">
+      <div class="settings-card-header">
+        <div class="settings-card-icon primary">📂</div>
+        <div class="settings-card-title-group">
+          <h3 class="settings-card-title">存储位置管理</h3>
+          <p class="settings-card-subtitle">数据库文件存放路径及手动备份/恢复</p>
+        </div>
+      </div>
+      <div class="settings-card-body">
+        <div class="settings-form-group" style="background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #edf2f7; margin-bottom: 20px;">
+          <label class="settings-label" style="font-size: 12px; color: #64748b; margin-bottom: 8px;">当前本地数据库路径</label>
+          <div class="settings-path-input-group">
+            <input type="text" class="settings-input" id="storagePathInput" readonly style="background: transparent; border: none; padding: 0; color: #1e293b; font-family: Consolas, monospace; font-size: 13px;" />
+            <button class="settings-btn secondary" id="btnOpenStorageLocation" style="padding: 4px 12px; font-size: 12px; height: 28px;">
+              <span class="settings-btn-icon">📂</span>
+              打开目录
+            </button>
+          </div>
+        </div>
+
+        <div class="settings-actions" style="justify-content: flex-start; gap: 12px; border-top: none; padding-top: 0;">
+          <button class="settings-btn success" id="btnDbBackup">
+            <span class="settings-btn-icon">💾</span>
+            立即手动备份...
+          </button>
+          <button class="settings-btn primary" id="btnDbImport">
+            <span class="settings-btn-icon">📥</span>
+            从备份恢复数据...
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 系统危险操作 -->
+    <div class="settings-card" style="border: 1px solid #fee2e2;">
+      <div class="settings-card-header" style="border-bottom-color: #fee2e2;">
+        <div class="settings-card-icon danger" style="background: linear-gradient(135deg, #f56565 0%, #c53030 100%);">⚠️</div>
+        <div class="settings-card-title-group">
+          <h3 class="settings-card-title" style="color: #9b2c2c;">系统重置与初始化</h3>
+          <p class="settings-card-subtitle">清空所有订单及配置数据</p>
+        </div>
+      </div>
+      <div class="settings-card-body">
+        <div style="padding: 15px; background: #fff5f5; border-radius: 8px; border: 1px solid #feb2b2; margin-bottom: 15px;">
+          <p style="font-size: 13px; color: #c53030; font-weight: 600; margin: 0; line-height: 1.6;">
+            危险操作警告：<br>
+            执行此操作将永久删除系统中的所有订单、客户资料、产品数据及公司配置。此过程不可逆，请务必在操作前确认已完成有效备份。
+          </p>
+        </div>
+        <div class="settings-form-group">
+          <button class="settings-btn danger" id="btnResetSystem" style="width: 100%; justify-content: center; height: 42px; font-size: 15px; font-weight: 700;">
+            <span class="settings-btn-icon">🗑️</span>
+            我已确认风险，立即初始化系统
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>

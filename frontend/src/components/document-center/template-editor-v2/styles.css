@@ -1,0 +1,398 @@
+/* 模板编辑器V2样式 */
+
+/* 区块面板样式 */
+.block-category {
+  margin-bottom: 15px;
+}
+
+.block-category-title {
+  font-size: 12px;
+  color: #666;
+  padding: 5px 0;
+  border-bottom: 1px solid #eee;
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+
+.block-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border: 1px solid #eee;
+  border-radius: 4px;
+  margin-bottom: 5px;
+  cursor: pointer;
+  background: #fff;
+  transition: all 0.2s;
+}
+
+.block-item:hover {
+  border-color: #1890ff;
+  background: #e6f7ff;
+}
+
+.block-item-icon {
+  font-size: 16px;
+}
+
+.block-item-name {
+  font-size: 13px;
+}
+
+/* 画布中的区块样式 */
+/* 使用 outline 而不是 border，避免影响布局 */
+.canvas-block {
+  position: relative;
+  cursor: pointer;
+  transition: all 0.2s;
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+.canvas-block:hover {
+  outline-color: #91d5ff;
+}
+
+.canvas-block.selected {
+  outline-color: #1890ff;
+}
+
+.canvas-block-actions {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  display: none;
+  gap: 5px;
+}
+
+.canvas-block:hover .canvas-block-actions,
+.canvas-block.selected .canvas-block-actions {
+  display: flex;
+}
+
+.block-action-btn {
+  width: 24px;
+  height: 24px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+
+.block-action-btn.delete {
+  background: #ff4d4f;
+  color: #fff;
+}
+
+.block-action-btn.delete:hover {
+  background: #ff7875;
+}
+
+.block-action-btn.move {
+  background: #1890ff;
+  color: #fff;
+  cursor: move;
+}
+
+.block-action-btn.move:hover {
+  background: #40a9ff;
+}
+
+.canvas-block-label {
+  font-size: 11px;
+  color: #999;
+  margin-bottom: 5px;
+  font-weight: 500;
+}
+
+/* 画布内容容器 */
+.canvas-content {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* 确保公司信息区块内的文本换行行为一致 */
+.canvas-content .company-header-block > div > div {
+  white-space: normal !important;
+  word-wrap: break-word !important;
+  word-break: break-word !important;
+  overflow-wrap: break-word !important;
+}
+
+/* 属性面板样式 */
+.property-panel-content {
+  padding: 10px;
+}
+
+.property-header {
+  margin-bottom: 15px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #eee;
+}
+
+.property-form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.property-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.property-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: #333;
+}
+
+.property-input,
+.property-select,
+.property-textarea {
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 13px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.property-input:focus,
+.property-select:focus,
+.property-textarea:focus {
+  outline: none;
+  border-color: #1890ff;
+  box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.1);
+}
+
+.property-textarea {
+  resize: vertical;
+  font-family: inherit;
+}
+
+.btn-insert-variable {
+  margin-top: 5px;
+  padding: 6px 12px;
+  background: #1890ff;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: background 0.2s;
+}
+
+.btn-insert-variable:hover {
+  background: #40a9ff;
+}
+
+.property-color {
+  width: 100%;
+  height: 36px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.checkbox-label input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+.property-hint {
+  font-size: 11px;
+  color: #999;
+  margin-top: 3px;
+}
+
+.btn-edit-columns {
+  width: 100%;
+  padding: 10px;
+  background: #1890ff;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: background 0.2s;
+}
+
+.btn-edit-columns:hover {
+  background: #40a9ff;
+}
+
+/* 变量选择器样式 */
+.variable-selector {
+  position: relative;
+}
+
+.variable-input-wrapper {
+  display: flex;
+  gap: 5px;
+}
+
+.variable-input {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 13px;
+}
+
+.btn-select-variable {
+  padding: 8px 12px;
+  background: #1890ff;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.btn-select-variable:hover {
+  background: #40a9ff;
+}
+
+.variable-panel {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  margin-top: 5px;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  max-height: 300px;
+  overflow-y: auto;
+  z-index: 1000;
+}
+
+.variable-tree {
+  padding: 10px;
+}
+
+.variable-group {
+  margin-bottom: 15px;
+}
+
+.variable-group-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: #666;
+  margin-bottom: 8px;
+  padding-bottom: 5px;
+  border-bottom: 1px solid #eee;
+}
+
+.variable-list {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.variable-item {
+  padding: 8px 10px;
+  border: 1px solid #eee;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.variable-item:hover {
+  background: #e6f7ff;
+  border-color: #1890ff;
+}
+
+.variable-name {
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.variable-path {
+  font-size: 11px;
+  color: #999;
+  font-family: monospace;
+}
+
+/* 字号选择器样式 */
+.font-size-selector {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.font-size-input-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.font-size-input {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 13px;
+}
+
+.font-size-unit {
+  font-size: 13px;
+  color: #666;
+}
+
+.font-size-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.font-size-preset-btn {
+  padding: 6px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background: #fff;
+  cursor: pointer;
+  font-size: 12px;
+  transition: all 0.2s;
+}
+
+.font-size-preset-btn:hover {
+  border-color: #1890ff;
+  color: #1890ff;
+}
+
+.font-size-preset-btn.active {
+  background: #1890ff;
+  color: #fff;
+  border-color: #1890ff;
+}
+
+.font-size-preview {
+  padding: 10px;
+  background: #f5f5f5;
+  border-radius: 4px;
+  text-align: center;
+}
+

@@ -1,0 +1,187 @@
+{
+  "id": "template_sales_default",
+  "name": "销售确认书-标准模板",
+  "type": "sales",
+  "applicability": {
+    "isDefault": true,
+    "productTypes": [],
+    "customerIds": [],
+    "customerNames": [],
+    "priority": 0
+  },
+  "blocks": [
+    {
+      "id": "block_company_header",
+      "type": "company-header",
+      "config": {
+        "style": {
+          "titleFontSize": 22,
+          "borderBottom": true
+        }
+      }
+    },
+    {
+      "id": "block_document_title",
+      "type": "document-title",
+      "config": {
+        "text": "SALES CONFIRMATION",
+        "style": {
+          "fontSize": 18,
+          "fontWeight": "bold",
+          "textAlign": "center",
+          "marginTop": 15,
+          "marginBottom": 15
+        }
+      }
+    },
+    {
+      "id": "block_order_info",
+      "type": "order-info",
+      "config": {
+        "layout": "two-column",
+        "fields": [
+          {
+            "position": "left",
+            "label": "CONTRACT No:",
+            "binding": "order.contractNo"
+          },
+          {
+            "position": "right",
+            "label": "DATE:",
+            "binding": "order.invoiceDate"
+          }
+        ],
+        "style": {
+          "fontSize": 11
+        }
+      }
+    },
+    {
+      "id": "block_customer_info",
+      "type": "customer-info",
+      "config": {
+        "title": "BUYER:",
+        "showAddress": true,
+        "showContact": true
+      }
+    },
+    {
+      "id": "block_product_table",
+      "type": "product-table",
+      "config": {
+        "columns": [
+          {
+            "header": "NO.",
+            "binding": "@index",
+            "width": "8%",
+            "align": "center"
+          },
+          {
+            "header": "DESCRIPTION",
+            "binding": "model",
+            "width": "40%",
+            "align": "left"
+          },
+          {
+            "header": "QUANTITY",
+            "binding": "quantity",
+            "width": "15%",
+            "align": "center",
+            "suffix": "PCS"
+          },
+          {
+            "header": "UNIT PRICE",
+            "binding": "unitPrice",
+            "width": "17%",
+            "align": "right",
+            "prefix": "USD",
+            "format": "currency"
+          },
+          {
+            "header": "AMOUNT",
+            "binding": "amount",
+            "width": "20%",
+            "align": "right",
+            "prefix": "USD",
+            "format": "currency"
+          }
+        ],
+        "descriptionFormat": "standard",
+        "showProductCategory": false,
+        "showHeader": true,
+        "headerStyle": {
+          "background": "#f1f5f9",
+          "fontWeight": "bold",
+          "borderColor": "#333",
+          "fontSize": 12
+        },
+        "rowStyle": {
+          "borderColor": "#333",
+          "fontSize": 11,
+          "minHeight": 30
+        },
+        "showFooter": true,
+        "footerConfig": {
+          "labelColumn": 0,
+          "labelColspan": 3,
+          "label": "TOTAL:",
+          "showTotalAmount": true,
+          "totalAmountColumn": 4
+        }
+      }
+    },
+    {
+      "id": "block_terms",
+      "type": "terms-block",
+      "config": {
+        "layout": "two-column",
+        "fields": [
+          {
+            "position": "left",
+            "label": "PAYMENT:",
+            "binding": "order.payment"
+          },
+          {
+            "position": "right",
+            "label": "SHIPMENT:",
+            "binding": "order.shipmentDate"
+          },
+          {
+            "position": "left",
+            "label": "INSURANCE:",
+            "binding": "order.insurance"
+          },
+          {
+            "position": "right",
+            "label": "DESTINATION:",
+            "binding": "order.destination"
+          }
+        ]
+      }
+    },
+    {
+      "id": "block_signature",
+      "type": "signature-area",
+      "config": {
+        "layout": "two-column",
+        "leftLabel": "BUYER",
+        "rightLabel": "SELLER"
+      }
+    }
+  ],
+  "pageSettings": {
+    "margin": {
+      "top": 15,
+      "bottom": 15,
+      "left": 15,
+      "right": 15
+    }
+  },
+  "globalStyles": {
+    "fontFamily": "Arial, \"Microsoft YaHei\", sans-serif",
+    "fontSize": 11,
+    "lineHeight": 1.4,
+    "color": "#000"
+  }
+}
+

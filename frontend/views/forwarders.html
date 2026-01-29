@@ -1,0 +1,120 @@
+<section id="view-forwarders" class="panel view-enter" data-view>
+    <div class="panel-header">
+        <div class="panel-title">货代管理</div>
+        <div class="panel-actions">
+            <button class="btn primary" id="btnNewForwarder">
+                <span style="margin-right: 4px;">➕</span>新建货代
+            </button>
+            <button class="btn success" id="btnExportForwarders" style="background: #10B981; border-color: #10B981;">
+                <span style="margin-right: 4px;">📊</span>导出CSV
+            </button>
+            <button class="btn danger" id="btnClearForwarders" style="display:none;">
+                <span style="margin-right: 4px;">🗑️</span>清空货代
+            </button>
+        </div>
+    </div>
+    <div class="panel-body">
+
+        <!-- 统计卡片区域 -->
+        <div class="stats-overview"
+            style="margin-bottom: 12px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;">
+            <!-- 总货代数 -->
+            <div class="stat-card"
+                style="background: linear-gradient(135deg, #06B6D4 0%, #0891B2 100%); border-radius: 6px; padding: 8px 12px; color: white; box-shadow: 0 3px 10px rgba(6, 182, 212, 0.35); transition: transform 0.2s ease, box-shadow 0.2s ease; cursor: pointer; display: flex; align-items: center; justify-content: space-between; height: 58px; box-sizing: border-box;">
+                <div style="font-size: 20px; opacity: 0.4; line-height: 1; margin-right: 10px; flex-shrink: 0;">🚢</div>
+                <div style="flex: 1; display: flex; align-items: baseline; gap: 8px; min-width: 0;">
+                    <span
+                        style="font-size: 24px; font-weight: 700; line-height: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"
+                        id="totalForwardersCount">0</span>
+                </div>
+            </div>
+
+            <!-- 活跃货代 -->
+            <div class="stat-card"
+                style="background: linear-gradient(135deg, #10B981 0%, #059669 100%); border-radius: 6px; padding: 8px 12px; color: white; box-shadow: 0 3px 10px rgba(16, 185, 129, 0.35); transition: transform 0.2s ease, box-shadow 0.2s ease; cursor: pointer; display: flex; align-items: center; justify-content: space-between; height: 58px; box-sizing: border-box;">
+                <div style="font-size: 20px; opacity: 0.4; line-height: 1; margin-right: 10px; flex-shrink: 0;">⭐</div>
+                <div style="flex: 1; display: flex; align-items: baseline; gap: 8px; min-width: 0;">
+                    <span style="font-size: 13px; opacity: 0.95; font-weight: 500; white-space: nowrap;">活跃货代</span>
+                    <span
+                        style="font-size: 24px; font-weight: 700; line-height: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"
+                        id="activeForwardersCount">0</span>
+                </div>
+            </div>
+
+            <!-- 合作项目 -->
+            <div class="stat-card"
+                style="background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%); border-radius: 6px; padding: 8px 12px; color: white; box-shadow: 0 3px 10px rgba(245, 158, 11, 0.35); transition: transform 0.2s ease, box-shadow 0.2s ease; cursor: pointer; display: flex; align-items: center; justify-content: space-between; height: 58px; box-sizing: border-box;">
+                <div style="font-size: 20px; opacity: 0.4; line-height: 1; margin-right: 10px; flex-shrink: 0;">📦</div>
+                <div style="flex: 1; display: flex; align-items: baseline; gap: 8px; min-width: 0;">
+                    <span style="font-size: 13px; opacity: 0.95; font-weight: 500; white-space: nowrap;">合作项目</span>
+                    <span
+                        style="font-size: 24px; font-weight: 700; line-height: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"
+                        id="totalProjectsCount">0</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 增强的筛选区域 -->
+        <div class="filter-section"
+            style="margin-bottom: 16px; padding: 16px; background-color: #f8f9fa; border-radius: 8px; border: 1px solid #e9ecef;">
+            <div class="filter-header"
+                style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                <h4 style="margin: 0; color: #495057; font-size: 16px; font-weight: 600;">筛选条件</h4>
+                <button class="btn primary small" id="btnClearForwarderFilters">清空筛选</button>
+            </div>
+            <div class="form-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
+                <div class="form-item">
+                    <label>货代名称</label>
+                    <input class="input" id="fltForwarderName" placeholder="按货代名称筛选" />
+                </div>
+                <div class="form-item">
+                    <label>联系电话</label>
+                    <input class="input" id="fltForwarderTel" placeholder="按电话筛选" />
+                </div>
+                <div class="form-item">
+                    <label>地址</label>
+                    <input class="input" id="fltForwarderAddress" placeholder="按地址筛选" />
+                </div>
+                <div class="form-item">
+                    <label>联系人</label>
+                    <input class="input" id="fltForwarderContact" placeholder="按联系人筛选" />
+                </div>
+            </div>
+        </div>
+
+        <table class="table" id="forwardersTable">
+            <thead>
+                <tr>
+                    <th style="width: 25%">货代名称</th>
+                    <th style="width: 20%">联系方式</th>
+                    <th style="width: 25%">地址</th>
+                    <th style="width: 15%">邮箱</th>
+                    <th style="width: 15%">操作</th>
+                </tr>
+            </thead>
+            <tbody id="forwardersTbody"></tbody>
+        </table>
+
+        <!-- 分页控件 -->
+        <div class="pagination-section"
+            style="margin-top: 16px; display: flex; justify-content: space-between; align-items: center;">
+            <div class="pagination-info" style="color: #6c757d; font-size: 14px;">
+                显示第 <span id="pageStart">0</span> - <span id="pageEnd">0</span> 条，共 <span id="totalRecords">0</span> 条记录
+            </div>
+            <div class="pagination-controls" style="display: flex; gap: 8px; align-items: center;">
+                <button class="btn secondary small" id="btnFirstPage" disabled>首页</button>
+                <button class="btn secondary small" id="btnPrevPage" disabled>上一页</button>
+                <span style="margin: 0 12px; color: #495057;">第 <span id="currentPage">1</span> / <span
+                        id="totalPages">1</span> 页</span>
+                <button class="btn secondary small" id="btnNextPage" disabled>下一页</button>
+                <button class="btn secondary small" id="btnLastPage" disabled>末页</button>
+                <select class="select small" id="pageSizeSelect" style="margin-left: 12px; width: 80px;">
+                    <option value="10">10条/页</option>
+                    <option value="20" selected>20条/页</option>
+                    <option value="50">50条/页</option>
+                    <option value="100">100条/页</option>
+                </select>
+            </div>
+        </div>
+    </div>
+</section>

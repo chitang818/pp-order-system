@@ -1,0 +1,200 @@
+<section id="view-orders-list" class="panel" data-view>
+  <div class="panel-header">
+    <div class="panel-title">订单列表</div>
+    <div class="panel-actions">
+      <button class="btn danger" id="btnDeleteSelectedOrders" style="display:none">
+        <span style="margin-right: 4px;">🗑️</span>删除订单
+      </button>
+      <button class="btn primary" id="btnNewOrder">
+        <span style="margin-right: 4px;">➕</span>新建订单
+      </button>
+      <button class="btn success" id="btnExportOrdersCsv" style="background: #10B981; border-color: #10B981;">
+        <span style="margin-right: 4px;">📊</span>导出CSV
+      </button>
+    </div>
+  </div>
+  <div class="panel-body">
+    
+    <!-- 统计卡片区域 -->
+    <div class="stats-overview" style="margin-bottom: 12px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; width: 100%;">
+      <!-- 总订单数 -->
+      <div class="stat-card" style="background: linear-gradient(135deg, #7C9DFF 0%, #5B8FE8 100%); border-radius: 6px; padding: 8px 12px; color: white; box-shadow: 0 3px 10px rgba(124, 157, 255, 0.3); transition: transform 0.2s ease, box-shadow 0.2s ease; cursor: pointer; display: flex; align-items: center; justify-content: space-between; min-height: 42px; min-width: 0; overflow: hidden;">
+        <div style="font-size: 20px; opacity: 0.4; line-height: 1; margin-right: 10px;">📝</div>
+        <div style="flex: 1; display: flex; align-items: baseline; gap: 8px;">
+          <span style="font-size: 13px; opacity: 0.95; font-weight: 500;">总订单数</span>
+          <span style="font-size: 24px; font-weight: 700; line-height: 1;" id="totalOrdersCount">0</span>
+        </div>
+      </div>
+      
+      <!-- 已排产待发货订单 -->
+      <div class="stat-card" style="background: linear-gradient(135deg, #A78BFA 0%, #8B5CF6 100%); border-radius: 6px; padding: 8px 12px; color: white; box-shadow: 0 3px 10px rgba(167, 139, 250, 0.3); transition: transform 0.2s ease, box-shadow 0.2s ease; cursor: pointer; display: flex; align-items: center; justify-content: space-between; min-height: 42px; min-width: 0; overflow: hidden;">
+        <div style="font-size: 20px; opacity: 0.4; line-height: 1; margin-right: 10px;">📦</div>
+        <div style="flex: 1; display: flex; align-items: baseline; gap: 8px;">
+          <span style="font-size: 13px; opacity: 0.95; font-weight: 500;">已排产待发货订单</span>
+          <span style="font-size: 24px; font-weight: 700; line-height: 1;" id="pendingShipmentCount">0</span>
+        </div>
+      </div>
+      
+      <!-- 已发货订单 -->
+      <div class="stat-card" style="background: linear-gradient(135deg, #818CF8 0%, #6366F1 100%); border-radius: 6px; padding: 8px 12px; color: white; box-shadow: 0 3px 10px rgba(129, 140, 248, 0.3); transition: transform 0.2s ease, box-shadow 0.2s ease; cursor: pointer; display: flex; align-items: center; justify-content: space-between; min-height: 42px; min-width: 0; overflow: hidden;">
+        <div style="font-size: 20px; opacity: 0.4; line-height: 1; margin-right: 10px;">🚚</div>
+        <div style="flex: 1; display: flex; align-items: baseline; gap: 8px;">
+          <span style="font-size: 13px; opacity: 0.95; font-weight: 500;">已发货订单</span>
+          <span style="font-size: 24px; font-weight: 700; line-height: 1;" id="shippedOrdersCount">0</span>
+        </div>
+      </div>
+      
+      <!-- 已完成订单 -->
+      <div class="stat-card" style="background: linear-gradient(135deg, #6EE7B7 0%, #34D399 100%); border-radius: 6px; padding: 8px 12px; color: white; box-shadow: 0 3px 10px rgba(110, 231, 183, 0.3); transition: transform 0.2s ease, box-shadow 0.2s ease; cursor: pointer; display: flex; align-items: center; justify-content: space-between; min-height: 42px; min-width: 0; overflow: hidden;">
+        <div style="font-size: 20px; opacity: 0.4; line-height: 1; margin-right: 10px;">✅</div>
+        <div style="flex: 1; display: flex; align-items: baseline; gap: 8px;">
+          <span style="font-size: 13px; opacity: 0.95; font-weight: 500;">已完成订单</span>
+          <span style="font-size: 24px; font-weight: 700; line-height: 1;" id="completedOrdersCount">0</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 快速筛选标签 -->
+    <div class="quick-filters" style="margin-bottom: 12px; display: flex; gap: 6px; flex-wrap: wrap; align-items: center;">
+      <span style="font-size: 13px; font-weight: 600; color: #495057; margin-right: 4px;">快速筛选：</span>
+      <button class="filter-tag active" data-filter="all" style="padding: 6px 14px; border-radius: 20px; border: 1px solid #3b82f6; background: #3b82f6; color: white; font-size: 13px; cursor: pointer; transition: all 0.2s ease; font-weight: 500;">
+        全部订单
+      </button>
+      <button class="filter-tag" data-filter="已创建" style="padding: 6px 14px; border-radius: 20px; border: 1px solid #cbd5e1; background: white; color: #64748b; font-size: 13px; cursor: pointer; transition: all 0.2s ease; font-weight: 500;">
+        已创建
+      </button>
+      <button class="filter-tag" data-filter="已排产" style="padding: 6px 14px; border-radius: 20px; border: 1px solid #cbd5e1; background: white; color: #64748b; font-size: 13px; cursor: pointer; transition: all 0.2s ease; font-weight: 500;">
+        已排产
+      </button>
+      <button class="filter-tag" data-filter="已发货" style="padding: 6px 14px; border-radius: 20px; border: 1px solid #cbd5e1; background: white; color: #64748b; font-size: 13px; cursor: pointer; transition: all 0.2s ease; font-weight: 500;">
+        已发货
+      </button>
+      <button class="filter-tag" data-filter="已完成" style="padding: 6px 14px; border-radius: 20px; border: 1px solid #cbd5e1; background: white; color: #64748b; font-size: 13px; cursor: pointer; transition: all 0.2s ease; font-weight: 500;">
+        已完成
+      </button>
+    </div>
+
+    <!-- 高级筛选区域（可折叠） -->
+    <div class="filter-section" style="margin-bottom: 12px; background-color: white; border-radius: 8px; border: 1px solid #e5e7eb; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+      <div class="filter-header" style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: #f8fafc; cursor: pointer; user-select: none;" id="filterToggleHeader">
+        <div style="display: flex; align-items: center; gap: 6px;">
+          <span style="font-size: 16px;">🔍</span>
+          <h4 style="margin: 0; color: #1e293b; font-size: 14px; font-weight: 600;">高级筛选</h4>
+          <span style="font-size: 12px; color: #4A90E2; font-weight: 600; background: #EFF6FF; padding: 2px 8px; border-radius: 10px;" id="activeFiltersCount">(0个条件)</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <button class="btn small" id="btnClearFilters" style="padding: 4px 12px; font-size: 12px; background: #FEF2F2; color: #DC2626; border: 1px solid #FCA5A5; font-weight: 600;">
+            清空筛选
+          </button>
+          <span style="font-size: 16px; transition: transform 0.3s ease; color: #4A90E2; font-weight: 700;" id="filterToggleIcon">▼</span>
+        </div>
+      </div>
+      <div class="filter-body" id="filterBody" style="padding: 12px; border-top: 1px solid #e5e7eb;">
+        <div class="form-grid" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px;">
+          <div class="form-item">
+            <label style="display: flex; align-items: center; gap: 3px; font-size: 12px; font-weight: 600; color: #475569; margin-bottom: 4px;">
+              <span>📄</span> 合同号
+            </label>
+            <input class="input" id="fltOrderNo" placeholder="按合同号筛选" style="border: 1px solid #e2e8f0; border-radius: 6px; padding: 6px 10px; font-size: 13px; height: 32px;" />
+          </div>
+          <div class="form-item">
+            <label style="display: flex; align-items: center; gap: 3px; font-size: 12px; font-weight: 600; color: #475569; margin-bottom: 4px;">
+              <span>🧾</span> 发票号
+            </label>
+            <input class="input" id="fltInvoiceNo" placeholder="按发票号筛选" style="border: 1px solid #e2e8f0; border-radius: 6px; padding: 6px 10px; font-size: 13px; height: 32px;" />
+          </div>
+          <div class="form-item">
+            <label style="display: flex; align-items: center; gap: 3px; font-size: 12px; font-weight: 600; color: #475569; margin-bottom: 4px;">
+              <span>👤</span> 客户
+            </label>
+            <select class="input" id="fltCustomer" style="border: 1px solid #e2e8f0; border-radius: 6px; padding: 6px 10px; font-size: 13px; height: 32px;">
+              <option value="">全部客户</option>
+            </select>
+          </div>
+          <div class="form-item">
+            <label style="display: flex; align-items: center; gap: 3px; font-size: 12px; font-weight: 600; color: #475569; margin-bottom: 4px;">
+              <span>📅</span> 日期筛选
+            </label>
+            <div style="position: relative; display: inline-block; width: 100%;">
+              <input class="input" id="fltDate" type="text" placeholder="YYYY-MM-DD" title="筛选订单日期或发货日期" style="width: 100%; padding-right: 32px; border: 1px solid #e2e8f0; border-radius: 6px; padding: 6px 10px; font-size: 13px; height: 32px;" />
+              <button type="button" id="datePickerBtn" style="position: absolute; right: 4px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; font-size: 14px; color: #007bff; padding: 0; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center;">📅</button>
+            </div>
+          </div>
+          <div class="form-item">
+            <label style="display: flex; align-items: center; gap: 3px; font-size: 12px; font-weight: 600; color: #475569; margin-bottom: 4px;">
+              <span>🌍</span> 目的港
+            </label>
+            <input class="input" id="fltDestination" placeholder="按目的港筛选" style="border: 1px solid #e2e8f0; border-radius: 6px; padding: 6px 10px; font-size: 13px; height: 32px;" />
+          </div>
+          <div class="form-item">
+            <label style="display: flex; align-items: center; gap: 3px; font-size: 12px; font-weight: 600; color: #475569; margin-bottom: 4px;">
+              <span>📦</span> 产品型号
+            </label>
+            <input class="input" id="fltProductModel" placeholder="按产品型号筛选" style="border: 1px solid #e2e8f0; border-radius: 6px; padding: 6px 10px; font-size: 13px; height: 32px;" />
+          </div>
+          <div class="form-item">
+            <label style="display: flex; align-items: center; gap: 3px; font-size: 12px; font-weight: 600; color: #475569; margin-bottom: 4px;">
+              <span>📊</span> 订单状态
+            </label>
+            <select class="input" id="fltStatus" style="border: 1px solid #e2e8f0; border-radius: 6px; padding: 6px 10px; font-size: 13px; height: 32px;">
+              <option value="">全部状态</option>
+              <option value="已创建">已创建</option>
+              <option value="已排产">已排产</option>
+              <option value="已发货">已发货</option>
+              <option value="已完成">已完成</option>
+            </select>
+          </div>
+          <div class="form-item">
+            <label style="display: flex; align-items: center; gap: 3px; font-size: 12px; font-weight: 600; color: #475569; margin-bottom: 4px;">
+              <span>🏷️</span> 产品类型
+            </label>
+            <select class="input" id="fltProductType" style="border: 1px solid #e2e8f0; border-radius: 6px; padding: 6px 10px; font-size: 13px; height: 32px;">
+              <option value="">全部类型</option>
+              <option value="1">A类品</option>
+              <option value="2">B类品</option>
+              <option value="3">C类品</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 订单表格 -->
+    <div class="orders-table-container" style="background: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+      <table class="table orders-table" id="ordersTable" style="table-layout: fixed; width: 100%;">
+        <colgroup>
+          <col style="width: 3%;">
+          <col style="width: 8%;">
+          <col style="width: 10%;">
+          <col style="width: 9%;">
+          <col style="width: 13%;">
+          <col style="width: 9%;">
+          <col style="width: 9%;">
+          <col style="width: 8%;">
+          <col style="width: 11%;">
+          <col style="width: 9%;">
+          <col style="width: 9%;">
+          <col style="width: 8%;">
+        </colgroup>
+        <thead>
+          <tr>
+            <th style="text-align: center;"><input type="checkbox" id="selectAllOrders" title="全选/取消全选"></th>
+            <th style="text-align: center; cursor: pointer;" data-sort="orderDate">📅 订单日期 <span class="sort-icon">⇅</span></th>
+            <th style="text-align: center; cursor: pointer;" data-sort="contractNo">📄 合同编号 <span class="sort-icon">⇅</span></th>
+            <th style="text-align: center; cursor: pointer;" data-sort="invoiceNo">🧾 发票号 <span class="sort-icon">⇅</span></th>
+            <th style="text-align: center; cursor: pointer;" data-sort="customerName">👤 客户 <span class="sort-icon">⇅</span></th>
+            <th style="text-align: center; cursor: pointer;" data-sort="totalUSD">💰 订单金额(USD) <span class="sort-icon">⇅</span></th>
+            <th style="text-align: center; cursor: pointer;" data-sort="paymentDueDate">💰 货款到账时间 <span class="sort-icon">⇅</span></th>
+            <th style="text-align: center; cursor: pointer;" data-sort="shipmentDate">🚢 发货日期 <span class="sort-icon">⇅</span></th>
+            <th style="text-align: center; cursor: pointer;" data-sort="shipTo">🌍 目的港城市 <span class="sort-icon">⇅</span></th>
+            <th style="text-align: center; cursor: pointer;" data-sort="forwarder">🏢 货代 <span class="sort-icon">⇅</span></th>
+            <th style="text-align: center; cursor: pointer;" data-sort="blNo">🚢 提单号 <span class="sort-icon">⇅</span></th>
+            <th style="text-align: center; cursor: pointer;" data-sort="status">📊 订单状态 <span class="sort-icon">⇅</span></th>
+          </tr>
+        </thead>
+        <tbody id="ordersTbody"></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+

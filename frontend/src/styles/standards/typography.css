@@ -1,0 +1,205 @@
+/* 字体大小标准规范 */
+/* 用于统一各页面的文字字号大小，提升视觉一致性 */
+
+/* 基础字体设置 */
+:root {
+    --font-size-xs: 11px;      /* 极小字体 - 辅助信息、版权等 */
+    --font-size-sm: 12px;      /* 小字体 - 标签、说明文字 */
+    --font-size-base: 14px;    /* 基础字体 - 正文、表单输入 */
+    --font-size-md: 15px;      /* 中等字体 - 重要正文 */
+    --font-size-lg: 16px;      /* 大字体 - 重要信息、按钮文字 */
+    --font-size-xl: 18px;      /* 特大字体 - 小标题 */
+    --font-size-2xl: 20px;     /* 超大字体 - 页面标题 */
+    --font-size-3xl: 24px;     /* 巨大字体 - 主标题 */
+    --font-size-4xl: 28px;     /* 超巨大字体 - 数据展示 */
+    --font-size-5xl: 32px;     /* 最大字体 - 特殊展示 */
+}
+
+/* 标题层级 */
+.text-title-main {
+    font-size: var(--font-size-3xl);
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.text-title-section {
+    font-size: var(--font-size-2xl);
+    font-weight: 600;
+    line-height: 1.3;
+}
+
+.text-title-subsection {
+    font-size: var(--font-size-xl);
+    font-weight: 600;
+    line-height: 1.4;
+}
+
+.text-title-card {
+    font-size: var(--font-size-lg);
+    font-weight: 600;
+    line-height: 1.4;
+}
+
+/* 正文文字 */
+.text-body-large {
+    font-size: var(--font-size-md);
+    line-height: 1.6;
+}
+
+.text-body {
+    font-size: var(--font-size-base);
+    line-height: 1.6;
+}
+
+.text-body-small {
+    font-size: var(--font-size-sm);
+    line-height: 1.5;
+}
+
+/* 标签和辅助文字 */
+.text-label {
+    font-size: var(--font-size-base);
+    font-weight: 500;
+}
+
+.text-caption {
+    font-size: var(--font-size-sm);
+    color: #6c757d;
+    line-height: 1.4;
+}
+
+.text-helper {
+    font-size: var(--font-size-xs);
+    color: #8e9aaf;
+    line-height: 1.3;
+}
+
+/* 数据展示 */
+.text-data-large {
+    font-size: var(--font-size-4xl);
+    font-weight: 700;
+    line-height: 1.1;
+}
+
+.text-data-medium {
+    font-size: var(--font-size-2xl);
+    font-weight: 600;
+    line-height: 1.2;
+}
+
+.text-data-small {
+    font-size: var(--font-size-lg);
+    font-weight: 500;
+    line-height: 1.3;
+}
+
+/* 表单元素 */
+.text-input {
+    font-size: var(--font-size-base);
+}
+
+.text-input-large {
+    font-size: var(--font-size-md);
+}
+
+.text-input-small {
+    font-size: var(--font-size-sm);
+}
+
+/* 按钮文字 */
+.text-button {
+    font-size: var(--font-size-base);
+    font-weight: 500;
+}
+
+.text-button-large {
+    font-size: var(--font-size-md);
+    font-weight: 500;
+}
+
+.text-button-small {
+    font-size: var(--font-size-sm);
+    font-weight: 500;
+}
+
+/* 表格文字 */
+.text-table-header {
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+}
+
+.text-table-cell {
+    font-size: var(--font-size-sm);
+}
+
+.text-table-cell-large {
+    font-size: var(--font-size-base);
+}
+
+/* 导航文字 */
+.text-nav-primary {
+    font-size: var(--font-size-base);
+    font-weight: 500;
+}
+
+.text-nav-secondary {
+    font-size: var(--font-size-sm);
+    font-weight: 400;
+}
+
+/* 面包屑导航 */
+.text-breadcrumb {
+    font-size: var(--font-size-sm);
+}
+
+/* 状态标签 */
+.text-status {
+    font-size: var(--font-size-xs);
+    font-weight: 500;
+}
+
+/* 响应式字体调整 */
+@media (max-width: 768px) {
+    :root {
+        --font-size-xs: 10px;
+        --font-size-sm: 11px;
+        --font-size-base: 13px;
+        --font-size-md: 14px;
+        --font-size-lg: 15px;
+        --font-size-xl: 16px;
+        --font-size-2xl: 18px;
+        --font-size-3xl: 20px;
+        --font-size-4xl: 24px;
+        --font-size-5xl: 28px;
+    }
+}
+
+/* 特殊场景字体 */
+.text-monospace {
+    font-family: 'Courier New', monospace;
+    font-size: var(--font-size-sm);
+}
+
+.text-emphasis {
+    font-weight: 600;
+}
+
+.text-muted {
+    color: #6c757d;
+}
+
+.text-success {
+    color: #28a745;
+}
+
+.text-warning {
+    color: #ffc107;
+}
+
+.text-danger {
+    color: #dc3545;
+}
+
+.text-info {
+    color: #17a2b8;
+}
