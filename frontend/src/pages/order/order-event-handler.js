@@ -1,7 +1,7 @@
 /**
  * 订单编辑页面 - 事件处理模块
  * 负责所有事件绑定和事件处理逻辑
- * 
+ *
  * 使用工厂函数模式，接收依赖并返回绑定函数
  */
 
@@ -33,21 +33,22 @@
  * @returns {Object} 事件绑定函数集合
  */
 export function createEventHandler(dependencies) {
+  // 移除未使用的变量，只保留需要的
   const {
-    prodTbody,
-    currentProductTypeRef,
+    // prodTbody, // 未使用
+    // currentProductTypeRef, // 未使用
     scheduleSaveDraft,
-    updateProductTypeDisplay,
+    // updateProductTypeDisplay, // 未使用
     updateContractNoDisplay,
     checkContractNoAndSwitchToC,
     checkContractNoExists,
-    switchTemplate,
-    addProdRow,
-    updateTotalRowWrapper,
-    calculateTotalAmountWrapper,
-    updateDeleteButtonVisibility,
-    renderRowIndices,
-    updateRowSelectionHighlight,
+    // switchTemplate, // 未使用
+    // addProdRow, // 未使用
+    // updateTotalRowWrapper, // 未使用
+    // calculateTotalAmountWrapper, // 未使用
+    // updateDeleteButtonVisibility, // 未使用
+    // renderRowIndices, // 未使用
+    // updateRowSelectionHighlight, // 未使用
     saveOrder,
     normalizeDateTextToISO,
     normalizeTimeTextToHHMM,
@@ -60,9 +61,12 @@ export function createEventHandler(dependencies) {
 
   // 绑定合同编号相关事件
   function bindContractNoEvents(contractNoInput, isEdit, isManuallyModifiedRef) {
-    if (!contractNoInput) return;
+    if (!contractNoInput) {
+      return;
+    }
 
     let contractNoCheckTimer = null;
+    let escapeHtml; // 声明变量，解决 no-undef 问题
 
     // 工具函数将在需要时动态导入
 
@@ -81,7 +85,9 @@ export function createEventHandler(dependencies) {
         clearTimeout(contractNoCheckTimer);
       }
       const contractNo = this.value.trim();
-      if (!contractNo) return;
+      if (!contractNo) {
+        return;
+      }
 
       contractNoCheckTimer = setTimeout(async () => {
         const existingOrder = await checkContractNoExists(contractNo);
@@ -177,7 +183,7 @@ export function createEventHandler(dependencies) {
   function bindDatePickerEvents() {
     // 导入工具函数
     if (!normalizeDateTextToISO || !normalizeTimeTextToHHMM) {
-      console.warn('[事件处理] 日期/时间格式化函数未提供，跳过日期选择器事件绑定');
+      console.warn('[事件处理] 日期/时间格式化函数未提供，跳过日期选择器事件绑定'); // eslint-disable-line no-console
       return;
     }
 
@@ -200,7 +206,9 @@ export function createEventHandler(dependencies) {
         const v = dateInput.value || '';
         if (/^\d{8}$/.test(v)) {
           const iso = normalizeDateTextToISO(v);
-          if (iso) dateInput.value = iso;
+          if (iso) {
+            dateInput.value = iso;
+          }
         }
         scheduleSaveDraft();
       });
@@ -215,11 +223,11 @@ export function createEventHandler(dependencies) {
             const iso = normalizeDateTextToISO(v);
             if (iso && iso !== v) {
               this.value = iso;
-              console.log('[日期输入] 回车键格式化:', v, '->', iso);
+              // console.log('[日期输入] 回车键格式化:', v, '->', iso);
             } else if (iso === v) {
-              console.log('[日期输入] 日期已是正确格式:', iso);
+              // console.log('[日期输入] 日期已是正确格式:', iso);
             } else {
-              console.log('[日期输入] 无法格式化日期:', v);
+              // console.log('[日期输入] 无法格式化日期:', v);
             }
           }
           // 延迟触发blur，确保值已更新
@@ -249,7 +257,9 @@ export function createEventHandler(dependencies) {
         const v = shipmentDateInput.value || '';
         if (/^\d{8}$/.test(v)) {
           const iso = normalizeDateTextToISO(v);
-          if (iso) shipmentDateInput.value = iso;
+          if (iso) {
+            shipmentDateInput.value = iso;
+          }
         }
         scheduleSaveDraft();
       });
@@ -264,11 +274,11 @@ export function createEventHandler(dependencies) {
             const iso = normalizeDateTextToISO(v);
             if (iso && iso !== v) {
               this.value = iso;
-              console.log('[日期输入] 回车键格式化:', v, '->', iso);
+              // console.log('[日期输入] 回车键格式化:', v, '->', iso);
             } else if (iso === v) {
-              console.log('[日期输入] 日期已是正确格式:', iso);
+              // console.log('[日期输入] 日期已是正确格式:', iso);
             } else {
-              console.log('[日期输入] 无法格式化日期:', v);
+              // console.log('[日期输入] 无法格式化日期:', v);
             }
           }
           // 延迟触发blur，确保值已更新
@@ -286,7 +296,9 @@ export function createEventHandler(dependencies) {
         const v = this.value.trim();
         if (v) {
           const iso = normalizeDateTextToISO(v);
-          if (iso) pickupDateInput.value = iso;
+          if (iso) {
+            pickupDateInput.value = iso;
+          }
         }
         scheduleSaveDraft();
       });
@@ -296,7 +308,9 @@ export function createEventHandler(dependencies) {
         const v = pickupDateInput.value || '';
         if (/^\d{8}$/.test(v)) {
           const iso = normalizeDateTextToISO(v);
-          if (iso) pickupDateInput.value = iso;
+          if (iso) {
+            pickupDateInput.value = iso;
+          }
         }
         scheduleSaveDraft();
       });
@@ -309,7 +323,9 @@ export function createEventHandler(dependencies) {
         const v = this.value.trim();
         if (v) {
           const formatted = normalizeTimeTextToHHMM(v);
-          if (formatted) pickupTimeInput.value = formatted;
+          if (formatted) {
+            pickupTimeInput.value = formatted;
+          }
         }
         scheduleSaveDraft();
       });
@@ -319,7 +335,9 @@ export function createEventHandler(dependencies) {
         const v = pickupTimeInput.value || '';
         if (/^\d{4}$/.test(v)) {
           const formatted = normalizeTimeTextToHHMM(v);
-          if (formatted) pickupTimeInput.value = formatted;
+          if (formatted) {
+            pickupTimeInput.value = formatted;
+          }
         }
         scheduleSaveDraft();
       });
@@ -330,12 +348,12 @@ export function createEventHandler(dependencies) {
   function bindSaveButtonEvent() {
     const saveBtn = document.getElementById('btnSaveOrderNew');
     if (!saveBtn) {
-      console.warn('[事件处理] 保存按钮未找到，跳过保存按钮事件绑定');
+      console.warn('[事件处理] 保存按钮未找到，跳过保存按钮事件绑定'); // eslint-disable-line no-console
       return;
     }
 
     if (!saveOrder || !serializeOrderForm) {
-      console.warn('[事件处理] 保存订单函数或序列化表单函数未提供，跳过保存按钮事件绑定');
+      console.warn('[事件处理] 保存订单函数或序列化表单函数未提供，跳过保存按钮事件绑定'); // eslint-disable-line no-console
       return;
     }
 
@@ -349,10 +367,12 @@ export function createEventHandler(dependencies) {
 
       try {
         // 在收集数据前，立即同步 textarea 的值（确保获取到最新输入）
-        await new Promise(resolve => {
+        await new Promise((resolve) => {
           requestAnimationFrame(() => {
             // 强制同步 textarea 的值（唛头说明字段）
-            const marksNoteTextarea = document.querySelector('.marks-note-textarea[data-field="marksNote"]');
+            const marksNoteTextarea = document.querySelector(
+              '.marks-note-textarea[data-field="marksNote"]'
+            );
             if (marksNoteTextarea) {
               // 触发 input 事件以确保值同步
               marksNoteTextarea.dispatchEvent(new Event('input', { bubbles: true }));
@@ -361,7 +381,7 @@ export function createEventHandler(dependencies) {
           });
         });
 
-        const result = await saveOrder({
+        await saveOrder({
           isEdit,
           editId,
           serializeOrderForm,
@@ -374,7 +394,7 @@ export function createEventHandler(dependencies) {
         // SPA环境：使用hash路由跳转，无需页面刷新
         setTimeout(() => {
           // 跳转到订单列表（路由切换会自动刷新数据）
-          console.log('[Order Save] 保存成功，准备跳转到列表页');
+          // console.log('[Order Save] 保存成功，准备跳转到列表页');
           location.hash = '#/orders/list';
           // 如果refreshOrders函数可用，也调用一次确保数据刷新
           if (typeof window.refreshOrders === 'function') {
@@ -382,10 +402,10 @@ export function createEventHandler(dependencies) {
           }
         }, 150);
       } catch (error) {
-        console.error('[Order Save] 订单保存异常 (已捕获):', error);
+        console.error('[Order Save] 订单保存异常 (已捕获):', error); // eslint-disable-line no-console
         // 确保不会继续执行跳转
 
-        console.error('[Order Save] 订单保存失败:', error);
+        console.error('[Order Save] 订单保存失败:', error); // eslint-disable-line no-console
         // 优化错误提示
         let errorMsg = error.message || '保存失败：服务器响应异常';
 
@@ -434,15 +454,34 @@ export function createEventHandler(dependencies) {
 
         // 如果错误消息包含换行符，说明有多个错误，需要特殊处理显示
         if (errorMsg.includes('\n')) {
-          // 多个错误时，使用 alert 显示完整错误列表
+          // 多个错误时，使用自定义模态框显示完整错误列表
           window.NotificationSystem?.toast('保存失败，请查看详细错误', 'error', 3000);
-          setTimeout(() => {
-            alert('保存失败，请检查以下问题：\n\n' + errorMsg);
+          setTimeout(async () => {
+            // alert('保存失败，请检查以下问题：\n\n' + errorMsg);
+            if (window.ModalDialog) {
+              await window.ModalDialog.custom(`
+                <div style="padding: 20px;">
+                  <div style="color: #ef4444; font-weight: 600; margin-bottom: 12px; font-size: 16px;">保存失败，请检查以下问题：</div>
+                  <pre style="background: #f3f4f6; padding: 12px; border-radius: 6px; overflow-x: auto; white-space: pre-wrap; font-family: monospace; font-size: 13px; color: #374151;">${errorMsg}</pre>
+                </div>
+              `, {
+                title: '保存失败',
+                size: 'small',
+                footer: '<button class="btn btn-primary" data-action="confirm" style="width: 100%;">确定</button>'
+              });
+            } else {
+              // 降级处理
+              // eslint-disable-next-line no-alert
+              alert('保存失败，请检查以下问题：\n\n' + errorMsg);
+            }
           }, 100);
         } else {
           // 单个错误时，根据错误类型选择不同的提示类型
           // 验证错误使用 warning，其他错误使用 error
-          const toastType = (errorMsg.includes('请') || errorMsg.includes('必须') || errorMsg.includes('不能')) ? 'warning' : 'error';
+          const toastType =
+            errorMsg.includes('请') || errorMsg.includes('必须') || errorMsg.includes('不能')
+              ? 'warning'
+              : 'error';
           window.NotificationSystem?.toast(errorMsg, toastType, 3000);
         }
       }
@@ -452,6 +491,7 @@ export function createEventHandler(dependencies) {
   // 绑定备注一键插入功能
   function bindRemarkInsertEvent() {
     document.addEventListener('click', function (e) {
+      // 生产备注快速填入按钮
       if (e.target.classList.contains('btn-remark')) {
         const remarkText = e.target.getAttribute('data-remark');
         const prodNoteTextarea = document.querySelector('textarea[data-field="prodNote"]');
@@ -465,10 +505,31 @@ export function createEventHandler(dependencies) {
             prodNoteTextarea.value = remarkText;
           }
           // 触发草稿保存
-          try { scheduleSaveDraft(); } catch (_) { }
+          try {
+            scheduleSaveDraft();
+          } catch (_) { /* 忽略草稿保存错误 */ }
           // 聚焦到文本框末尾
           prodNoteTextarea.focus();
-          prodNoteTextarea.setSelectionRange(prodNoteTextarea.value.length, prodNoteTextarea.value.length);
+          prodNoteTextarea.setSelectionRange(
+            prodNoteTextarea.value.length,
+            prodNoteTextarea.value.length
+          );
+        }
+      }
+
+      // 拍照备注快速填入按钮
+      if (e.target.classList.contains('btn-quick-photo-remark')) {
+        const remarkText = e.target.getAttribute('data-remark');
+        const photoRemarkInput = document.querySelector('input[data-field="photoRemark"]');
+        if (photoRemarkInput && remarkText) {
+          // 直接替换拍照备注输入框的内容
+          photoRemarkInput.value = remarkText;
+          // 触发草稿保存
+          try {
+            scheduleSaveDraft();
+          } catch (_) { /* 忽略草稿保存错误 */ }
+          // 聚焦到输入框
+          photoRemarkInput.focus();
         }
       }
     });
@@ -478,14 +539,14 @@ export function createEventHandler(dependencies) {
   function bindCustomerSelectEvent(customers, isManuallyModifiedRef, loadNextContractNoWrapper) {
     const sel = document.getElementById('ordCustomerSelect');
     if (!sel) {
-      console.warn('[事件处理] 客户选择框未找到，跳过客户选择事件绑定');
+      console.warn('[事件处理] 客户选择框未找到，跳过客户选择事件绑定'); // eslint-disable-line no-console
       return;
     }
 
     // 监听客户选择框变化，自动填充客户信息
     // 注意：目的港（shipTo）不自动填充，由用户手动填写
     sel.addEventListener('change', function () {
-      const selectedCustomer = customers.find(c => String(c.id) === this.value);
+      const selectedCustomer = customers.find((c) => String(c.id) === this.value);
 
       // 安全地设置元素值，只设置存在的元素
       // 注意：shipTo（目的港）不自动填充，保持用户手动输入的值
@@ -497,11 +558,18 @@ export function createEventHandler(dependencies) {
       if (selectedCustomer) {
         // 不自动填充目的港（shipTo），由用户手动填写
         // if (shipToEl) shipToEl.value = selectedCustomer.address || '';
-        if (contactPersonEl) contactPersonEl.value = selectedCustomer.contactPerson || '';
-        if (contactTelEl) contactTelEl.value = selectedCustomer.contactTel || '';
-        if (contactFaxEl) contactFaxEl.value = selectedCustomer.contactFax || '';
-        if (contactEmailEl) contactEmailEl.value = selectedCustomer.contactEmail || '';
-
+        if (contactPersonEl) {
+          contactPersonEl.value = selectedCustomer.contactPerson || '';
+        }
+        if (contactTelEl) {
+          contactTelEl.value = selectedCustomer.contactTel || '';
+        }
+        if (contactFaxEl) {
+          contactFaxEl.value = selectedCustomer.contactFax || '';
+        }
+        if (contactEmailEl) {
+          contactEmailEl.value = selectedCustomer.contactEmail || '';
+        }
 
         // 当客户选择除DAINEN TRADING CO.,LTD外的其他客户时，自动填写拍照备注
         const photoRemarkEl = document.querySelector('[data-field="photoRemark"]');
@@ -517,10 +585,18 @@ export function createEventHandler(dependencies) {
       } else {
         // 清空客户信息（但不清空目的港，保持用户输入）
         // if (shipToEl) shipToEl.value = '';
-        if (contactPersonEl) contactPersonEl.value = '';
-        if (contactTelEl) contactTelEl.value = '';
-        if (contactFaxEl) contactFaxEl.value = '';
-        if (contactEmailEl) contactEmailEl.value = '';
+        if (contactPersonEl) {
+          contactPersonEl.value = '';
+        }
+        if (contactTelEl) {
+          contactTelEl.value = '';
+        }
+        if (contactFaxEl) {
+          contactFaxEl.value = '';
+        }
+        if (contactEmailEl) {
+          contactEmailEl.value = '';
+        }
       }
 
       // 在客户选择变化时，如果合同编号未手动修改，则重新获取
@@ -536,13 +612,13 @@ export function createEventHandler(dependencies) {
   function bindAddOrderNoButtonEvent(contractNoInput, isManuallyModifiedRef) {
     const btnAddOrderNo = document.getElementById('btnAddOrderNo');
     if (!btnAddOrderNo) {
-      console.warn('[事件处理] NO.按钮未找到，跳过NO.按钮事件绑定');
+      console.warn('[事件处理] NO.按钮未找到，跳过NO.按钮事件绑定'); // eslint-disable-line no-console
       return;
     }
 
     // 防止重复绑定事件：检查是否已经绑定过
     if (btnAddOrderNo.hasAttribute('data-no-btn-bound')) {
-      console.log('[NO.按钮] 事件已绑定，跳过重复绑定');
+      // console.log('[NO.按钮] 事件已绑定，跳过重复绑定');
       return;
     }
     // 标记为已绑定
@@ -552,7 +628,7 @@ export function createEventHandler(dependencies) {
       // 防止重复点击：检查是否已经有弹窗打开
       const existingModal = document.querySelector('.modal-dialog-overlay');
       if (existingModal) {
-        console.log('[NO.按钮] 已有弹窗打开，忽略点击');
+        // console.log('[NO.按钮] 已有弹窗打开，忽略点击');
         e.preventDefault();
         e.stopPropagation();
         return;
@@ -560,7 +636,7 @@ export function createEventHandler(dependencies) {
 
       // 防止按钮在弹窗打开期间被重复点击
       if (btnAddOrderNo.disabled) {
-        console.log('[NO.按钮] 按钮已禁用，忽略点击');
+        // console.log('[NO.按钮] 按钮已禁用，忽略点击');
         e.preventDefault();
         e.stopPropagation();
         return;
@@ -603,16 +679,16 @@ export function createEventHandler(dependencies) {
 
         // 确认按钮处理函数
         const handleConfirm = () => {
-          console.log('[NO.按钮] 确认按钮被点击');
+          // console.log('[NO.按钮] 确认按钮被点击');
           // 获取输入值
           const input = document.getElementById(inputId);
           if (!input) {
-            console.warn('[NO.按钮] 输入框未找到');
+            console.warn('[NO.按钮] 输入框未找到'); // eslint-disable-line no-console
             return false;
           }
 
           const orderNo = input.value.trim();
-          console.log('[NO.按钮] 输入的订单号:', orderNo);
+          // console.log('[NO.按钮] 输入的订单号:', orderNo);
 
           // 验证：如果required为true且值为空，不关闭弹窗
           if (!orderNo) {
@@ -630,7 +706,10 @@ export function createEventHandler(dependencies) {
           if (existingOrderNo) {
             // 如果已有订单号，替换它
             // 支持两种格式：(NO.数字) 或 (数字)
-            const newContractNo = currentContractNo.replace(/\(NO\.\s*\d+\s*\)|\(\d+\)/i, `(NO.${trimmedOrderNo})`);
+            const newContractNo = currentContractNo.replace(
+              /\(NO\.\s*\d+\s*\)|\(\d+\)/i,
+              `(NO.${trimmedOrderNo})`
+            );
             contractNoInput.value = newContractNo;
           } else {
             // 如果没有订单号，追加到合同编号后面
@@ -661,21 +740,23 @@ export function createEventHandler(dependencies) {
           // 标记为手动修改
           isManuallyModifiedRef.current = true;
 
-          console.log('[NO.按钮] 订单号已更新，返回true关闭弹窗');
+          // console.log('[NO.按钮] 订单号已更新，返回true关闭弹窗');
           // 返回true关闭弹窗
           return true;
         };
 
         // 取消按钮处理函数
-        const handleCancel = () => {
-          console.log('[NO.按钮] 取消按钮被点击，关闭弹窗');
-          // 取消时不做任何操作，直接关闭
-          return null;
-        };
+        // const handleCancel = () => {
+        //   console.log('[NO.按钮] 取消按钮被点击，关闭弹窗');
+        //   // 取消时不做任何操作，直接关闭
+        //   return null;
+        // };
 
         // 使用统一弹窗模块的custom方法
         // 设置 preventDuplicate: true 防止重复弹窗
-        const result = await window.ModalDialog.custom(bodyHTML, {
+        // 使用统一弹窗模块的custom方法
+        // 设置 preventDuplicate: true 防止重复弹窗
+        await window.ModalDialog.custom(bodyHTML, {
           title: '添加订单号',
           footer: footerHTML,
           size: 'small',
@@ -685,38 +766,38 @@ export function createEventHandler(dependencies) {
           onConfirm: handleConfirm,
           onClose: () => {
             // onClose回调：当用户点击取消按钮、关闭按钮或点击背景关闭时调用
-            console.log('[NO.按钮] onClose回调被调用');
+            // console.log('[NO.按钮] onClose回调被调用');
             // 返回null表示关闭弹窗，不需要其他操作
             return null;
           }
         });
 
-        console.log('[NO.按钮] 弹窗已关闭，返回结果:', result);
+        // console.log('[NO.按钮] 弹窗已关闭，返回结果:', result);
 
         // 弹窗显示后，聚焦到输入框并绑定回车键
         setTimeout(() => {
           // 通过查找包含特定 inputId 的弹窗来确认弹窗是否仍然存在
           const input = document.getElementById(inputId);
           if (!input) {
-            console.log('[NO.按钮] 输入框不存在，弹窗可能已关闭，跳过后续处理');
+            // console.log('[NO.按钮] 输入框不存在，弹窗可能已关闭，跳过后续处理');
             btnAddOrderNo.disabled = false;
             return;
           }
 
           const modal = input.closest('.modal-dialog-overlay');
           if (!modal) {
-            console.log('[NO.按钮] 弹窗已关闭，跳过后续处理');
+            // console.log('[NO.按钮] 弹窗已关闭，跳过后续处理');
             btnAddOrderNo.disabled = false;
             return;
           }
 
           // 检查弹窗是否正在关闭（通过检查是否有 show 类）
           if (!modal.classList.contains('show')) {
-            console.log('[NO.按钮] 弹窗正在关闭，跳过后续处理');
+            // console.log('[NO.按钮] 弹窗正在关闭，跳过后续处理');
             btnAddOrderNo.disabled = false;
             return;
           }
-          console.log('[NO.按钮] 弹窗已显示，准备聚焦输入框');
+          // console.log('[NO.按钮] 弹窗已显示，准备聚焦输入框');
 
           // 聚焦到输入框
           if (input) {
@@ -739,7 +820,10 @@ export function createEventHandler(dependencies) {
             const observer = new MutationObserver((mutations) => {
               mutations.forEach((mutation) => {
                 mutation.removedNodes.forEach((node) => {
-                  if (node === modal || (node.nodeType === 1 && node.contains && node.contains(modal))) {
+                  if (
+                    node === modal ||
+                    (node.nodeType === 1 && node.contains && node.contains(modal))
+                  ) {
                     input.removeEventListener('keydown', handleEnter);
                     observer.disconnect();
                   }
@@ -753,7 +837,10 @@ export function createEventHandler(dependencies) {
           const closeObserver = new MutationObserver((mutations) => {
             mutations.forEach((mutation) => {
               mutation.removedNodes.forEach((node) => {
-                if (node === modal || (node.nodeType === 1 && node.contains && node.contains(modal))) {
+                if (
+                  node === modal ||
+                  (node.nodeType === 1 && node.contains && node.contains(modal))
+                ) {
                   btnAddOrderNo.disabled = false;
                   closeObserver.disconnect();
                 }
@@ -763,7 +850,7 @@ export function createEventHandler(dependencies) {
           closeObserver.observe(document.body, { childList: true, subtree: true });
         }, 150);
       } catch (error) {
-        console.error('[NO.按钮] 弹窗处理异常:', error);
+        console.error('[NO.按钮] 弹窗处理异常:', error); // eslint-disable-line no-console
         btnAddOrderNo.disabled = false;
       } finally {
         // 如果弹窗创建失败，确保按钮恢复可用
@@ -786,7 +873,9 @@ export function createEventHandler(dependencies) {
 
     // 通用日期选择器函数 - 与日期筛选输入框一致的实现
     function setupDatePicker(inputElement, buttonElement) {
-      if (!inputElement || !buttonElement) return;
+      if (!inputElement || !buttonElement) {
+        return;
+      }
 
       // 防止重复绑定
       if (buttonElement.hasAttribute('data-date-btn-bound')) {
@@ -818,7 +907,9 @@ export function createEventHandler(dependencies) {
             inputElement.value = originalValue;
           } else if (originalValue) {
             const normalized = normalizeDateTextToISO(originalValue);
-            if (normalized) inputElement.value = normalized;
+            if (normalized) {
+              inputElement.value = normalized;
+            }
           }
         }
       };
@@ -833,7 +924,7 @@ export function createEventHandler(dependencies) {
         e.preventDefault();
         e.stopPropagation();
 
-        console.log('日期选择器按钮被点击');
+        // console.log('日期选择器按钮被点击');
 
         // 再次确保已准备好（防止键盘触发等情况）
         const originalStyle = inputElement.style.cssText;
@@ -841,7 +932,7 @@ export function createEventHandler(dependencies) {
 
         // 监听日期选择
         const handleDateChange = function () {
-          console.log('日期已选择:', inputElement.value);
+          // console.log('日期已选择:', inputElement.value);
           inputElement.type = 'text';
           inputElement.style.cssText = originalStyle;
           inputElement.removeEventListener('change', handleDateChange);
@@ -851,7 +942,7 @@ export function createEventHandler(dependencies) {
 
         // 监听失焦事件
         const handleDateBlur = function () {
-          console.log('日期选择器失焦');
+          // console.log('日期选择器失焦');
           setTimeout(() => {
             inputElement.type = 'text';
             inputElement.style.cssText = originalStyle;
@@ -868,7 +959,7 @@ export function createEventHandler(dependencies) {
           try {
             inputElement.showPicker();
           } catch (err) {
-            console.warn('[DatePicker] showPicker failed, fallback to focus:', err);
+            console.warn('[DatePicker] showPicker failed, fallback to focus:', err); // eslint-disable-line no-console
             inputElement.focus();
           }
         } else {
@@ -918,7 +1009,9 @@ export function createEventHandler(dependencies) {
               pickupTimeInput.value = originalValue;
             } else if (originalValue) {
               const normalized = normalizeTimeTextToHHMM(originalValue);
-              if (normalized) pickupTimeInput.value = normalized;
+              if (normalized) {
+                pickupTimeInput.value = normalized;
+              }
             }
           }
         };
@@ -929,7 +1022,7 @@ export function createEventHandler(dependencies) {
           e.preventDefault();
           e.stopPropagation();
 
-          console.log('时间选择器按钮被点击');
+          // console.log('时间选择器按钮被点击');
 
           const originalStyle = pickupTimeInput.style.cssText;
           const originalType = 'text'; // 或者是 pickupTimeInput.getAttribute('type') || 'text'
@@ -938,7 +1031,7 @@ export function createEventHandler(dependencies) {
 
           // 监听时间选择
           const handleTimeChange = function () {
-            console.log('时间已选择:', pickupTimeInput.value);
+            // console.log('时间已选择:', pickupTimeInput.value);
             pickupTimeInput.type = originalType;
             pickupTimeInput.style.cssText = originalStyle;
             pickupTimeInput.removeEventListener('change', handleTimeChange);
@@ -948,7 +1041,7 @@ export function createEventHandler(dependencies) {
 
           // 监听失焦事件
           const handleTimeBlur = function () {
-            console.log('时间选择器失焦');
+            // console.log('时间选择器失焦');
             setTimeout(() => {
               pickupTimeInput.type = originalType;
               pickupTimeInput.style.cssText = originalStyle;
@@ -965,7 +1058,7 @@ export function createEventHandler(dependencies) {
             try {
               pickupTimeInput.showPicker();
             } catch (err) {
-              console.warn('[TimePicker] showPicker failed, fallback to focus:', err);
+              console.warn('[TimePicker] showPicker failed, fallback to focus:', err); // eslint-disable-line no-console
               pickupTimeInput.focus();
             }
           } else {
@@ -988,4 +1081,3 @@ export function createEventHandler(dependencies) {
     // 其他事件绑定函数将在后续分段中添加
   };
 }
-

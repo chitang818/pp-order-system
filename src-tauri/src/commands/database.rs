@@ -71,6 +71,21 @@ pub async fn db_init_connection(app_handle: AppHandle, holder: State<'_, DbPoolH
         return Ok("".to_string());
     }
 
+    // 清除数据库文件的只读属性（防止 WAL 模式初始化失败）
+    #[cfg(target_os = "windows")]
+    {
+        if let Ok(metadata) = std::fs::metadata(&db_path) {
+            let mut perms = metadata.permissions();
+            if perms.readonly() {
+                append_app_log(&app_handle, "WARN", "检测到数据库文件为只读，正在清除只读属性...");
+                perms.set_readonly(false);
+                if let Err(e) = std::fs::set_permissions(&db_path, perms) {
+                    append_app_log(&app_handle, "ERROR", &format!("清除只读属性失败: {}", e));
+                }
+            }
+        }
+    }
+
     // 执行初始化
     match init_pool(&db_path.to_string_lossy()) {
         Ok(pool) => {
@@ -243,6 +258,18 @@ pub fn setup_database_import(app_handle: AppHandle, holder: State<'_, DbPoolHold
     }
 
     fs::copy(&source, &target_path).map_err(|e| format!("Failed to copy database: {}", e))?;
+
+    // 清除目标文件的只读属性（Windows 上 fs::copy 会复制源文件属性）
+    #[cfg(target_os = "windows")]
+    {
+        if let Ok(metadata) = fs::metadata(&target_path) {
+            let mut perms = metadata.permissions();
+            if perms.readonly() {
+                perms.set_readonly(false);
+                let _ = fs::set_permissions(&target_path, perms);
+            }
+        }
+    }
 
     let mut config = DatabaseConfig::load(&app_handle)?;
     let db_path_str = target_path.to_string_lossy().to_string();
