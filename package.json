@@ -1,6 +1,6 @@
 {
   "name": "pp-foreign-trade-order-system",
-  "version": "2.2.1",
+  "version": "2.2.2",
   "description": "PP外贸订单管理系统 - 支持订单管理、发票、装箱单、销售确认书生成",
   "main": "src-tauri/src/main.rs",
   "scripts": {

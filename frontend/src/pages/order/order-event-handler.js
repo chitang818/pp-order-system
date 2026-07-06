@@ -5,6 +5,8 @@
  * 使用工厂函数模式，接收依赖并返回绑定函数
  */
 
+import { ApiService } from '../../api/api.js';
+
 /**
  * 创建事件处理器
  * @param {Object} dependencies - 依赖对象
@@ -467,7 +469,8 @@ export function createEventHandler(dependencies) {
               `, {
                 title: '保存失败',
                 size: 'small',
-                footer: '<button class="btn btn-primary" data-action="confirm" style="width: 100%;">确定</button>'
+                footer: '<button class="btn btn-primary" data-action="confirm" style="width: 100%;">确定</button>',
+                onConfirm: () => true // 修复无法关闭弹窗的问题
               });
             } else {
               // 降级处理
@@ -1027,6 +1030,83 @@ export function createEventHandler(dependencies) {
     }
   }
 
+  // 绑定发票号历史按钮事件
+  function bindInvoiceHistoryEvent() {
+    const btnInvoiceHistory = document.getElementById('btnInvoiceHistory');
+    const invoiceNoInput = document.getElementById('invoiceNo');
+    const invoiceHistoryDropdown = document.getElementById('invoiceHistoryDropdown');
+
+    if (!btnInvoiceHistory || !invoiceNoInput || !invoiceHistoryDropdown) {
+      return;
+    }
+
+    btnInvoiceHistory.addEventListener('click', async function (e) {
+      e.stopPropagation(); // 阻止事件冒泡到 document
+
+      // 切换显示/隐藏状态
+      if (invoiceHistoryDropdown.style.display === 'block') {
+        invoiceHistoryDropdown.style.display = 'none';
+        return;
+      }
+
+      // 显示加载中状态
+      invoiceHistoryDropdown.innerHTML = '<div style="padding: 8px 12px; color: #666; font-size: 13px; text-align: center;">正在读取...</div>';
+      invoiceHistoryDropdown.style.display = 'block';
+
+      try {
+        // 从后端拉取订单列表（默认按 ID 降序或最新创建排在前面，若后端没排序这里依赖后端返回顺序）
+        const orders = await ApiService.orders.list();
+        
+        let history = [];
+        if (Array.isArray(orders)) {
+          // 提取最新的5个非空且不重复的发票号
+          for (let i = 0; i < orders.length; i++) {
+            const invoiceNo = orders[i].invoiceNo;
+            if (invoiceNo && invoiceNo.trim() !== '') {
+              const val = invoiceNo.trim();
+              if (!history.includes(val)) {
+                history.push(val);
+              }
+              if (history.length >= 5) break;
+            }
+          }
+        }
+
+        if (history.length === 0) {
+          invoiceHistoryDropdown.innerHTML = '<div style="padding: 8px 12px; color: #999; font-size: 13px; text-align: center;">暂无历史记录</div>';
+        } else {
+          invoiceHistoryDropdown.innerHTML = '';
+          history.forEach(item => {
+            const div = document.createElement('div');
+            div.textContent = item;
+            div.style.cssText = 'padding: 8px 12px; cursor: pointer; font-size: 13px; color: #333; border-bottom: 1px solid #f0f0f0;';
+            div.addEventListener('mouseenter', () => div.style.backgroundColor = '#f5f5f5');
+            div.addEventListener('mouseleave', () => div.style.backgroundColor = 'transparent');
+            div.addEventListener('click', () => {
+              invoiceNoInput.value = item;
+              invoiceHistoryDropdown.style.display = 'none';
+              // 触发 input 事件以确保任何监听器（如草稿保存）能捕捉到变化
+              invoiceNoInput.dispatchEvent(new Event('input', { bubbles: true }));
+            });
+            invoiceHistoryDropdown.appendChild(div);
+          });
+        }
+      } catch (err) {
+        console.error('获取发票号历史失败', err);
+        invoiceHistoryDropdown.innerHTML = '<div style="padding: 8px 12px; color: #ef4444; font-size: 13px; text-align: center;">读取失败</div>';
+      }
+    });
+
+    // 点击页面其他区域隐藏下拉菜单
+    document.addEventListener('click', function (e) {
+      if (invoiceHistoryDropdown.style.display === 'block' && 
+          !btnInvoiceHistory.contains(e.target) && 
+          !invoiceHistoryDropdown.contains(e.target)) {
+        invoiceHistoryDropdown.style.display = 'none';
+      }
+    });
+  }
+
   // 返回导出的函数集合
   return {
     bindContractNoEvents,
@@ -1035,7 +1115,8 @@ export function createEventHandler(dependencies) {
     bindRemarkInsertEvent,
     bindCustomerSelectEvent,
     bindAddOrderNoButtonEvent,
-    bindDatePickerButtonEvents
+    bindDatePickerButtonEvents,
+    bindInvoiceHistoryEvent
     // 其他事件绑定函数将在后续分段中添加
   };
 }

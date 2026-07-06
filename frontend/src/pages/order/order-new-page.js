@@ -1245,6 +1245,11 @@ export async function initOrderNewPage() {
   // 绑定日期选择器按钮事件（使用事件处理模块）
   eventHandler.bindDatePickerButtonEvents();
 
+  // 绑定发票历史按钮事件
+  if (typeof eventHandler.bindInvoiceHistoryEvent === 'function') {
+    eventHandler.bindInvoiceHistoryEvent();
+  }
+
   // 主表单字段变更触发草稿保存（防止重复绑定）
   ['contractNo', 'blNo', 'invoiceNo', 'invoiceDate', 'shipmentDate', 'shipFrom', 'shipTo', 'shippedPerSs', 'forwarder', 'ordAmount', 'orderStatus'].forEach(id => {
     const el = document.getElementById(id);

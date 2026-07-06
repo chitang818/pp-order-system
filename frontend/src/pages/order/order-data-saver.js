@@ -577,11 +577,26 @@ export async function saveOrder(options = {}) {
         ? ApiService.orders.create(customerInfo)
         : ApiService.orders.update(editId, customerInfo),
 
-      // 异步清理草稿（不阻塞主流程）
+      // 异步清理草稿及保存发票号历史（不阻塞主流程）
       new Promise(resolve => {
         setTimeout(() => {
           try {
             if (!isEdit) StorageService.remove(KEY_ORDER_DRAFT);
+            
+            // 保存发票号历史
+            const invoiceNoToSave = customerInfo.invoiceNo;
+            if (invoiceNoToSave && invoiceNoToSave.trim()) {
+              const val = invoiceNoToSave.trim();
+              let history = StorageService.get('erp.invoice_history') || [];
+              if (!Array.isArray(history)) history = [];
+              // 移除重复
+              history = history.filter(item => item !== val);
+              // 添加到开头
+              history.unshift(val);
+              // 保留最多3条
+              if (history.length > 3) history = history.slice(0, 3);
+              StorageService.set('erp.invoice_history', history);
+            }
           } catch (e) { }
           resolve();
         }, 0);
