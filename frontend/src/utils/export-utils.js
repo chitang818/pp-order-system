@@ -3,8 +3,6 @@
  * 负责各种数据导出功能
  */
 
-import { FileExportService } from '../services/file-export-service.js';
-
 /**
  * 导出客户数据为CSV
  * @param {Array} customers - 客户数组
@@ -32,7 +30,8 @@ export async function exportCustomersToCSV(customers = [], escapeHtml = (str) =>
 
     const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
     const fileName = `客户数据_${new Date().toISOString().slice(0, 10)}.csv`;
-    
+
+    const { FileExportService } = await import('../services/file-export-service.js');
     // 使用统一文件导出服务（支持 Tauri 文件对话框）
     await FileExportService.exportCSV(blob, fileName, {
       successMessage: `成功导出 ${customers.length} 条客户记录`

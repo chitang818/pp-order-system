@@ -4,8 +4,8 @@ REM ========================================
 REM PP订单管理系统 - Tauri 桌面应用开发模式
 REM ========================================
 REM 开发模式: 桌面应用开发
-REM 启动速度: 15-30秒(首次启动)
-REM 端口: 3000(后端) + Tauri窗口
+REM 启动速度: 15-30秒，首次启动
+REM 端口: 3000 后端 + Tauri窗口
 REM 
 REM 适合场景:
 REM   - 测试系统原生功能
@@ -15,7 +15,7 @@ REM   - 完整功能验证
 REM   - 发布前最终测试
 REM 
 REM 完整功能:
-REM   - 文件保存对话框(原生)
+REM   - 文件保存对话框，原生
 REM   - 系统托盘图标
 REM   - 开机自启动
 REM   - 单实例运行
@@ -25,6 +25,9 @@ REM
 REM 对应命令: npm run tauri:dev
 REM ========================================
 setlocal enabledelayedexpansion
+
+REM 缓解 Windows 杀软在并发编译时拦截 build-script（getrandom 等报「拒绝访问 os error 5」）
+set CARGO_BUILD_JOBS=1
 
 REM 切换到项目根目录
 cd /d "%~dp0\..\.."
@@ -135,6 +138,10 @@ echo ========================================
 echo.
 echo [启动中] 正在启动后端和 Tauri...
 echo.
+echo   提示: 请勿同时运行多个本脚本或其它 cargo/tauri dev。
+echo   若长时间停在「Blocking waiting for file lock」: 任务管理器结束多余的 cargo.exe 后重试。
+echo   已配置 rust-analyzer 使用独立 target 目录，减少与 Tauri 抢锁（见 .vscode\settings.json）。
+echo.
 
 REM 设置数据库路径环境变量（使用 AppData 目录，与 Tauri 生产环境一致）
 REM 获取 AppData 目录
@@ -208,7 +215,12 @@ if errorlevel 1 (
     echo.
     echo 常见问题: Rust工具链过旧、Tauri依赖缺失、端口3000被占用、编译缓存损坏
     echo.
-    echo 解决方案: rustup update / scripts\utils\clear-cache.bat / netstat -ano
+    echo 若报错含「拒绝访问」「os error 5」「build-script-build」:
+    echo   多为杀毒软件拦截 target\debug\build 下刚生成的程序。
+    echo   请将本仓库的 src-tauri\target 加入 Windows 安全中心排除项，
+    echo   或对 rustup 工具链目录添加排除，然后重新运行本脚本。
+    echo.
+    echo 其他方案: rustup update / scripts\utils\clear-cache.bat / netstat -ano
     echo.
     echo 详细文档: https://tauri.app
     echo.

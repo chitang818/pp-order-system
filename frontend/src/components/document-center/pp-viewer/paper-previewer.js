@@ -1354,7 +1354,7 @@ export class PPPreviewer {
           <div class="error-icon" style="font-size: 48px; margin-bottom: 16px;">⚠️</div>
           <h3 style="margin: 0 0 8px 0; font-size: 18px; color: #374151;">渲染出错</h3>
           <p style="margin: 0; font-size: 14px; color: #9ca3af; max-width: 300px;">${this.escapeHtml(errorMessage)}</p>
-          <button class="retry-btn" style="
+          <button type="button" class="retry-btn" style="
             margin-top: 20px;
             padding: 8px 20px;
             background: #3b82f6;
@@ -1363,7 +1363,7 @@ export class PPPreviewer {
             border-radius: 6px;
             cursor: pointer;
             font-size: 14px;
-          " onclick="this.closest('.pp-container')?.dispatchEvent(new CustomEvent('pp-retry'))">
+          ">
             重试
           </button>
         </div>
@@ -1371,6 +1371,13 @@ export class PPPreviewer {
       
       this.pagesContainer.innerHTML = '';
       this.pagesContainer.appendChild(page);
+
+      const retryBtn = page.querySelector('.retry-btn');
+      if (retryBtn) {
+        retryBtn.addEventListener('click', () => {
+          retryBtn.closest('.pp-container')?.dispatchEvent(new CustomEvent('pp-retry'));
+        });
+      }
     }
 
     console.error('[PPPreviewer] 渲染错误:', errorMessage);

@@ -70,7 +70,8 @@ const lazyLoadUtils = async () => {
     // 延迟预加载其他视图（不阻塞启动）
     const secondaryViews = [
       './views/orders/list.html',
-      './views/customers.html'
+      './views/partners/customers.html',
+      './views/partners/forwarders.html'
     ];
 
     // 立即预加载关键视图（首页）
@@ -145,7 +146,14 @@ window.addEventListener('error', (event) => {
 // 核心启动函数：协调后端检查、认证和UI加载
 const initApp = async () => {
   try {
+    const tStartup = typeof performance !== 'undefined' ? performance.now() : 0;
+    const logStartup = (label) => {
+      if (typeof performance === 'undefined') return;
+      console.log(`[Startup] ${label} +${(performance.now() - tStartup).toFixed(0)}ms`);
+    };
+
     console.log('[App] 开始启动流程...');
+    logStartup('开始');
 
     // 0. 显示环境提示（开发模式）
     showEnvBanner();
@@ -156,48 +164,67 @@ const initApp = async () => {
       console.log('[App] 等待 DOM 就绪...');
       await new Promise(resolve => document.addEventListener('DOMContentLoaded', resolve));
     }
+    logStartup('DOM 就绪');
 
-    // --- 数据库初始化逻辑（全局前置，优先于其他操作） ---
-    // 无论在哪个页面，只要检测到是 Tauri 环境，就必须确保数据库连接已建立
+    // --- Tauri：先快速处理首次运行，再建立 DB；Node 辅助服务后台启动，不阻塞首屏 ---
     const { isRealTauriEnvironment, getTauriInvoke } = await import('../utils/tauri-env.js');
+    let tauriInvoke = null;
     if (isRealTauriEnvironment()) {
-      const invoke = getTauriInvoke();
-      if (invoke) {
-        console.log('[App] 正在建立数据库连接...');
+      tauriInvoke = getTauriInvoke();
+
+      if (tauriInvoke) {
         try {
-          await invoke('db_init_connection');
+          const isFirstRun = await tauriInvoke('check_first_run');
+          logStartup('check_first_run 完成');
+          if (isFirstRun === true && !window.location.pathname.includes('setup-wizard.html')) {
+            console.log('[App] 首次运行，跳转安装向导（不等待 Node 后端）');
+            window.location.replace('setup-wizard.html');
+            return;
+          }
+        } catch (e) {
+          console.warn('[App] check_first_run 失败，继续主流程:', e);
+        }
+
+        try {
+          console.log('[App] 正在建立数据库连接...');
+          await tauriInvoke('db_init_connection');
           console.log('[App] 数据库连接已就绪');
         } catch (dbErr) {
           console.error('[App] 数据库连接失败:', dbErr);
-          // 数据库连接失败不应阻塞应用加载，登录页会显示具体的连接状态和路径
         }
+        logStartup('db_init_connection 完成');
+
+        // 数据库就绪后并行预取首页统计数据（与 initAuth 并行，不增加等待）
+        tauriInvoke('dashboard_stats').then(stats => {
+          window.__prefetchedStats = stats;
+          logStartup('首页 stats 预取完成');
+        }).catch(() => {});
+
+        // 后台预热 Node：不阻塞 initAuth / loadSPA
+        void backendManager.ensureBackend({ silent: true }).then(() => {
+          logStartup('Node 后端 ensureBackend 完成');
+        }).catch((err) => {
+          console.warn('[App] Node 后端启动失败，将在使用时重试:', err?.message || err);
+        });
       }
     }
 
-    // 2. 初始化认证 (检查登录状态，可能触发跳转)
-    // 注意：initAuth 现在是手动调用，不会自动运行
+    // 2. 初始化认证（await 拿到结果，供后续 guard/Router 复用，消除双重 IPC）
     console.log('[App] 初始化认证系统...');
-    initAuth();
+    await initAuth();
+    logStartup('initAuth 完成');
 
     // 3. 加载主应用 SPA 逻辑 (必须在认证处理后)
     console.log('[App] 加载 SPA 模块...');
     await loadSPA();
+    logStartup('loadSPA 完成');
+
+    // 主窗口由 Rust setup 中 show，此处不再 invoke，避免重复 maximize/闪动
 
     // 4. 启动非关键模块懒加载 (不阻塞)
     lazyLoadUtils();
 
-    // 5. 后台静默启动导出服务（不阻塞 UI，用户无感知）
-    // 延迟启动，让 UI 先完全渲染
-    setTimeout(() => {
-      console.log('[App] 后台静默启动导出服务...');
-      backendManager.ensureBackend({ silent: true }).then(() => {
-        console.log('[App] 导出服务已在后台就绪');
-      }).catch(err => {
-        // 导出服务启动失败不影响主流程，只在用户真正使用导出功能时才提示
-        console.warn('[App] 导出服务后台启动失败，将在使用时重试:', err.message);
-      });
-    }, 2000); // 延迟 2 秒，确保 UI 已完全加载
-
+    logStartup('启动流程完成（含 SPA）');
     console.log('[App] 启动流程完成');
 
   } catch (err) {

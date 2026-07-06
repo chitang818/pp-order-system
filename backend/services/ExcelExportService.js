@@ -3,8 +3,13 @@
  * 负责将订单数据导出为Excel格式
  */
 
-const XLSX = require('xlsx');
 const OrderService = require('./OrderService');
+
+let _XLSX = null;
+function getXLSX() {
+  if (!_XLSX) _XLSX = require('xlsx');
+  return _XLSX;
+}
 
 class ExcelExportService {
   /**
@@ -22,6 +27,7 @@ class ExcelExportService {
       }
 
       // 2. 创建工作簿
+      const XLSX = getXLSX();
       const workbook = XLSX.utils.book_new();
 
       // 3. 创建订单信息工作表

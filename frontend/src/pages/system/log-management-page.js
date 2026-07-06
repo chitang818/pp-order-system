@@ -143,7 +143,7 @@ let logs = [];
         <td style="font-family: monospace; font-size: 12px;">${escapeHtml(log.ipAddress || '-')}</td>
         <td style="font-size: 12px;">${formatDateTime(log.createdAt)}</td>
         <td>
-                  <button class="btn secondary small" onclick="LogManagement.showLogDetail(${log.id})">详情</button>
+                  <button type="button" class="btn secondary small log-detail-btn" data-log-id="${log.id}">详情</button>
         </td>
               </tr>
       `).join('')}
@@ -153,6 +153,14 @@ let logs = [];
   `;
 
   container.innerHTML = tableHTML;
+  container.querySelectorAll('button.log-detail-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const id = parseInt(btn.getAttribute('data-log-id'), 10);
+      if (Number.isFinite(id)) {
+        showLogDetail(id);
+      }
+    });
+  });
   }
 
   // 获取模块颜色

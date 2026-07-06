@@ -4,6 +4,10 @@
  */
 import { isTauriAvailable } from '../../core/ipc-client.js';
 import { backendManager } from '../../utils/backend-manager.js';
+import {
+  isOldDocsExportPdfButtonHidden,
+  setOldDocsExportPdfButtonHidden
+} from '../../utils/ui-preferences.js';
 
 export class ExportSettingsView {
   constructor(apiService) {
@@ -32,6 +36,19 @@ export class ExportSettingsView {
   }
 
   bindButtons() {
+    const hidePdfCb = document.getElementById('hideOldDocsExportPdfCheckbox');
+    if (hidePdfCb) {
+      hidePdfCb.checked = isOldDocsExportPdfButtonHidden();
+      hidePdfCb.onchange = () => {
+        setOldDocsExportPdfButtonHidden(!!hidePdfCb.checked);
+        window.NotificationSystem?.toast(
+          hidePdfCb.checked ? '已隐藏旧版单据页的「导出 PDF」按钮' : '已恢复显示「导出 PDF」按钮',
+          'success',
+          2800
+        );
+      };
+    }
+
     const input = document.getElementById('pdfBrowserPathInput');
     const btnSelect = document.getElementById('btnSelectPdfBrowser');
     const btnSave = document.getElementById('btnSavePdfBrowser');

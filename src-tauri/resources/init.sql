@@ -80,7 +80,7 @@ CREATE TABLE IF NOT EXISTS order_items (
 
 CREATE TABLE IF NOT EXISTS products (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
-  model TEXT NOT NULL UNIQUE,
+  model TEXT NOT NULL,
   description TEXT,
   estimatedWeight REAL,
   labelWeight REAL,
@@ -95,7 +95,8 @@ CREATE TABLE IF NOT EXISTS products (
   label TEXT,
   marks TEXT,
   template TEXT,
-  productType INTEGER DEFAULT 1
+  productType INTEGER DEFAULT 1,
+  UNIQUE(model, productType)
 );
 
 CREATE TABLE IF NOT EXISTS users (
@@ -165,6 +166,7 @@ CREATE TABLE IF NOT EXISTS order_configs (
 CREATE INDEX IF NOT EXISTS idx_customers_name ON customers(name);
 CREATE INDEX IF NOT EXISTS idx_products_model ON products(model);
 CREATE INDEX IF NOT EXISTS idx_products_description ON products(description);
+CREATE INDEX IF NOT EXISTS idx_products_model_type ON products(model, productType);
 CREATE INDEX IF NOT EXISTS idx_orders_customer ON orders(customerId);
 CREATE INDEX IF NOT EXISTS idx_orders_created ON orders(createdAt);
 CREATE INDEX IF NOT EXISTS idx_orders_contract ON orders(contractNo);

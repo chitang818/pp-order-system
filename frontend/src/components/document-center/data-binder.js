@@ -627,7 +627,7 @@ export class DataBinder {
           const unitEng = (item && item.unit === '托盘') ? getPluralUnit(packValRaw, 'PALLET') : ((item && item.unit === '捆包') ? getPluralUnit(packValRaw, 'SACK') : ((item && item.unit === '件') ? getPluralUnit(packValRaw, 'BALE') : ''));
           const packText = unitEng ? `${packNumStr}PCS/${unitEng}` : `${packNumStr}PCS`;
           // 如果订单使用B类品且有标签批号，使用flex布局让批号右对齐
-          const orderProductType = order.productType || 1;
+          const orderProductType = (order.productType ?? order.product_type) || 1;
           if (orderProductType === 2 && item.labelBatchNo) {
             packingText = `<div style="display: flex; justify-content: space-between; align-items: center;"><span>${packText}</span><span style="font-weight: 600;">SC:${item.labelBatchNo}</span></div>`;
           } else {
@@ -941,7 +941,7 @@ export class DataBinder {
                 };
                 const unitEng = (item && item.unit === '托盘') ? getPluralUnit(packValRaw, 'PALLET') : ((item && item.unit === '捆包') ? getPluralUnit(packValRaw, 'SACK') : ((item && item.unit === '件') ? getPluralUnit(packValRaw, 'BALE') : ''));
                 const packText = unitEng ? `${packNumStr}PCS/${unitEng}` : `${packNumStr}PCS`;
-                const orderProductType = order.productType || 1;
+                const orderProductType = (order.productType ?? order.product_type) || 1;
                 if (orderProductType === 2 && item.labelBatchNo) {
                   packingText = `<div style="display: flex; justify-content: space-between; align-items: center;"><span>${packText}</span><span style="font-weight: 600;">SC:${item.labelBatchNo}</span></div>`;
                 } else {

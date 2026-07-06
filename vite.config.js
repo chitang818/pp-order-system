@@ -274,32 +274,40 @@ export default defineConfig(({ command, mode }) => {
         output: {
           // 手动代码分割：将共享依赖提取到单独的 chunk
           manualChunks: (id) => {
+            // 统一路径分隔符，兼容 Windows 反斜杠和 Unix 正斜杠
+            const normalizedId = id.replace(/\\/g, '/');
+
             // 将 node_modules 中的依赖分离到 vendor chunk
-            if (id.includes('node_modules')) {
+            if (normalizedId.includes('node_modules')) {
               // 将大型库分离到单独的 chunk
-              if (id.includes('jspdf') || id.includes('html2canvas')) {
+              if (normalizedId.includes('jspdf') || normalizedId.includes('html2canvas')) {
                 return 'pdf-libs';
               }
-              if (id.includes('docx') || id.includes('html-to-docx')) {
+              if (normalizedId.includes('docx') || normalizedId.includes('html-to-docx')) {
                 return 'docx-libs';
+              }
+              // ExcelJS 体积较大（~500KB），单独拆出避免 vendor chunk 过大
+              if (normalizedId.includes('exceljs')) {
+                return 'excel-lib';
               }
               // 其他第三方库
               return 'vendor';
             }
 
-            // 将共享的工具类分离到 common chunk
-            if (id.includes('/src/utils/')) {
-              return 'utils';
-            }
-
-            // 将 API 层分离到 api chunk
-            if (id.includes('/src/api/')) {
-              return 'api';
-            }
-
-            // 将配置和组件分离到 config chunk
-            if (id.includes('/src/config/') || id.includes('/src/components/')) {
-              return 'config';
+            // 应用骨架 + 单据中心 + 旧版单据生成页：与 foundation 互引用时单独拆 chunk 会触发 Circular chunk，
+            // 故 core/api/utils/config/components/services/constants 及 document 相关 pages 统一归入 foundation。
+            if (
+              normalizedId.includes('/src/core/') ||
+              normalizedId.includes('/src/api/') ||
+              normalizedId.includes('/src/utils/') ||
+              normalizedId.includes('/src/config/') ||
+              normalizedId.includes('/src/components/') ||
+              normalizedId.includes('/src/services/') ||
+              normalizedId.includes('/src/constants/') ||
+              normalizedId.includes('/src/pages/document-center/') ||
+              normalizedId.includes('/src/pages/document-generator/')
+            ) {
+              return 'foundation';
             }
           },
 
@@ -340,8 +348,8 @@ export default defineConfig(({ command, mode }) => {
       // 启用源映射（生产环境建议关闭以提高安全性）
       sourcemap: false,
 
-      // Chunk 大小警告阈值
-      chunkSizeWarningLimit: 1000, // 1MB
+      // Chunk 大小警告阈值（Tauri 本地加载无网络延迟，1.5MB 以下无实际性能影响）
+      chunkSizeWarningLimit: 1500,
 
       // 压缩配置（Vite 默认使用 esbuild 压缩，更快）
       // esbuild 会自动移除未使用的代码和 console（通过 define 配置）

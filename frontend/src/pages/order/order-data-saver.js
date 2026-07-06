@@ -6,8 +6,40 @@
 import { ApiService } from '../../api/api.js';
 import { StorageService } from '../../utils/storage.js';
 import { normalizeDateTextToISO } from './order-utils.js';
+import { resolveOrderEditRoot } from '../../utils/dom-utils.js';
 
 const KEY_ORDER_DRAFT = 'erp.order_draft';
+
+function normalizeOrderProductType(raw) {
+  const t = Number(raw);
+  if (t === 2 || t === 3) return t;
+  return 1;
+}
+
+/**
+ * 校验产品表格每行的 data-line-template 是否与当前订单类品一致（防止表头/行模板混用）
+ * @param {HTMLElement|null} prodTbody
+ * @param {number} expectedProductType
+ * @returns {{ ok: true } | { ok: false, message: string }}
+ */
+export function validateProductRowsMatchOrderType(prodTbody, expectedProductType) {
+  const expected = normalizeOrderProductType(expectedProductType);
+  if (!prodTbody) return { ok: true };
+  const rows = Array.from(prodTbody.querySelectorAll('tr'));
+  for (let i = 0; i < rows.length; i++) {
+    const r = rows[i];
+    const attr = r.getAttribute('data-line-template');
+    if (attr == null || String(attr).trim() === '') continue;
+    const lineType = normalizeOrderProductType(attr);
+    if (lineType !== expected) {
+      return {
+        ok: false,
+        message: `第 ${i + 1} 行产品明细与当前订单类品（${expected === 1 ? 'A' : expected === 2 ? 'B' : 'C'}类品）模板不一致，请切换类品或删除该行后重新添加。`
+      };
+    }
+  }
+  return { ok: true };
+}
 
 /**
  * 收集产品明细数据
@@ -70,6 +102,10 @@ export function collectProducts(prodTbody) {
         if (!Object.keys(obj).length) {
           const raw = r.dataset.itemExtras || '{}';
           try { const parsed = JSON.parse(raw); if (parsed && typeof parsed === 'object') return parsed; } catch (_) { }
+        }
+        // 双保险：将包皮布写入 extras，兼容后端从 extras 读取的情况
+        if ((it.wrappingCloth || '').trim() !== '') {
+          obj.wrappingCloth = (it.wrappingCloth || '').trim();
         }
         return obj;
       })()
@@ -219,9 +255,27 @@ export function serializeOrderForm(options = {}) {
     return calculatedTotal;
   })();
 
-  // 获取订单状态
-  const orderStatusSelect = document.getElementById('orderStatus');
+  // 优先从当前编辑视图内查找，避免 SPA 隐藏视图干扰
+  const orderEditRoot = resolveOrderEditRoot(prodTbody);
+  const orderStatusSelect = orderEditRoot
+    ? orderEditRoot.querySelector('#orderStatus')
+    : document.getElementById('orderStatus');
   const orderStatus = orderStatusSelect ? orderStatusSelect.value : '已创建';
+
+  // 通过 DOM class 对产品类型做最终确认，防止闭包状态过期
+  let actualProductType = currentProductType;
+  const sectionProducts = orderEditRoot
+    ? orderEditRoot.querySelector('#section-products')
+    : document.getElementById('section-products');
+  if (sectionProducts) {
+    if (sectionProducts.classList.contains('template-3')) {
+      actualProductType = 3;
+    } else if (sectionProducts.classList.contains('template-2')) {
+      actualProductType = 2;
+    } else if (sectionProducts.classList.contains('template-1')) {
+      actualProductType = 1;
+    }
+  }
 
   return {
     orderNo: invoiceNoInput.value.trim() || contractNoInput.value.trim(),
@@ -229,7 +283,7 @@ export function serializeOrderForm(options = {}) {
     customerName: (c && c.name) || customerKey || '未指定客户',
     totalUSD,
     status: orderStatus, // 添加订单状态字段
-    productType: currentProductType, // 记录当前使用的产品类型
+    productType: actualProductType, // 使用通过UI修正过的真实产品类型
     contractNo: contractNoInput.value.trim(),
     blNo: blNoInput ? blNoInput.value.trim() : '',
     invoiceNo: invoiceNoInput.value.trim(),
@@ -404,9 +458,21 @@ export async function saveOrder(options = {}) {
           errors.push('请至少填写一条产品明细');
         }
 
+        const prodTbodyEl = document.getElementById('prodTbody');
+        if (prodTbodyEl) {
+          const lineCheck = validateProductRowsMatchOrderType(
+            prodTbodyEl,
+            Number(payload.productType) || 1
+          );
+          if (!lineCheck.ok) {
+            errors.push(lineCheck.message);
+          }
+        }
+
         // 验证产品明细的选择字段
         if (payload.items && payload.items.length > 0) {
-          const currentProductType = payload.productType || 1; // 默认为A类品
+          // 【思考】将 payload.productType 稳健转为 Number 类型
+          const currentProductType = Number(payload.productType) || 1; // 默认为A类品
 
           payload.items.forEach((item, index) => {
             const rowNumber = index + 1;

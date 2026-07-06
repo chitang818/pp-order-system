@@ -31,6 +31,27 @@ import {
 import { renderWelcomeCard } from './dashboard-welcome.js';
 // import { toggleLayoutEditingMode, initLayoutSettings, syncLayoutToDefaults } from './dashboard-layout-editor.js';
 
+/**
+ * 将 Tauri/Node 返回的 { data, advanceDays } 转为 renderShipmentReminder 需要的 { orders, total, advanceDays }
+ */
+function normalizeShipmentRemindersFromApi(rawData, fallbackAdvanceDays) {
+  if (rawData == null) {
+    return { orders: [], total: 0, advanceDays: fallbackAdvanceDays };
+  }
+  const list = rawData.data || rawData.orders || [];
+  const orders = list.map((item) => ({
+    contractNo: item.contract_no || item.contractNo,
+    shipmentDate: item.shipment_date || item.shipmentDate,
+    status: item.status,
+    daysUntilShipment: item.days_remaining ?? item.daysUntilShipment ?? item.days_until_shipment
+  }));
+  return {
+    orders,
+    total: orders.length,
+    advanceDays: rawData.advance_days ?? rawData.advanceDays ?? fallbackAdvanceDays
+  };
+}
+
 export class HomeView {
   constructor(options = {}) {
     this.apiService = options.apiService || (window.ApiService || null);
@@ -372,7 +393,7 @@ export class HomeView {
       // 先使用默认值，设置加载完成后再更新
       Promise.resolve({ advanceDays: 5 }).then(async (defaultSettings) => {
         const settings = await this.dashboardService.getShipmentReminderSettings().catch(() => defaultSettings);
-        const advanceDays = settings?.advanceDays || 5;
+        const advanceDays = settings?.advanceDays ?? settings?.advance_days ?? 5;
         return this.dashboardService.getShipmentReminders(advanceDays, 5, false);
       }),
       this.dashboardService.getPaymentReminders(5, false)
@@ -380,7 +401,7 @@ export class HomeView {
 
     // 更新数据
     const shipmentSettings = settingsResult.status === 'fulfilled' ? settingsResult.value : { advanceDays: 5 };
-    const advanceDays = shipmentSettings?.advanceDays || 5;
+    const advanceDays = shipmentSettings?.advanceDays ?? shipmentSettings?.advance_days ?? 5;
 
     if (!this.data) {
       this.data = {};
@@ -391,19 +412,10 @@ export class HomeView {
     
     // 处理发货提醒数据（兼容后端返回的 snake_case 格式）
     if (shipmentResult.status === 'fulfilled') {
-      const rawData = shipmentResult.value;
-      // 后端返回格式: { data: [...], advance_days: 5 }
-      // 前端期望格式: { orders: [...], advanceDays: 5 }
-      this.data.shipmentReminders = {
-        orders: (rawData.data || rawData.orders || []).map(item => ({
-          contractNo: item.contract_no || item.contractNo,
-          shipmentDate: item.shipment_date || item.shipmentDate,
-          status: item.status,
-          daysUntilShipment: item.days_remaining ?? item.daysUntilShipment ?? item.days_until_shipment
-        })),
-        total: (rawData.data || rawData.orders || []).length,
-        advanceDays: rawData.advance_days ?? rawData.advanceDays ?? advanceDays
-      };
+      this.data.shipmentReminders = normalizeShipmentRemindersFromApi(
+        shipmentResult.value,
+        advanceDays
+      );
     } else {
       this.data.shipmentReminders = { orders: [], total: 0, advanceDays };
     }
@@ -418,8 +430,9 @@ export class HomeView {
           contractNo: item.contract_no || item.contractNo,
           invoiceNo: item.invoice_no || item.invoiceNo,
           shipmentDate: item.shipment_date || item.shipmentDate,
+          paymentDate: item.payment_date || item.paymentDate,
           daysSinceShipment: item.days_since_shipment ?? item.daysSinceShipment,
-          totalUSD: item.total_usd ?? item.totalUSD ?? item.total_USD
+          totalUSD: item.total_usd ?? item.totalUSD ?? item.total_USD ?? item.totalAmount
         })),
         total: rawData.total ?? (rawData.data || rawData.orders || []).length
       };
@@ -564,7 +577,7 @@ export class HomeView {
         console.warn('[HomeView] 获取发货提醒设置失败，使用默认值:', error);
       }
 
-      const advanceDays = shipmentSettings?.advanceDays || 5;
+      const advanceDays = shipmentSettings?.advanceDays ?? shipmentSettings?.advance_days ?? 5;
 
       // 第一批：关键数据（立即渲染需要的数据）
       this.updateLoadingProgress(10, '加载关键数据...');
@@ -656,7 +669,7 @@ export class HomeView {
         productRanking,
         boxTypeStats,
         activities,
-        shipmentReminders: shipmentReminders || { orders: [], total: 0, advanceDays },
+        shipmentReminders: normalizeShipmentRemindersFromApi(shipmentReminders, advanceDays),
         paymentReminders: paymentReminders || { orders: [], total: 0 }
       };
 
@@ -900,17 +913,16 @@ export class HomeView {
                   console.log('[HomeView] 保存设置，提前天数:', days);
                   // 保存设置
                   await this.dashboardService.saveShipmentReminderSettings(days);
-                  // 刷新提醒数据
-                  const reminders = await this.dashboardService.getShipmentReminders(days, 5, false);
-                  this.data.shipmentReminders = reminders;
+                  const raw = await this.dashboardService.getShipmentReminders(days, 5, false);
+                  this.data.shipmentReminders = normalizeShipmentRemindersFromApi(raw, days);
                   this.data.shipmentSettings = { advanceDays: days };
-                  // 重新渲染
                   this.renderReminders();
                 } catch (error) {
                   console.error('[HomeView] 保存设置失败:', error);
                   if (window.NotificationSystem) {
                     window.NotificationSystem.toast('保存失败，请重试', 'error');
                   }
+                  throw error;
                 }
               });
             } catch (error) {

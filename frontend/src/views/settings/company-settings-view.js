@@ -2,6 +2,16 @@
  * 公司设置视图
  * 处理公司信息的显示、编辑和保存
  */
+import {
+  isDocumentCenterNavEnabled,
+  setDocumentCenterNavEnabled,
+  isAnalyticsSummaryNavEnabled,
+  setAnalyticsSummaryNavEnabled,
+  isOrderPreviewNewDocsButtonEnabled,
+  setOrderPreviewNewDocsButtonEnabled
+} from '../../utils/ui-preferences.js';
+import { refreshMainSidebarFromPreferences } from '../../components/layout.js';
+
 export class CompanySettingsView {
   constructor(apiService) {
     this.apiService = apiService || window.ApiService;
@@ -24,6 +34,50 @@ export class CompanySettingsView {
       const signAtInput = document.getElementById("sysCompanySignAt");
       const btnSaveCompany = document.getElementById("btnSaveCompany");
       const btnResetCompany = document.getElementById("btnResetCompany");
+
+      const uiShowDc = document.getElementById('uiShowDocumentCenter');
+      if (uiShowDc) {
+        uiShowDc.checked = isDocumentCenterNavEnabled();
+        uiShowDc.onchange = () => {
+          setDocumentCenterNavEnabled(uiShowDc.checked);
+          refreshMainSidebarFromPreferences();
+          const raw = (location.hash.replace('#/', '') || '').trim().split('?')[0];
+          if (raw === 'document-center' || raw.startsWith('document-center/')) {
+            location.hash = '#/home';
+          } else {
+            const base = (location.hash.replace('#/', '') || 'home').split('/')[0];
+            if (base === 'home' && typeof window.renderHome === 'function') {
+              window.renderHome();
+            }
+          }
+        };
+      }
+
+      const uiShowAnalyticsSummary = document.getElementById('uiShowAnalyticsSummary');
+      if (uiShowAnalyticsSummary) {
+        uiShowAnalyticsSummary.checked = isAnalyticsSummaryNavEnabled();
+        uiShowAnalyticsSummary.onchange = () => {
+          setAnalyticsSummaryNavEnabled(uiShowAnalyticsSummary.checked);
+          refreshMainSidebarFromPreferences();
+          const raw = (location.hash.replace('#/', '') || '').trim().split('?')[0];
+          if (raw === 'analytics' || raw === 'analytics/summary') {
+            location.hash = '#/analytics/export';
+          } else {
+            const base = (location.hash.replace('#/', '') || 'home').split('/')[0];
+            if (base === 'home' && typeof window.renderHome === 'function') {
+              window.renderHome();
+            }
+          }
+        };
+      }
+
+      const uiShowPreviewNewDocs = document.getElementById('uiShowOrderPreviewNewDocs');
+      if (uiShowPreviewNewDocs) {
+        uiShowPreviewNewDocs.checked = isOrderPreviewNewDocsButtonEnabled();
+        uiShowPreviewNewDocs.onchange = () => {
+          setOrderPreviewNewDocsButtonEnabled(uiShowPreviewNewDocs.checked);
+        };
+      }
 
       if (!nameCN || !nameEN || !addrCN || !addrEN || !telInput || !faxInput || !signAtInput) {
         console.warn('[公司设置] 页面元素未找到', {

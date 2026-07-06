@@ -8,7 +8,7 @@ const { db } = require('./connection');
  * 获取产品列表
  */
 function listProducts(cb) {
-  db.all('SELECT * FROM products ORDER BY model ASC', cb);
+  db.all('SELECT * FROM products ORDER BY model ASC, COALESCE(productType, 1) ASC', cb);
 }
 
 /**
@@ -22,24 +22,73 @@ function getProduct(id, cb) {
  * 创建产品
  */
 function createProduct(payload, cb) {
-  const { model, description, estimatedWeight, labelWeight, safetyFactor, cleanliness, unit, labelBatchNo, label, marks, source = 'manual' } = payload;
+  const {
+    model,
+    description,
+    estimatedWeight,
+    labelWeight,
+    safetyFactor,
+    cleanliness,
+    unit,
+    labelBatchNo,
+    label,
+    marks,
+    source = 'manual',
+    productType: rawProductType
+  } = payload;
+  const productType =
+    rawProductType === 2 || rawProductType === 3 ? rawProductType : 1;
   const now = new Date().toISOString();
-  
-  console.log('[DB] 创建产品:', { model, description, estimatedWeight, labelWeight, safetyFactor, cleanliness, unit, labelBatchNo, label, marks, source });
-  
+  const trimmedModel = (model || '').trim();
+
+  console.log('[DB] 创建产品:', {
+    model: trimmedModel,
+    productType,
+    description,
+    estimatedWeight,
+    labelWeight,
+    safetyFactor,
+    cleanliness,
+    unit,
+    labelBatchNo,
+    label,
+    marks,
+    source
+  });
+
   db.run(
-    'INSERT INTO products (model, description, estimatedWeight, labelWeight, safetyFactor, cleanliness, unit, labelBatchNo, label, marks, source, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-    [model, description, estimatedWeight || 0, labelWeight || 0, safetyFactor || null, cleanliness || null, unit || '', labelBatchNo || '', label || '', marks || '', source, now, now],
-    function(err) {
+    'INSERT INTO products (model, description, estimatedWeight, labelWeight, safetyFactor, cleanliness, unit, labelBatchNo, label, marks, source, productType, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+    [
+      trimmedModel,
+      description,
+      estimatedWeight || 0,
+      labelWeight || 0,
+      safetyFactor || null,
+      cleanliness || null,
+      unit || '',
+      labelBatchNo || '',
+      label || '',
+      marks || '',
+      source,
+      productType,
+      now,
+      now
+    ],
+    function (err) {
       if (err) {
         console.error('[DB] 创建产品失败:', err);
+        if (err.code === 'SQLITE_CONSTRAINT' || String(err.message || '').includes('UNIQUE')) {
+          err.code = 'DUPLICATE_MODEL_TYPE';
+          err.message = '该型号在此产品类型下已存在';
+        }
         return cb(err);
       }
       console.log('[DB] 创建产品成功，ID:', this.lastID);
-      cb(null, { 
-        id: this.lastID, 
-        model, 
-        description, 
+      cb(null, {
+        id: this.lastID,
+        model: trimmedModel,
+        productType,
+        description,
         estimatedWeight: estimatedWeight || 0,
         labelWeight: labelWeight || 0,
         safetyFactor: safetyFactor || '',
@@ -48,9 +97,9 @@ function createProduct(payload, cb) {
         labelBatchNo: labelBatchNo || '',
         label: label || '',
         marks: marks || '',
-        source, 
-        createdAt: now, 
-        updatedAt: now 
+        source,
+        createdAt: now,
+        updatedAt: now
       });
     }
   );
@@ -60,39 +109,97 @@ function createProduct(payload, cb) {
  * 更新产品
  */
 function updateProduct(id, payload, cb) {
-  const { model, description, actualWeight, unit, safetyFactor, cleanliness, labelBatchNo, label, marks } = payload;
+  const {
+    model,
+    description,
+    actualWeight,
+    unit,
+    safetyFactor,
+    cleanliness,
+    labelBatchNo,
+    label,
+    marks,
+    productType: rawPt
+  } = payload;
   const now = new Date().toISOString();
-  
-  console.log('[DB] 更新产品，ID:', id, '数据:', { model, description, actualWeight, unit, safetyFactor, cleanliness, labelBatchNo, label, marks });
-  
-  // 手动编辑产品时，将来源更新为manual，并更新修改时间
-  // 安全系数和清洁度为空时保存为null而不是空字符串
-  db.run(
-    'UPDATE products SET model = ?, description = ?, actualWeight = ?, unit = ?, safetyFactor = ?, cleanliness = ?, labelBatchNo = ?, label = ?, marks = ?, source = ?, updatedAt = ? WHERE id = ?',
-    [model, description, actualWeight || 0, unit || '', safetyFactor || null, cleanliness || null, labelBatchNo || '', label || '', marks || '', 'manual', now, id],
-    function(err) {
-      if (err) {
-        console.error('[DB] 更新产品失败:', err);
-        return cb(err);
-      }
-      console.log('[DB] 更新产品成功，影响行数:', this.changes);
-      cb(null, { 
-        changes: this.changes,
-        id,
-        model,
-        description,
-        actualWeight: actualWeight || 0,
-        unit: unit || '',
-        safetyFactor: safetyFactor || '',
-        cleanliness: cleanliness || '',
-        labelBatchNo: labelBatchNo || '',
-        label: label || '',
-        marks: marks || '',
-        source: 'manual',
-        updatedAt: now
-      });
+
+  db.get('SELECT * FROM products WHERE id = ? OR rowid = ?', [id, id], (err, row) => {
+    if (err) {
+      console.error('[DB] 更新产品前读取失败:', err);
+      return cb(err);
     }
-  );
+    if (!row) {
+      return cb(new Error('产品不存在'));
+    }
+
+    const modelFinal = (model != null ? String(model) : row.model).trim();
+    let productType = row.productType != null ? row.productType : 1;
+    if (rawPt !== undefined && rawPt !== null && rawPt !== '') {
+      const p = Number(rawPt);
+      productType = p === 2 || p === 3 ? p : 1;
+    }
+    const descFinal = description !== undefined ? description : row.description;
+    const aw = actualWeight !== undefined ? actualWeight : row.actualWeight;
+    const unitFinal = unit !== undefined ? unit : row.unit;
+    const sf = safetyFactor !== undefined ? safetyFactor : row.safetyFactor;
+    const cl = cleanliness !== undefined ? cleanliness : row.cleanliness;
+    const lbno = labelBatchNo !== undefined ? labelBatchNo : row.labelBatchNo;
+    const lbl = label !== undefined ? label : row.label;
+    const mk = marks !== undefined ? marks : row.marks;
+
+    console.log('[DB] 更新产品，ID:', id, '数据:', {
+      model: modelFinal,
+      productType,
+      description: descFinal,
+      actualWeight: aw,
+      unit: unitFinal
+    });
+
+    db.run(
+      'UPDATE products SET model = ?, description = ?, actualWeight = ?, unit = ?, safetyFactor = ?, cleanliness = ?, labelBatchNo = ?, label = ?, marks = ?, productType = ?, source = ?, updatedAt = ? WHERE id = ?',
+      [
+        modelFinal,
+        descFinal,
+        aw || 0,
+        unitFinal || '',
+        sf || null,
+        cl || null,
+        lbno || '',
+        lbl || '',
+        mk || '',
+        productType,
+        'manual',
+        now,
+        id
+      ],
+      function (uerr) {
+        if (uerr) {
+          console.error('[DB] 更新产品失败:', uerr);
+          if (uerr.code === 'SQLITE_CONSTRAINT' || String(uerr.message || '').includes('UNIQUE')) {
+            uerr.message = '该型号在此产品类型下已存在';
+          }
+          return cb(uerr);
+        }
+        console.log('[DB] 更新产品成功，影响行数:', this.changes);
+        cb(null, {
+          changes: this.changes,
+          id,
+          model: modelFinal,
+          productType,
+          description: descFinal,
+          actualWeight: aw || 0,
+          unit: unitFinal || '',
+          safetyFactor: sf || '',
+          cleanliness: cl || '',
+          labelBatchNo: lbno || '',
+          label: lbl || '',
+          marks: mk || '',
+          source: 'manual',
+          updatedAt: now
+        });
+      }
+    );
+  });
 }
 
 /**
@@ -127,7 +234,8 @@ function searchProducts(searchTerm, limit = 10, cb) {
         ELSE 5
       END,
       LENGTH(model) ASC,
-      model ASC
+      model ASC,
+      COALESCE(productType, 1) ASC
     LIMIT ?
   `;
   
@@ -187,8 +295,10 @@ function syncProductFromOrder(model, estimatedWeight, labelWeight, safetyFactor,
   const now = new Date().toISOString();
   const trimmedModel = model.trim();
 
-  // 检查产品是否已存在
-  db.get('SELECT * FROM products WHERE model = ?', [trimmedModel], (err, row) => {
+  const orderProductType = 1;
+
+  // 检查产品是否已存在（与订单同步入口一致时按类型区分；此辅助函数默认 A 类）
+  db.get('SELECT * FROM products WHERE model = ? AND COALESCE(productType, 1) = ?', [trimmedModel, orderProductType], (err, row) => {
     if (err) return cb && cb(err);
     
     if (row) {
@@ -248,8 +358,8 @@ function syncProductFromOrder(model, estimatedWeight, labelWeight, safetyFactor,
 
     // 添加新产品
     db.run(
-      'INSERT INTO products (model, description, estimatedWeight, labelWeight, safetyFactor, cleanliness, unit, labelBatchNo, label, createdAt, updatedAt, source) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-      [trimmedModel, '', estimatedWeight || null, labelWeight || null, safetyFactor || null, cleanliness || null, unit || null, labelBatchNo || null, label || null, now, now, 'order'],
+      'INSERT INTO products (model, description, estimatedWeight, labelWeight, safetyFactor, cleanliness, unit, labelBatchNo, label, productType, createdAt, updatedAt, source) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      [trimmedModel, '', estimatedWeight || null, labelWeight || null, safetyFactor || null, cleanliness || null, unit || null, labelBatchNo || null, label || null, orderProductType, now, now, 'order'],
       function(insertErr) {
         if (insertErr && insertErr.code !== 'SQLITE_CONSTRAINT_UNIQUE') {
           return cb && cb(insertErr);

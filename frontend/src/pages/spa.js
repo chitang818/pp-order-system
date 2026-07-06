@@ -20,6 +20,7 @@ import { updateBatchDeleteButton, updateSelectAllState } from '../utils/ui-state
 import { exportCustomersToCSV } from '../utils/export-utils.js';
 import { goto } from '../utils/common-utils.js';
 import { updateNavigation } from '../utils/navigation-utils.js';
+import { isAnalyticsSummaryNavEnabled } from '../utils/ui-preferences.js';
 
 // 标记为SPA模式
 window.isSPA = true;
@@ -714,7 +715,14 @@ async function renderDocumentCenter(subRoute) {
   // 动态导入单据中心页面逻辑
   try {
     if (route === 'generate') {
-      // 加载单据生成页面
+      // 进入单据生成页时并行预热 Node 导出服务（不阻塞页面渲染）
+      import('../utils/backend-manager.js').then(({ backendManager }) => {
+        backendManager.ensureBackend({ silent: true }).then(() => {
+          // Node 就绪后触发导出模块预加载
+          fetch('http://127.0.0.1:3000/api/export/warmup', { method: 'POST' }).catch(() => {});
+        }).catch(() => {});
+      }).catch(() => {});
+
       const { initDocumentCenterGeneratePage } = await import('./document-center/document-center-generate-page.js');
       initDocumentCenterGeneratePage();
     } else if (route === 'templates') {
@@ -1702,14 +1710,18 @@ function enableButtonRipple() {
 function init() {
   console.log('SPA初始化开始...');
   bindEvents();
-  enableButtonRipple();
 
-  // 不再在这里处理路由，等待应用初始化完成后再处理
-  // 应用初始化会在 initApp() 中完成，并在 app.init() 中处理初始路由
-
-  window.NotificationSystem?.toast("欢迎使用PP外贸订单管理系统", "info", 1500);
-  // 启动时提示来源一致性，避免同站不同端口或 file 协议造成数据不可见
-  hintOriginConsistency();
+  // 非关键操作延迟到空闲时执行，优先让首屏内容更快呈现
+  const deferNonCritical = () => {
+    enableButtonRipple();
+    window.NotificationSystem?.toast("欢迎使用PP外贸订单管理系统", "info", 1500);
+    hintOriginConsistency();
+  };
+  if (typeof requestIdleCallback !== 'undefined') {
+    requestIdleCallback(deferNonCritical, { timeout: 2000 });
+  } else {
+    setTimeout(deferNonCritical, 300);
+  }
 }
 
 // 将SPA路由功能暴露到全局作用域，供自动化测试使用
@@ -1766,8 +1778,25 @@ function renderHome() {
   homeView.render();
 }
 
+/**
+ * 侧栏已更新 class 后，推迟修改 hash 到连续两帧 paint 之后。
+ * 订单列表路由会立刻同步清空 #view-container 并拉取大视图，若与侧栏 grid 展开同一时刻执行，主线程被占满，展开动画会发黏；交易统计视图更轻，体感差异明显。
+ */
+function deferNavHashForSidebarPaint(setHash) {
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      setHash();
+    });
+  });
+}
+
 // 拦截"订单管理"和"系统设置"点击：展开/高亮子菜单
 function setupNavMenuHandlers() {
+  const navRoot = document.getElementById('nav');
+  if (!navRoot || navRoot.getAttribute('data-spa-nav-handlers-bound') === '1') {
+    return;
+  }
+
   // 拦截"订单管理"点击：展开/高亮子菜单，若无子路由则默认跳转 list
   const navOrders = document.getElementById('navOrders');
   const ordersSubnav = document.getElementById('ordersSubnav');
@@ -1784,18 +1813,20 @@ function setupNavMenuHandlers() {
         navOrders.classList.toggle('expanded', !isOpen);
         // 当展开时如果没有子路由，默认跳转到 list
         if (!isOpen && !seg) {
-          location.hash = '#/orders/list';
+          deferNavHashForSidebarPaint(() => {
+            location.hash = '#/orders/list';
+          });
         } else if (!isOpen && seg) {
           // 如果展开时已有子路由，确保订单列表被选中
           updateNavigation('orders', seg);
         }
       } else {
-        // 非订单管理视图：跳到 orders 并展开子菜单，同时选中订单列表
-        location.hash = '#/orders/list';
-        // 立即更新导航状态，确保订单列表被选中
-        setTimeout(() => {
-          updateNavigation('orders', 'list');
-        }, 50);
+        // 先展开再推迟改 hash，避免订单列表路由同步重绘主区时挤掉侧栏过渡帧
+        ordersSubnav.classList.add('open');
+        navOrders.classList.add('expanded');
+        deferNavHashForSidebarPaint(() => {
+          location.hash = '#/orders/list';
+        });
       }
     });
   }
@@ -1881,16 +1912,19 @@ function setupNavMenuHandlers() {
         const isOpen = analyticsSubnav.classList.contains('open');
         analyticsSubnav.classList.toggle('open', !isOpen);
         navAnalytics.classList.toggle('expanded', !isOpen);
-        // 当展开时如果没有子路由，默认跳转到 summary
+        // 当展开时如果没有子路由，默认跳转到统计概览或出口统计
         if (!isOpen && !seg) {
-          location.hash = '#/analytics/summary';
+          location.hash = isAnalyticsSummaryNavEnabled()
+            ? '#/analytics/summary'
+            : '#/analytics/export';
         }
       } else {
-        // 非交易统计视图：跳到 analytics/summary 并展开子菜单
-        // 确保子菜单展开并高亮统计概览
+        // 非交易统计视图：展开子菜单并进入默认统计子页
         analyticsSubnav.classList.add('open');
         navAnalytics.classList.add('expanded');
-        location.hash = '#/analytics/summary';
+        location.hash = isAnalyticsSummaryNavEnabled()
+          ? '#/analytics/summary'
+          : '#/analytics/export';
       }
     });
   }
@@ -1914,7 +1948,8 @@ function setupNavMenuHandlers() {
           location.hash = '#/settings/company';
         }
       } else {
-        // 非设置视图：跳到 settings 并展开子菜单
+        settingsSubnav.classList.add('open');
+        navSettings.classList.add('expanded');
         location.hash = '#/settings/company';
       }
     });
@@ -1951,37 +1986,43 @@ function setupNavMenuHandlers() {
       }
     });
   }
+
+  navRoot.setAttribute('data-spa-nav-handlers-bound', '1');
 }
 
 // 使用微任务队列立即执行，不阻塞渲染
 // 延迟执行以确保导航菜单已生成
 function trySetupNavMenuHandlers() {
-  const navDocumentCenter = document.getElementById('navDocumentCenter');
-  const documentCenterSubnav = document.getElementById('documentCenterSubnav');
-
-  // 如果元素存在，设置事件处理器
-  if (navDocumentCenter && documentCenterSubnav) {
-    setupNavMenuHandlers();
-    return true;
+  const nav = document.getElementById('nav');
+  if (!nav || !nav.querySelector('a[data-route]')) {
+    return false;
   }
-  return false;
+  setupNavMenuHandlers();
+  return nav.getAttribute('data-spa-nav-handlers-bound') === '1';
 }
 
-// 尝试立即设置（如果菜单已生成）
-if (!trySetupNavMenuHandlers()) {
-  // 如果菜单未生成，使用轮询等待
-  let retries = 0;
-  const maxRetries = 50; // 最多尝试5秒（50 * 100ms）
-  const checkInterval = setInterval(() => {
-    if (trySetupNavMenuHandlers() || retries >= maxRetries) {
-      clearInterval(checkInterval);
-      if (retries >= maxRetries) {
-        console.warn('[SPA] 导航菜单元素未找到，事件绑定失败');
+window.__rebindSpaNavAfterSidebarRefresh = function () {
+  const nav = document.getElementById('nav');
+  nav?.removeAttribute('data-spa-nav-handlers-bound');
+  setupNavMenuHandlers();
+};
+
+// 延迟到下一帧再尝试绑定导航菜单事件（避免阻塞首屏渲染主线程）
+requestAnimationFrame(() => {
+  if (!trySetupNavMenuHandlers()) {
+    let retries = 0;
+    const maxRetries = 50;
+    const checkInterval = setInterval(() => {
+      if (trySetupNavMenuHandlers() || retries >= maxRetries) {
+        clearInterval(checkInterval);
+        if (retries >= maxRetries) {
+          console.warn('[SPA] 导航菜单元素未找到，事件绑定失败');
+        }
       }
-    }
-    retries++;
-  }, 100);
-}
+      retries++;
+    }, 100);
+  }
+});
 
 // 初始化应用（使用新架构）
 async function initApp() {

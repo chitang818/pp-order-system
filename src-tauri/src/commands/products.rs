@@ -21,7 +21,7 @@ pub fn products_list(holder: State<DbPoolHolder>, token: String) -> Result<serde
                         ELSE 1
                     END AS productType
              FROM products
-             ORDER BY model ASC",
+             ORDER BY model ASC, COALESCE(productType, 1) ASC",
         )
         .map_err(|e| format!("查询产品失败：{:?}", e))?;
 
@@ -120,12 +120,17 @@ pub fn products_create(holder: State<DbPoolHolder>, payload: ProductCreatePayloa
     if model.is_empty() {
         return Err("产品型号不能为空".to_string());
     }
+    let product_type: i64 = match payload.product_type {
+        Some(2) => 2,
+        Some(3) => 3,
+        _ => 1,
+    };
     let now = now_iso_utc();
     let source = payload.source.unwrap_or_else(|| "manual".to_string());
 
     let res = conn.execute(
-        "INSERT INTO products (model, description, estimatedWeight, labelWeight, safetyFactor, cleanliness, unit, labelBatchNo, label, marks, source, createdAt, updatedAt)
-         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13)",
+        "INSERT INTO products (model, description, estimatedWeight, labelWeight, safetyFactor, cleanliness, unit, labelBatchNo, label, marks, source, productType, createdAt, updatedAt)
+         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14)",
         rusqlite::params![
             &model,
             &payload.description,
@@ -138,6 +143,7 @@ pub fn products_create(holder: State<DbPoolHolder>, payload: ProductCreatePayloa
             &payload.label.unwrap_or_else(|| "".to_string()),
             &payload.marks.unwrap_or_else(|| "".to_string()),
             &source,
+            &product_type,
             &now,
             &now
         ],
@@ -146,11 +152,11 @@ pub fn products_create(holder: State<DbPoolHolder>, payload: ProductCreatePayloa
     match res {
         Ok(_) => {
             let id = conn.last_insert_rowid();
-            Ok(serde_json::json!({ "success": true, "data": { "id": id, "model": model } }))
+            Ok(serde_json::json!({ "success": true, "data": { "id": id, "model": model, "productType": product_type } }))
         }
         Err(e) => {
             if format!("{:?}", e).contains("UNIQUE") {
-                Err("产品型号已存在".to_string())
+                Err("该型号在此产品类型下已存在".to_string())
             } else {
                 Err(format!("创建产品失败：{:?}", e))
             }
@@ -165,10 +171,23 @@ pub fn products_update(holder: State<DbPoolHolder>, payload: ProductUpdatePayloa
     let _ = require_user(&conn, &payload.token)?;
 
     let mut stmt = conn
-        .prepare("SELECT model, description, actualWeight, unit, safetyFactor, cleanliness, labelBatchNo, label, marks FROM products WHERE id = ?1")
+        .prepare("SELECT model, description, actualWeight, unit, safetyFactor, cleanliness, labelBatchNo, label, marks, COALESCE(productType, 1) FROM products WHERE id = ?1")
         .map_err(|e| format!("{:?}", e))?;
-    let current: (String, Option<String>, Option<f64>, Option<String>, Option<String>, Option<String>, Option<String>, Option<String>, Option<String>) =
-        stmt.query_row([payload.id], |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?, r.get(3)?, r.get(4)?, r.get(5)?, r.get(6)?, r.get(7)?, r.get(8)?)))
+    let current: (String, Option<String>, Option<f64>, Option<String>, Option<String>, Option<String>, Option<String>, Option<String>, Option<String>, i64) =
+        stmt.query_row([payload.id], |r| {
+            Ok((
+                r.get(0)?,
+                r.get(1)?,
+                r.get(2)?,
+                r.get(3)?,
+                r.get(4)?,
+                r.get(5)?,
+                r.get(6)?,
+                r.get(7)?,
+                r.get(8)?,
+                r.get(9)?,
+            ))
+        })
             .map_err(|_| "产品不存在".to_string())?;
 
     let now = now_iso_utc();
@@ -184,16 +203,41 @@ pub fn products_update(holder: State<DbPoolHolder>, payload: ProductUpdatePayloa
     let label_batch_no = payload.label_batch_no.or(current.6).unwrap_or_else(|| "".to_string());
     let label = payload.label.or(current.7).unwrap_or_else(|| "".to_string());
     let marks = payload.marks.or(current.8).unwrap_or_else(|| "".to_string());
+    let product_type: i64 = match payload.product_type {
+        Some(2) => 2,
+        Some(3) => 3,
+        Some(_) => 1,
+        None => current.9,
+    };
 
-    let changes = conn
-        .execute(
-            "UPDATE products
-             SET model = ?1, description = ?2, actualWeight = ?3, unit = ?4, safetyFactor = ?5, cleanliness = ?6,
-                 labelBatchNo = ?7, label = ?8, marks = ?9, source = 'manual', updatedAt = ?10
-             WHERE id = ?11",
-            rusqlite::params![&model, &description, &actual_weight, &unit, &safety_factor, &cleanliness, &label_batch_no, &label, &marks, &now, &payload.id],
-        )
-        .map_err(|e| format!("更新产品失败：{:?}", e))?;
+    let changes = match conn.execute(
+        "UPDATE products
+         SET model = ?1, description = ?2, actualWeight = ?3, unit = ?4, safetyFactor = ?5, cleanliness = ?6,
+             labelBatchNo = ?7, label = ?8, marks = ?9, productType = ?10, source = 'manual', updatedAt = ?11
+         WHERE id = ?12",
+        rusqlite::params![
+            &model,
+            &description,
+            &actual_weight,
+            &unit,
+            &safety_factor,
+            &cleanliness,
+            &label_batch_no,
+            &label,
+            &marks,
+            &product_type,
+            &now,
+            &payload.id
+        ],
+    ) {
+        Ok(c) => c,
+        Err(e) => {
+            if format!("{:?}", e).contains("UNIQUE") {
+                return Err("该型号在此产品类型下已存在".to_string());
+            }
+            return Err(format!("更新产品失败：{:?}", e));
+        }
+    };
 
     Ok(serde_json::json!({ "success": true, "result": { "changes": changes } }))
 }

@@ -244,7 +244,7 @@ export class OrdersListView {
 
     // 智能判断：如果订单数量较少（< 100），不使用虚拟滚动，直接渲染所有订单
     // 虚拟滚动主要用于优化大数据量（1000+）的性能，对于77个订单，直接渲染更简单可靠
-    const VIRTUAL_SCROLL_THRESHOLD = 100;
+    const VIRTUAL_SCROLL_THRESHOLD = 500;
     if (allOrders.length < VIRTUAL_SCROLL_THRESHOLD) {
       // 禁用虚拟滚动，直接渲染所有订单
       if (this.virtualScroller) {
@@ -257,7 +257,7 @@ export class OrdersListView {
       return;
     }
 
-    // 订单数量 >= 100，使用虚拟滚动优化性能
+    // 订单数量 >= 500，使用虚拟滚动优化性能
     // 真实滚动容器：本项目 body 禁止滚动，实际滚动通常发生在 .main（overflow-y: auto）
     // 如果找不到，则回退 window
     const detectedScrollContainer = document.querySelector('.main') || window;
@@ -496,7 +496,18 @@ export class OrdersListView {
           <span class="contract-no-link" data-action="previewOrder" data-index="${origIdx >= 0 ? origIdx : ''}" ${orderIdAttr}
                 style="cursor: pointer; color: #3b82f6; font-weight: 600; text-decoration: underline;" 
                 title="点击预览订单详情">
-            ${this.escapeHtml(o.contractNo || o.orderNo || "-")}
+            ${(() => {
+              // 合同编号换行优化：在括号前换行，主编号部分不拆分
+              const rawNo = this.escapeHtml(o.contractNo || o.orderNo || '-');
+              // 将 "SC2025-194(NO.25566)" 拆为 "SC2025-194" + "(NO.25566)"
+              const idx = rawNo.indexOf('(');
+              if (idx > 0) {
+                const mainPart = rawNo.substring(0, idx);
+                const suffixPart = rawNo.substring(idx);
+                return `<span style="white-space:nowrap">${mainPart}</span><wbr><span style="white-space:nowrap">${suffixPart}</span>`;
+              }
+              return `<span style="white-space:nowrap">${rawNo}</span>`;
+            })()}
           </span>
         </td>
         <td style="text-align: center;">${this.escapeHtml(o.invoiceNo || "-")}</td>
@@ -522,8 +533,6 @@ export class OrdersListView {
                 data-action="showPaymentStatus" 
                 data-order-id="${orderId}"
                 style="color: ${amountColor}; font-weight: ${fontWeight}; cursor: pointer; transition: all 0.2s ease;"
-                onmouseover="this.style.textDecoration='underline'; this.style.opacity='0.8';"
-                onmouseout="this.style.textDecoration='none'; this.style.opacity='1';"
                 title="点击查看货款状态">
             ${this.fmtMoney(o.totalUSD)}
           </span>`;

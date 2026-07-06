@@ -16,6 +16,31 @@
 .order-amount-link:hover {
   color: #2563eb;
   text-decoration: underline;
+  opacity: 0.8;
+}
+
+/* 货款状态弹窗：单选项行悬停（替代内联 onmouseover） */
+.payment-status-option-label:hover {
+  background: #f3f4f6 !important;
+}
+
+/* 出口统计：货款列与快捷「已到账」按钮悬停（替代内联事件） */
+.payment-amount-cell:hover {
+  opacity: 0.8;
+}
+
+.payment-amount-cell:hover > span:first-of-type {
+  text-decoration: underline;
+}
+
+.payment-amount-cell:hover .quick-mark-paid-btn {
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+.quick-mark-paid-btn:hover {
+  background: #b91c1c !important;
+  transform: translateY(-50%) scale(1.1) !important;
 }
 
 /* 货款状态弹窗样式增强（补充内联样式） */

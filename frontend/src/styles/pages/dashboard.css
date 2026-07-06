@@ -784,6 +784,8 @@
   border: var(--card-border);
   transition: all 0.3s ease;
   min-height: 400px;
+  min-width: 0;
+  /* Grid 子项默认 min-width:auto 会在窄窗口/WebView 中撑破列宽 */
   /* 默认布局（基于 CARD_CONFIGS），JavaScript 会覆盖 */
   grid-column: 1 / span 6;
   grid-row: 6 / span 6;
@@ -798,7 +800,7 @@
   border: var(--card-border);
   transition: all 0.3s ease;
   min-height: 400px;
-  /* 默认布局（基于 CARD_CONFIGS），JavaScript 会覆盖 */
+  min-width: 0;
   grid-column: 9 / span 6;
   grid-row: 6 / span 6;
 }
@@ -965,9 +967,9 @@
   /* 限制最大宽度 */
 }
 
-.reminder-scroll-message[style*="display: flex"],
-.reminder-scroll-message[style*="display:block"] {
-  display: flex !important;
+/* 用类名控制显示，避免依赖 style 属性子串匹配（WebView 与浏览器序列化可能不一致） */
+.reminder-scroll-message.reminder-scroll-visible {
+  display: flex;
 }
 
 .reminder-scroll-message-red {
@@ -1064,6 +1066,7 @@
   overflow-y: auto;
   padding-right: 4px;
   flex: 1;
+  min-width: 0;
   /* 允许列表区域自动填充剩余空间 */
 }
 
@@ -1094,6 +1097,8 @@
   border: 1px solid #e5e7eb;
   margin-bottom: 8px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  min-width: 0;
+  overflow: hidden;
 }
 
 .reminder-item:hover {
@@ -1110,16 +1115,20 @@
   font-size: 13px;
   line-height: 1.6;
   width: 100%;
-  flex-wrap: wrap;
-  /* 允许内容换行以适应更小的宽度 */
+  min-width: 0;
+  box-sizing: border-box;
+  flex-wrap: nowrap;
+  justify-content: space-between;
+  /* 桌面 WebView 在窄列宽下若允许 wrap，三列会错位叠行；单行 + 左侧省略号与浏览器一致 */
 }
 
 /* 左侧：合同号（不显示客户名） */
 .reminder-item-left {
   display: flex;
   align-items: center;
-  flex: 1;
+  flex: 1 1 0;
   min-width: 0;
+  overflow: hidden;
 }
 
 .reminder-item-contract-no {

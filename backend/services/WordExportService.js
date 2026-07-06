@@ -7,13 +7,27 @@
 
 const path = require('path');
 const fs = require('fs');
-const { Document, Paragraph, TextRun, Table, TableRow, TableCell,
-  AlignmentType, WidthType, BorderStyle, Packer, HeadingLevel } = require('docx');
-const cheerio = require('cheerio');
-const JSZip = require('jszip');
 const config = require('../config');
 const BrowserFinder = require('../utils/browser-finder');
-let puppeteer; // 动态加载 puppeteer
+
+// 重型依赖延迟加载
+let _docx = null;
+let _cheerio = null;
+let _jszip = null;
+let puppeteer;
+
+function _getDocx() {
+  if (!_docx) _docx = require('docx');
+  return _docx;
+}
+function _getCheerio() {
+  if (!_cheerio) _cheerio = require('cheerio');
+  return _cheerio;
+}
+function _getJSZip() {
+  if (!_jszip) _jszip = require('jszip');
+  return _jszip;
+}
 
 class WordExportService {
   /**
@@ -218,6 +232,7 @@ ${renderedHtml}
       console.log('[Word导出-拉货通知] [步骤5/5] 生成.docx文档...');
 
       // 创建ZIP结构来构建.docx文件
+      const JSZip = _getJSZip();
       const zip = new JSZip();
 
       // 添加Content Types文件
@@ -330,6 +345,8 @@ ${completeHtml}
           throw new Error('html-to-docx 库未安装，请运行: npm install html-to-docx');
         }
       }
+
+      const cheerio = _getCheerio();
 
       // 解析HTML，提取主要内容
       const $ = cheerio.load(html, { decodeEntities: false });
@@ -726,6 +743,9 @@ ${bodyContent}
     console.log('[Word导出] HTML原始长度:', html.length);
 
     try {
+      const cheerio = _getCheerio();
+      const { Document, Paragraph, TextRun, Packer } = _getDocx();
+
       // 解析HTML
       const $ = cheerio.load(html, { decodeEntities: false });
 
@@ -920,11 +940,13 @@ ${bodyContent}
 
     // 处理换行
     if (tagName === 'br') {
+      const { Paragraph } = _getDocx();
       return new Paragraph({ text: '' });
     }
 
     // 其他元素，提取文本内容
     if (text) {
+      const { Paragraph, TextRun } = _getDocx();
       return new Paragraph({
         children: [new TextRun({ text: text, size: 22, font: 'Arial' })],
         spacing: { after: 200 }
@@ -938,6 +960,7 @@ ${bodyContent}
    * 从HTML元素创建Word段落
    */
   static createParagraphFromElement($, $el, parentStyles = {}) {
+    const { Paragraph, TextRun, AlignmentType } = _getDocx();
     const styleStr = $el.attr('style') || '';
     const styles = { ...parentStyles, ...this.parseStyle(styleStr) };
 
@@ -1001,6 +1024,7 @@ ${bodyContent}
    * 递归构建文本运行，保留嵌套样式
    */
   static buildTextRuns($, $el, textRuns, defaultFontSize, defaultBold, defaultColor) {
+    const { TextRun } = _getDocx();
     $el.contents().each((i, node) => {
       if (node.type === 'text') {
         const nodeText = $(node).text();
@@ -1069,6 +1093,8 @@ ${bodyContent}
    * 转换表格
    */
   static convertTable($, $table) {
+    const { Paragraph, TextRun, Table, TableRow, TableCell,
+      AlignmentType, WidthType, BorderStyle } = _getDocx();
     const rows = [];
     $table.find('tr').each((i, tr) => {
       const cells = [];

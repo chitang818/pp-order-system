@@ -15,7 +15,7 @@
  * ```
  */
 
-import { isRealTauriEnvironment, getTauriInvokeAsync } from '../utils/tauri-env.js';
+import { isRealTauriEnvironment, getTauriInvokeAsync, getHttpApiBase } from '../utils/tauri-env.js';
 
 /**
  * 检测是否在 Tauri 环境中
@@ -52,8 +52,8 @@ async function getTauriInvoke() {
  * @returns {Promise<any>}
  */
 async function httpFallback(endpoint, payload, method = 'POST') {
-  const API_BASE_URL = 'http://127.0.0.1:3000';
-  const url = endpoint.startsWith('/') ? API_BASE_URL + endpoint : endpoint;
+  const base = getHttpApiBase();
+  const url = endpoint.startsWith('/') ? base + endpoint : endpoint;
 
   const headers = {
     'Content-Type': 'application/json',

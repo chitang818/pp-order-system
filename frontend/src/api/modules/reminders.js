@@ -10,7 +10,7 @@ export const reminders = {
         return result.data || result;
     },
     async saveShipmentSettings(advanceDays) {
-        const result = await apiClient.invoke('reminders_save_shipment_settings', { advance_days: parseInt(advanceDays) }, {
+        const result = await apiClient.invoke('reminders_save_shipment_settings', { payload: { advance_days: parseInt(advanceDays) } }, {
             fallbackToHttp: true,
             httpPath: '/api/reminders/shipment-reminder-settings',
             httpMethod: 'POST',
@@ -19,7 +19,7 @@ export const reminders = {
         return result.data || result;
     },
     async getShipmentList(advanceDays, limit) {
-        const result = await apiClient.invoke('reminders_get_shipment_list', { advance_days: parseInt(advanceDays || 5), limit: parseInt(limit || 5) }, {
+        const result = await apiClient.invoke('reminders_get_shipment_list', { payload: { advance_days: parseInt(advanceDays || 5), limit: parseInt(limit || 5) } }, {
             fallbackToHttp: true,
             httpPath: `/api/reminders/shipment-reminders?advanceDays=${advanceDays}&limit=${limit}`,
             httpMethod: 'GET'
@@ -27,7 +27,7 @@ export const reminders = {
         return result.data || result;
     },
     async getPaymentList(limit) {
-        const result = await apiClient.invoke('reminders_get_payment_list', { limit: parseInt(limit || 5) }, {
+        const result = await apiClient.invoke('reminders_get_payment_list', { payload: { limit: parseInt(limit || 5) } }, {
             fallbackToHttp: true,
             httpPath: `/api/reminders/payment-reminders?limit=${limit}`,
             httpMethod: 'GET'

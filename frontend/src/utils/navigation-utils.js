@@ -3,6 +3,8 @@
  * 负责更新导航菜单的高亮和展开状态
  */
 
+import { isAnalyticsSummaryNavEnabled } from './ui-preferences.js';
+
 // DOM元素缓存（优化性能）
 const domCache = {
   nav: null,
@@ -131,7 +133,12 @@ function _updateNavigationSync(route, sub) {
     { subnavId: 'ordersSubnav', navId: 'navOrders', routeMatch: route === 'orders', defaultSub: 'list' },
     { subnavId: 'documentCenterSubnav', navId: 'navDocumentCenter', routeMatch: route === 'document-center', defaultSub: 'generate' },
     { subnavId: 'productsSubnav', navId: 'navProducts', routeMatch: route === 'products', defaultSub: 'list' },
-    { subnavId: 'analyticsSubnav', navId: 'navAnalytics', routeMatch: route === 'analytics', defaultSub: 'summary' },
+    {
+      subnavId: 'analyticsSubnav',
+      navId: 'navAnalytics',
+      routeMatch: route === 'analytics',
+      defaultSub: isAnalyticsSummaryNavEnabled() ? 'summary' : 'export'
+    },
     { subnavId: 'settingsSubnav', navId: 'navSettings', routeMatch: route === 'settings', defaultSub: 'company' }
   ];
   

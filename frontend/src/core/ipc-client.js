@@ -15,7 +15,7 @@
  * ```
  */
 
-import { isRealTauriEnvironment, getTauriInvokeAsync } from '../utils/tauri-env.js';
+import { isRealTauriEnvironment, getTauriInvokeAsync, getHttpApiBase } from '../utils/tauri-env.js';
 
 /**
  * 检测是否在 Tauri 环境中
@@ -144,8 +144,8 @@ export async function call(cmd, payload = null, options = {}) {
  * @returns {Promise<any>}
  */
 async function fallbackToHttpCall(path, payload, method) {
-  const API_BASE_URL = isTauriEnv() ? 'http://127.0.0.1:3000' : '';
-  const url = path.startsWith('/') ? API_BASE_URL + path : path;
+  const base = getHttpApiBase();
+  const url = path.startsWith('/') ? base + path : path;
   
   const headers = {
     'Content-Type': 'application/json'

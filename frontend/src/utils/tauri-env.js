@@ -5,6 +5,45 @@
  * @module utils/tauri-env
  */
 
+/** Node 嵌入式 HTTP 服务地址（与 src-tauri/backend、Rust 启动逻辑一致） */
+export const NODE_HTTP_API_ORIGIN = 'http://127.0.0.1:3000';
+
+/**
+ * 广义「需直连 Node」环境：无 Vite /api 代理时，相对路径 /api 无法到达后端
+ * 与 isRealTauriEnvironment() 区分：浏览器里打开 Tauri 开发 URL 时可能仅为「类桌面」判定用 HTTP 基址
+ *
+ * @returns {boolean}
+ */
+export function isTauriLikeEnvironment() {
+    if (typeof window === 'undefined') {
+        return false;
+    }
+    try {
+        if (window.__TAURI__ || window.__TAURI_INTERNALS__ || window.__TAURI_METADATA__) {
+            return true;
+        }
+        const p = String(window.location?.protocol || '').toLowerCase();
+        if (p === 'tauri:' || p === 'file:') {
+            return true;
+        }
+        const host = String(window.location.hostname || '').toLowerCase();
+        if (host === 'tauri.localhost') {
+            return true;
+        }
+    } catch (_) {
+        /* ignore */
+    }
+    return false;
+}
+
+/**
+ * 浏览器 + Vite 开发：返回 ''（走同源 + 代理）；桌面/打包：返回 Node 绝对基址
+ * @returns {string}
+ */
+export function getHttpApiBase() {
+    return isTauriLikeEnvironment() ? NODE_HTTP_API_ORIGIN : '';
+}
+
 /**
  * 检测是否在真正的 Tauri 环境中
  * 不仅要检查 window.__TAURI__ 存在，还要检查底层支持是否可用

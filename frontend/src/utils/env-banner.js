@@ -68,7 +68,7 @@ export function showEnvBadge() {
   const badge = document.createElement('div');
   badge.id = 'env-badge';
   badge.innerHTML = `
-    <div style="
+    <div class="env-badge-inner" style="
       position: fixed;
       bottom: 20px;
       right: 20px;
@@ -83,9 +83,7 @@ export function showEnvBadge() {
       line-height: 1.5;
       cursor: pointer;
       transition: all 0.3s ease;
-    " 
-    onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 16px rgba(0,0,0,0.2)';"
-    onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.15)';">
+    ">
       <div style="font-weight: bold; margin-bottom: 6px;">
         🌐 浏览器开发模式
       </div>
@@ -95,6 +93,18 @@ export function showEnvBadge() {
       </div>
     </div>
   `;
+
+  const badgeInner = badge.querySelector('.env-badge-inner');
+  if (badgeInner) {
+    badgeInner.addEventListener('mouseenter', () => {
+      badgeInner.style.transform = 'translateY(-2px)';
+      badgeInner.style.boxShadow = '0 6px 16px rgba(0,0,0,0.2)';
+    });
+    badgeInner.addEventListener('mouseleave', () => {
+      badgeInner.style.transform = 'translateY(0)';
+      badgeInner.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+    });
+  }
 
   // 点击显示详细信息
   badge.addEventListener('click', () => {

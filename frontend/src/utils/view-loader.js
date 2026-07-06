@@ -140,8 +140,9 @@ export class ViewLoader {
       });
     }
 
-    // 只有在没有匹配视图时才显示加载状态
-    if (!existingView || existingViewId !== expectedViewId) {
+    // 缓存命中时跳过 loading spinner（直接注入 HTML，用户感知零延迟）
+    const isCached = this.cache.has(viewPath);
+    if (!isCached && (!existingView || existingViewId !== expectedViewId)) {
       container.innerHTML = '<div class="loading-view" style="padding: 40px; text-align: center; color: #6c757d;"><div class="loading-spinner" style="display: inline-block; width: 20px; height: 20px; border: 3px solid #f3f3f3; border-top: 3px solid #667eea; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 10px;"></div><div>加载中...</div></div>';
     }
 
@@ -324,22 +325,32 @@ export class ViewLoader {
    * @param {string} currentViewPath - 当前视图路径
    */
   smartPreload(currentViewPath) {
-    // 预加载策略：根据当前页面预测用户可能访问的页面
+    // 预加载策略：根据当前页面预测用户可能访问的页面（键为 ViewLoader 的 viewPath，与路由 buildViewPath 一致）
+    const partnersCustomers = ['customers/edit', 'orders/list', 'partners/forwarders'];
     const preloadMap = {
-      'home': ['orders/list', 'customers'],
-      'orders/list': ['orders/edit', 'orders/config'],
-      'orders/edit': ['orders/list', 'customers'],
-      'customers': ['customers/edit', 'orders/list'],
+      'home': ['orders/list', 'partners/customers', 'document-center/generate'],
+      'orders/list': ['orders/edit', 'orders/config', 'partners/customers'],
+      'orders/edit': ['orders/list', 'partners/customers'],
+      'partners/customers': partnersCustomers,
+      'partners/forwarders': ['partners/customers', 'orders/list'],
+      // 兼容旧视图路径（若仍有入口命中）
+      'customers': partnersCustomers,
+      'customers/edit': ['partners/customers', 'orders/list'],
       'products/list': ['products/add'],
       'products/add': ['products/list']
     };
 
     const pathsToPreload = preloadMap[currentViewPath] || [];
     if (pathsToPreload.length > 0) {
-      // 延迟预加载，不阻塞当前页面
-      setTimeout(() => {
-        this.preloadViews(pathsToPreload, { priority: false, delay: 0 });
-      }, 1000);
+      const isHome = currentViewPath === 'home';
+      if (isHome) {
+        // 首页渲染后立即高优先级预加载高频视图
+        this.preloadViews(pathsToPreload, { priority: true, delay: 0 });
+      } else {
+        setTimeout(() => {
+          this.preloadViews(pathsToPreload, { priority: false, delay: 0 });
+        }, 1000);
+      }
     }
   }
 

@@ -24,10 +24,10 @@ export const NAVIGATION_CONFIG = {
     { tab: 'config', label: '订单参数配置', icon: '⚙️' }
   ],
 
-  // 产品库管理子菜单
+  // 产品库管理子菜单（产品列表在上，新增产品在下）
   productsSubmenu: [
-    { tab: 'add', label: '新增产品', icon: '➕' },
-    { tab: 'list', label: '产品列表', icon: '📋' }
+    { tab: 'list', label: '产品列表', icon: '📋' },
+    { tab: 'add', label: '新增产品', icon: '➕' }
   ],
 
   // 合作方管理子菜单

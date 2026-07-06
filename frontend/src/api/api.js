@@ -11,6 +11,7 @@
 
 import { invokeCommand } from '../utils/tauri-api.js';
 import { apiClient } from '../core/api-client.js';
+import { getHttpApiBase } from '../utils/tauri-env.js';
 
 // Tauri API import for production builds
 // Import from @tauri-apps/api for production, fallback to window.__TAURI__ for dev
@@ -43,20 +44,7 @@ function getCookie(name) {
   return match ? decodeURIComponent(match[1]) : undefined;
 }
 
-function isTauriLikeEnv() {
-  try {
-    if (typeof window !== 'undefined') {
-      if (window.__TAURI__) return true;
-    }
-    const p = String(window.location.protocol || '').toLowerCase();
-    if (p === 'tauri:' || p === 'file:') return true;
-    const host = String(window.location.hostname || '').toLowerCase();
-    if (host === 'tauri.localhost') return true;
-  } catch (_) { }
-  return false;
-}
-
-const API_BASE_URL = isTauriLikeEnv() ? 'http://127.0.0.1:3000' : '';
+const API_BASE_URL = getHttpApiBase();
 
 async function request(url, opts) {
   let requestUrl = url;

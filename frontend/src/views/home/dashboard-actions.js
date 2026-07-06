@@ -1,6 +1,7 @@
 /**
  * 仪表盘快速操作和最近记录渲染
  */
+import { isDocumentCenterNavEnabled, isAnalyticsSummaryNavEnabled } from '../../utils/ui-preferences.js';
 
 /**
  * 格式化日期时间
@@ -106,7 +107,7 @@ export function renderQuickActions(container) {
     {
       icon: '📊',
       label: '交易统计',
-      route: 'analytics/summary',
+      route: isAnalyticsSummaryNavEnabled() ? 'analytics/summary' : 'analytics/export',
       color: '#ec4899'
     },
     {
@@ -115,7 +116,10 @@ export function renderQuickActions(container) {
       route: 'settings/company',
       color: '#64748b'
     }
-  ];
+  ].filter(
+    (action) =>
+      action.route !== 'document-center/generate' || isDocumentCenterNavEnabled()
+  );
 
   actions.forEach(action => {
     const btn = document.createElement('a');

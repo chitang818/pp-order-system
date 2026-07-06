@@ -8,13 +8,27 @@
  * - 字体样式：Arial, "Microsoft YaHei", sans-serif
  */
 const FontSizeManager = require('../utils/font-size-manager');
-const ExcelJS = require('exceljs');
-const { Document, Paragraph, TextRun, Table, TableRow, TableCell,
-  AlignmentType, WidthType, Packer, convertMillimetersToTwip } = require('docx');
-const puppeteer = require('puppeteer-core');
 const config = require('../config');
 const PdfExportService = require('./PdfExportService');
 const BrowserFinder = require('../utils/browser-finder');
+
+// 重型依赖延迟加载（首次调用对应导出方法时才 require，加速 Node 启动）
+let _ExcelJS = null;
+let _docx = null;
+let _puppeteer = null;
+
+function getExcelJS() {
+  if (!_ExcelJS) _ExcelJS = require('exceljs');
+  return _ExcelJS;
+}
+function getDocx() {
+  if (!_docx) _docx = require('docx');
+  return _docx;
+}
+function getPuppeteer() {
+  if (!_puppeteer) _puppeteer = require('puppeteer-core');
+  return _puppeteer;
+}
 
 // A4 标准尺寸（与 PP 预览器一致）
 const A4_SIZE = {
@@ -68,7 +82,7 @@ class TemplateExportService {
 
       // 备用方案：直接使用 Puppeteer
       const launchOptions = BrowserFinder.getBrowserLaunchOptions();
-      const browser = await puppeteer.launch(launchOptions);
+      const browser = await getPuppeteer().launch(launchOptions);
 
       const page = await browser.newPage();
 
@@ -116,6 +130,7 @@ class TemplateExportService {
    */
   async exportToExcel(template, data) {
     try {
+      const ExcelJS = getExcelJS();
       const workbook = new ExcelJS.Workbook();
       const worksheet = workbook.addWorksheet('单据');
 
@@ -192,6 +207,9 @@ class TemplateExportService {
       // 使用 convertMillimetersToTwip 函数（如果可用）或手动转换
       // 1mm = 56.7 twips (20 twips = 1 point, 72 points = 1 inch, 1 inch = 25.4 mm)
       const mmToTwip = (mm) => Math.round(mm * 56.7);
+
+      const { Document, Paragraph, TextRun, Table, TableRow, TableCell,
+        AlignmentType, WidthType, Packer, convertMillimetersToTwip } = getDocx();
 
       const doc = new Document({
         sections: [{
@@ -373,6 +391,8 @@ class TemplateExportService {
    * 渲染区块到Word
    */
   renderBlockToWord(block, data, template) {
+    const { Paragraph, TextRun, Table, TableRow, TableCell,
+      AlignmentType, WidthType } = getDocx();
     const config = block.config || {};
     const elements = [];
 
@@ -541,6 +561,7 @@ class TemplateExportService {
    * 映射对齐方式
    */
   mapAlignment(align) {
+    const { AlignmentType } = getDocx();
     switch (align) {
       case 'center': return AlignmentType.CENTER;
       case 'right': return AlignmentType.RIGHT;

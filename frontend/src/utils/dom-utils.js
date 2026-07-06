@@ -5,6 +5,23 @@
  */
 
 /**
+ * 解析订单编辑根节点。
+ * 优先从锚点元素向上查找 #view-orders-edit，再退回全局 getElementById。
+ * 在 Tauri WebView 的 SPA 环境下，全局 ID 查询可能命中隐藏视图，使用此函数可避免此问题。
+ * @param {Element|null} anchorEl - 与当前操作相关的 DOM 元素（表格行、输入框等）
+ * @returns {Element|null}
+ */
+export function resolveOrderEditRoot(anchorEl) {
+  if (anchorEl) {
+    const fromAnchor = anchorEl.closest('#view-orders-edit');
+    if (fromAnchor) return fromAnchor;
+  }
+  const activeView = document.querySelector('#view-orders-edit.view-active');
+  if (activeView) return activeView;
+  return document.getElementById('view-orders-edit');
+}
+
+/**
  * 渲染订单列表骨架屏
  * @param {number} rows - 骨架屏行数，默认 10
  */

@@ -2,6 +2,12 @@
  * 仪表盘统计卡片渲染
  */
 
+import { isAnalyticsSummaryNavEnabled } from '../../utils/ui-preferences.js';
+
+function analyticsAmountTargetPath() {
+  return isAnalyticsSummaryNavEnabled() ? '/analytics/summary' : '/analytics/export';
+}
+
 /**
  * 格式化金额
  */
@@ -221,10 +227,11 @@ export function renderStatsCards(stats, container) {
       color: ['#FBBF24', '#F59E0B'],
       suffix: ' USD',
       onClick: () => {
+        const p = analyticsAmountTargetPath();
         if (window.navigateTo) {
-          window.navigateTo('/analytics/summary');
+          window.navigateTo(p);
         } else {
-          window.location.hash = '#/analytics/summary';
+          window.location.hash = `#${p.startsWith('/') ? p : '/' + p}`;
         }
       }
     },
@@ -236,10 +243,11 @@ export function renderStatsCards(stats, container) {
       color: ['#F472B6', '#EC4899'],
       suffix: ' USD',
       onClick: () => {
+        const p = analyticsAmountTargetPath();
         if (window.navigateTo) {
-          window.navigateTo('/analytics/summary');
+          window.navigateTo(p);
         } else {
-          window.location.hash = '#/analytics/summary';
+          window.location.hash = `#${p.startsWith('/') ? p : '/' + p}`;
         }
       }
     }

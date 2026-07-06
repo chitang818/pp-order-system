@@ -3,6 +3,8 @@
  * ES6 模块化版本
  */
 
+import { isTauriLikeEnvironment, getHttpApiBase } from './tauri-env.js';
+
 /**
  * Tauri Command 调用辅助函数
  * @param {string} cmd - 命令名
@@ -19,26 +21,7 @@ async function invokeIfTauri(cmd, payload) {
   }
 }
 
-/**
- * API 基础地址
- * - 浏览器开发模式（Vite proxy）：使用相对路径 ''
- * - Tauri / file:// / 桌面端：强制使用本地后端 http://127.0.0.1:3000
- */
-function isTauriLikeEnv() {
-  try {
-    // Tauri 2.x 常见标识（不同版本/打包形态可能略有差异）
-    if (typeof window !== 'undefined') {
-      if (window.__TAURI__ || window.__TAURI_INTERNALS__ || window.__TAURI_METADATA__) return true;
-    }
-    const p = String(window.location.protocol || '').toLowerCase();
-    if (p === 'tauri:' || p === 'file:') return true;
-    const host = String(window.location.hostname || '').toLowerCase();
-    if (host === 'tauri.localhost') return true;
-  } catch (_) { }
-  return false;
-}
-
-const API_BASE_URL = isTauriLikeEnv() ? 'http://127.0.0.1:3000' : '';
+const API_BASE_URL = getHttpApiBase();
 
 export function getToken() {
   return localStorage.getItem('token');
@@ -182,7 +165,7 @@ export async function checkAuth() {
  */
 async function checkStartupState() {
   // 仅在 Tauri 环境检查
-  if (isTauriLikeEnv()) {
+  if (isTauriLikeEnvironment()) {
     const isFirstRun = await invokeIfTauri('check_first_run');
     if (isFirstRun === true) {
       if (!window.location.pathname.includes('setup-wizard.html')) {
@@ -598,80 +581,46 @@ export function initEventListeners() {
 }
 
 /**
- * 初始化认证模块
+ * 初始化认证模块（async，调用方可 await 拿到结果）
+ * 结果会缓存到 window.__authReady，供 guard/Router 复用，消除双重 IPC
+ * @returns {Promise<boolean>} 是否已登录
  */
-export function initAuth() {
-  // 页面加载时初始化
+export async function initAuth() {
+  const run = async () => {
+    if (await checkStartupState()) return false;
+
+    initUserInfo();
+
+    const isLoggedIn = await checkAuth();
+
+    initEventListeners();
+
+    // 缓存认证结果，供 guard() / Router._authCache 复用
+    window.__authReady = isLoggedIn;
+    window.__authReadyTimestamp = Date.now();
+
+    if (!isLoggedIn) {
+      const user = getUser();
+      const token = getToken();
+      if (!user || !token) {
+        if (!window.location.pathname.includes('login.html')) {
+          window.location.href = 'login.html';
+        }
+        return false;
+      }
+      if (!window.location.pathname.includes('login.html')) {
+        window.location.href = 'login.html';
+      }
+    }
+    return isLoggedIn;
+  };
+
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', async () => {
-      // 优先检查启动状态（数据库是否存在）
-      if (await checkStartupState()) return;
-
-      // 先显示已有的用户信息（如果有）
-      initUserInfo();
-
-      // 然后检查登录状态（异步，不阻塞显示）
-      const isLoggedIn = await checkAuth();
-      // checkAuth 成功后会自动调用 initUserInfo() 更新显示
-
-      // 初始化事件监听
-      initEventListeners();
-
-      // 强制未登录跳转登录页（只有在明确未登录时才跳转）
-      if (!isLoggedIn) {
-        const user = getUser();
-        const token = getToken();
-        // 如果没有用户信息和token，才跳转登录页
-        if (!user || !token) {
-          // 避免在登录页无限重定向
-          if (!window.location.pathname.includes('login.html')) {
-            window.location.href = 'login.html';
-          }
-          return;
-        }
-        // 修正后的严格逻辑：验证失败也跳转
-        if (!window.location.pathname.includes('login.html')) {
-          window.location.href = 'login.html';
-        }
-      }
+    return new Promise(resolve => {
+      document.addEventListener('DOMContentLoaded', () => run().then(resolve));
     });
-  } else {
-    // DOM 已经加载完成，立即执行
-    (async () => {
-      // 优先检查启动状态（数据库是否存在）
-      if (await checkStartupState()) return;
-
-      // 先显示已有的用户信息（如果有）
-      initUserInfo();
-
-      // 然后检查登录状态（异步，不阻塞显示）
-      const isLoggedIn = await checkAuth();
-      // checkAuth 成功后会自动调用 initUserInfo() 更新显示
-
-      // 初始化事件监听
-      initEventListeners();
-
-      // 强制未登录跳转登录页（只有在明确未登录时才跳转）
-      if (!isLoggedIn) {
-        const user = getUser();
-        const token = getToken();
-        // 如果没有用户信息和token，才跳转登录页
-        if (!user || !token) {
-          // 避免在登录页无限重定向
-          if (!window.location.pathname.includes('login.html')) {
-            window.location.href = 'login.html';
-          }
-          return;
-        }
-        // 如果有用户信息但checkAuth失败，可能是后端暂时不可用，不跳转
-        // 但由于我们在 checkAuth 中修补了 fail-open 漏洞，现在会返回 false
-        // 所以这里也应该跳转
-        if (!window.location.pathname.includes('login.html')) {
-          window.location.href = 'login.html';
-        }
-      }
-    })();
   }
+  return run();
 }
 
 // 导出 AuthManager 对象（保持向后兼容）

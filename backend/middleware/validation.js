@@ -222,6 +222,7 @@ const validateCustomer = [
 const validateProduct = [
   body('model').trim().notEmpty().withMessage('产品型号不能为空'),
   body('model').isLength({ max: 100 }).withMessage('产品型号不能超过100个字符'),
+  body('productType').optional().isInt({ min: 1, max: 3 }).withMessage('产品类型必须是1、2或3'),
   body('description').optional().isString().trim().isLength({ max: 500 }).withMessage('产品描述不能超过500个字符'),
   body('estimatedWeight').optional().isFloat({ min: 0 }).withMessage('预估重量必须大于等于0'),
   body('labelWeight').optional().isFloat({ min: 0 }).withMessage('标签重量必须大于等于0'),

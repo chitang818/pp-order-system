@@ -20,8 +20,6 @@ import { Router } from './router.js';
 import { StateManager } from './state-manager.js';
 import { OrderService } from '../services/order-service.js';
 import { CustomerService } from '../services/customer-service.js';
-import { OrdersListView } from '../views/orders/orders-list-view.js';
-import { CustomersListView } from '../views/customers/customers-list-view.js';
 import { escapeHtml, fmtMoney, fmtDateYMD, formatContact } from '../utils/format-utils.js';
 import { eventManager } from '../utils/event-manager.js';
 import { timerManager } from '../utils/timer-manager.js';
@@ -157,29 +155,7 @@ export class App {
       apiService: this.apiService
     });
 
-    // 3. 初始化视图层
-    this.ordersListView = new OrdersListView({
-      orderService: this.orderService,
-      customerService: this.customerService,
-      stateManager: this.stateManager,
-      fmtMoney,
-      fmtDateYMD,
-      escapeHtml,
-      onOrderEdit: this._handleOrderEdit.bind(this),
-      onOrderPreview: this._handleOrderPreview.bind(this),
-      onOrderDocs: this._handleOrderDocs.bind(this),
-      renderCustomerSelect: this._renderCustomerSelect.bind(this)
-    });
-
-    this.customersListView = new CustomersListView({
-      customerService: this.customerService,
-      stateManager: this.stateManager,
-      fmtMoney,
-      escapeHtml,
-      onCustomerEdit: this._handleCustomerEdit.bind(this),
-      onCustomerDelete: this._handleCustomerDelete.bind(this),
-      renderCustomerSelect: this._renderCustomerSelect.bind(this)
-    });
+    // 3. 订单/客户列表视图按需动态加载（见 _ensureOrdersListView / _ensureCustomersListView）
 
     // 4. 初始化路由管理器
     if (!this.router) {
@@ -205,6 +181,47 @@ export class App {
 
     // 8. 检查备份设置（桌面端专用）
     this._checkBackupSettings();
+  }
+
+  /**
+   * 首次进入订单列表相关路由时动态加载 OrdersListView
+   * @private
+   */
+  async _ensureOrdersListView() {
+    if (this.ordersListView) return this.ordersListView;
+    const { OrdersListView } = await import('../views/orders/orders-list-view.js');
+    this.ordersListView = new OrdersListView({
+      orderService: this.orderService,
+      customerService: this.customerService,
+      stateManager: this.stateManager,
+      fmtMoney,
+      fmtDateYMD,
+      escapeHtml,
+      onOrderEdit: this._handleOrderEdit.bind(this),
+      onOrderPreview: this._handleOrderPreview.bind(this),
+      onOrderDocs: this._handleOrderDocs.bind(this),
+      renderCustomerSelect: this._renderCustomerSelect.bind(this)
+    });
+    return this.ordersListView;
+  }
+
+  /**
+   * 首次进入客户列表相关路由时动态加载 CustomersListView
+   * @private
+   */
+  async _ensureCustomersListView() {
+    if (this.customersListView) return this.customersListView;
+    const { CustomersListView } = await import('../views/customers/customers-list-view.js');
+    this.customersListView = new CustomersListView({
+      customerService: this.customerService,
+      stateManager: this.stateManager,
+      fmtMoney,
+      escapeHtml,
+      onCustomerEdit: this._handleCustomerEdit.bind(this),
+      onCustomerDelete: this._handleCustomerDelete.bind(this),
+      renderCustomerSelect: this._renderCustomerSelect.bind(this)
+    });
+    return this.customersListView;
   }
 
   /**
@@ -301,21 +318,22 @@ export class App {
         // 订单列表页面（优化：分阶段初始化）
         console.log('[App] 初始化订单列表页面');
 
+        const ordersListView = await this._ensureOrdersListView();
         // 第一阶段：立即初始化视图
-        await this.ordersListView.init();
+        await ordersListView.init();
 
         // 第二阶段：延迟渲染（使用 requestIdleCallback）
         if (typeof requestIdleCallback !== 'undefined') {
           requestIdleCallback(() => {
-            if (this.ordersListView._initialized) {
-              this.ordersListView.render();
+            if (ordersListView._initialized) {
+              ordersListView.render();
             }
           }, { timeout: 500 });
         } else {
           // 降级：使用 requestAnimationFrame
           requestAnimationFrame(() => {
-            if (this.ordersListView._initialized) {
-              this.ordersListView.render();
+            if (ordersListView._initialized) {
+              ordersListView.render();
             }
           });
         }
@@ -370,7 +388,7 @@ export class App {
       } else {
         // 客户列表页面
         console.log('[App] 初始化客户列表页面');
-        await this.customersListView.init();
+        await (await this._ensureCustomersListView()).init();
       }
     });
 
@@ -383,7 +401,7 @@ export class App {
       if (currentRoute.sub === 'customers') {
         // 客户管理列表
         console.log('[App] 初始化客户列表页面');
-        await this.customersListView.init();
+        await (await this._ensureCustomersListView()).init();
       } else if (currentRoute.sub === 'forwarders') {
         // 货代管理列表
         console.log('[App] 初始化货代列表页面');
@@ -447,7 +465,7 @@ export class App {
       } else {
         // 默认显示客户管理
         console.log('[App] 显示合作方管理首页（默认客户管理）');
-        await this.customersListView.init();
+        await (await this._ensureCustomersListView()).init();
       }
     });
 
@@ -690,28 +708,7 @@ export class App {
       }
     });
 
-    // 处理设置菜单展开/收起
-    const navSettings = document.getElementById('navSettings');
-    if (navSettings) {
-      eventManager.on(navSettings, 'click', (e) => {
-        e.preventDefault();
-        const raw = (location.hash.replace('#/', '') || '').trim();
-        const base = raw.split('/')[0] || '';
-        const seg = raw.split('/')[1] || '';
-        const settingsSubnav = document.getElementById('settingsSubnav');
-
-        if (base === 'settings') {
-          const isOpen = settingsSubnav?.classList.contains('open');
-          settingsSubnav?.classList.toggle('open', !isOpen);
-          navSettings.classList.toggle('expanded', !isOpen);
-          if (!isOpen && !seg) {
-            location.hash = '#/settings/company';
-          }
-        } else {
-          location.hash = '#/settings/company';
-        }
-      });
-    }
+    // 设置主菜单展开/收起由 spa.js setupNavMenuHandlers 绑定，此处不再重复绑定，避免双击逻辑冲突。
 
     // 拦截订单编辑菜单项点击
     // 直接在链接上绑定事件，确保能正确捕获点击

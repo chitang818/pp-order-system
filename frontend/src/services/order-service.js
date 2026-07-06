@@ -533,7 +533,8 @@ export class OrderService {
       // 产品类型筛选（A类品=1, B类品=2, C类品=3）
       .filter((o) => {
         if (!fProductType) return true;
-        const orderProductType = o.productType !== null && o.productType !== undefined ? o.productType : 1; // 默认为A类品
+        // 兼容 Rust IPC 驼峰字段与 Node HTTP 蛇形字段
+        const orderProductType = o.productType ?? o.product_type ?? 1;
         // 将筛选条件转换为数字进行比较
         const filterProductType = parseInt(fProductType, 10);
         if (isNaN(filterProductType)) return true;

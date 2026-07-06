@@ -2,6 +2,9 @@
  * 订单分析视图
  * 显示订单的分析信息
  */
+import flatpickr from 'flatpickr';
+import { Mandarin } from 'flatpickr/dist/l10n/zh.js';
+import 'flatpickr/dist/flatpickr.min.css';
 import { fmtMoney, fmtDateYMD, escapeHtml } from '../../utils/format-utils.js';
 import { eventManager } from '../../utils/event-manager.js';
 import { timerManager } from '../../utils/timer-manager.js';
@@ -19,8 +22,12 @@ export class OrderAnalysisView {
       invoiceNo: '',
       customerName: '',
       pickupDateFrom: '',
-      pickupDateTo: ''
+      pickupDateTo: '',
+      shipmentDateFrom: '',
+      shipmentDateTo: ''
     };
+    this._fpPickupRange = null;
+    this._fpShipmentRange = null;
     this._isRendering = false;
     this._hasRendered = false;
   }
@@ -583,7 +590,27 @@ export class OrderAnalysisView {
           return false;
         }
       }
-      
+
+      if (this.filters.shipmentDateFrom) {
+        if (!order.shipmentDate) {
+          return false;
+        }
+        const sd = fmtDateYMD(order.shipmentDate);
+        if (!sd || sd === '-' || sd < this.filters.shipmentDateFrom) {
+          return false;
+        }
+      }
+
+      if (this.filters.shipmentDateTo) {
+        if (!order.shipmentDate) {
+          return false;
+        }
+        const sd = fmtDateYMD(order.shipmentDate);
+        if (!sd || sd === '-' || sd > this.filters.shipmentDateTo) {
+          return false;
+        }
+      }
+
       return true;
     });
   }
@@ -636,6 +663,10 @@ export class OrderAnalysisView {
           aVal = statsA2.weightLoaded ? statsA2.totalNetWeight : 0;
           bVal = statsB2.weightLoaded ? statsB2.totalNetWeight : 0;
           break;
+        case 'shipTo':
+          aVal = (a.shipTo || '').toLowerCase();
+          bVal = (b.shipTo || '').toLowerCase();
+          break;
         case 'boxType':
           const extrasA = a.extras || {};
           const extrasB = b.extras || {};
@@ -645,6 +676,10 @@ export class OrderAnalysisView {
         case 'tradeMode':
           aVal = '一般贸易';
           bVal = '一般贸易';
+          break;
+        case 'shipmentDate':
+          aVal = a.shipmentDate || '';
+          bVal = b.shipmentDate || '';
           break;
         case 'pickupDate':
           const extrasA2 = a.extras || {};
@@ -721,6 +756,8 @@ export class OrderAnalysisView {
         <td style="text-align: center; padding: 8px 6px;"><div class="skeleton-line" style="margin: 0 auto;"></div></td>
         <td style="text-align: center; padding: 8px 6px;"><div class="skeleton-line" style="margin: 0 auto;"></div></td>
         <td style="text-align: center; padding: 8px 6px;"><div class="skeleton-line" style="margin: 0 auto;"></div></td>
+        <td style="text-align: center; padding: 8px 6px;"><div class="skeleton-line short" style="margin: 0 auto;"></div></td>
+        <td style="text-align: center; padding: 8px 6px;"><div class="skeleton-line short" style="margin: 0 auto;"></div></td>
         <td style="text-align: center; padding: 8px 6px;"><div class="skeleton-line short" style="margin: 0 auto;"></div></td>
         <td style="text-align: center; padding: 8px 6px;"><div class="skeleton-line short" style="margin: 0 auto;"></div></td>
         <td style="text-align: center; padding: 8px 6px;"><div class="skeleton-line short" style="margin: 0 auto;"></div></td>
@@ -805,7 +842,7 @@ export class OrderAnalysisView {
       if (this.filteredOrders.length === 0) {
       const emptyRow = document.createElement('tr');
       emptyRow.innerHTML = `
-        <td colspan="9" style="text-align: center; padding: 30px; color: #6c757d;">
+        <td colspan="11" style="text-align: center; padding: 30px; color: #6c757d;">
           <div style="font-size: 14px; margin-bottom: 6px;">📊</div>
           <div style="font-size: 13px;">暂无数据</div>
         </td>
@@ -833,6 +870,7 @@ export class OrderAnalysisView {
       const productsDisplay = this.formatProducts(order);
       const quantitiesDisplay = this.formatQuantities(order);
       const pickupDate = extras.pickupDate ? fmtDateYMD(extras.pickupDate) : '-';
+      const shipmentDateDisplay = order.shipmentDate ? fmtDateYMD(order.shipmentDate) : '-';
       
       const tr = document.createElement('tr');
       tr.innerHTML = `
@@ -842,8 +880,10 @@ export class OrderAnalysisView {
         <td style="text-align: center; padding: 8px 6px; word-wrap: break-word; overflow-wrap: break-word; white-space: normal; font-size: 11px; line-height: 1.4;">${productsDisplay}</td>
         <td style="text-align: center; padding: 8px 6px; word-wrap: break-word; overflow-wrap: break-word; white-space: normal; font-size: 11px; line-height: 1.5;">${quantitiesDisplay}</td>
         <td style="text-align: center; padding: 8px 6px; word-wrap: break-word; overflow-wrap: break-word; white-space: normal; font-size: 12px;" data-weight="${order.id || ''}">${weightDisplay}</td>
+        <td style="text-align: center; padding: 8px 6px; word-wrap: break-word; overflow-wrap: break-word; white-space: normal; font-size: 12px;">${escapeHtml(order.shipTo || '-')}</td>
         <td style="text-align: center; padding: 8px 6px; word-wrap: break-word; overflow-wrap: break-word; white-space: normal; font-size: 12px;">${escapeHtml(stats.boxType || '-')}</td>
         <td style="text-align: center; padding: 8px 6px; word-wrap: break-word; overflow-wrap: break-word; white-space: normal; font-size: 12px;">一般贸易</td>
+        <td style="text-align: center; padding: 8px 6px; word-wrap: break-word; overflow-wrap: break-word; white-space: normal; font-size: 12px;">${shipmentDateDisplay}</td>
         <td style="text-align: center; padding: 8px 6px; word-wrap: break-word; overflow-wrap: break-word; white-space: normal; font-size: 12px;">${pickupDate}</td>
       `;
       fragment.appendChild(tr);
@@ -886,19 +926,132 @@ export class OrderAnalysisView {
     });
   }
 
+  /** 本地日历日格式化为 YYYY-MM-DD（与 flatpickr 选中日期一致） */
+  _formatLocalYmd(date) {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  }
+
+  _afterFilterInputsChange() {
+    this.applyFilters();
+    this.applySort();
+    this.renderStats();
+    this.renderTableSync();
+  }
+
+  _commitPickupRange(dates) {
+    if (!dates || dates.length === 0) {
+      this.filters.pickupDateFrom = '';
+      this.filters.pickupDateTo = '';
+    } else if (dates.length === 1) {
+      const s = this._formatLocalYmd(dates[0]);
+      this.filters.pickupDateFrom = s;
+      this.filters.pickupDateTo = s;
+    } else {
+      const a = this._formatLocalYmd(dates[0]);
+      const b = this._formatLocalYmd(dates[1]);
+      const [lo, hi] = a <= b ? [a, b] : [b, a];
+      this.filters.pickupDateFrom = lo;
+      this.filters.pickupDateTo = hi;
+    }
+    this._afterFilterInputsChange();
+  }
+
+  _commitShipmentRange(dates) {
+    if (!dates || dates.length === 0) {
+      this.filters.shipmentDateFrom = '';
+      this.filters.shipmentDateTo = '';
+    } else if (dates.length === 1) {
+      const s = this._formatLocalYmd(dates[0]);
+      this.filters.shipmentDateFrom = s;
+      this.filters.shipmentDateTo = s;
+    } else {
+      const a = this._formatLocalYmd(dates[0]);
+      const b = this._formatLocalYmd(dates[1]);
+      const [lo, hi] = a <= b ? [a, b] : [b, a];
+      this.filters.shipmentDateFrom = lo;
+      this.filters.shipmentDateTo = hi;
+    }
+    this._afterFilterInputsChange();
+  }
+
+  _destroyOrderAnalysisDatePickers() {
+    if (this._fpPickupRange) {
+      try {
+        this._fpPickupRange.destroy();
+      } catch {
+        /* ignore */
+      }
+      this._fpPickupRange = null;
+    }
+    if (this._fpShipmentRange) {
+      try {
+        this._fpShipmentRange.destroy();
+      } catch {
+        /* ignore */
+      }
+      this._fpShipmentRange = null;
+    }
+  }
+
+  _initOrderAnalysisDatePickers() {
+    this._destroyOrderAnalysisDatePickers();
+
+    const rangeOpts = {
+      locale: Mandarin,
+      mode: 'range',
+      allowInput: false,
+      dateFormat: 'Y-m-d'
+    };
+
+    const pickupEl = document.getElementById('fltOrderAnalysisPickupDateRange');
+    if (pickupEl) {
+      this._fpPickupRange = flatpickr(pickupEl, {
+        ...rangeOpts,
+        onChange: selectedDates => {
+          if (selectedDates.length === 2) {
+            this._commitPickupRange(selectedDates);
+          }
+        },
+        onClose: selectedDates => {
+          if (selectedDates.length !== 2) {
+            this._commitPickupRange(selectedDates);
+          }
+        }
+      });
+    }
+
+    const shipmentEl = document.getElementById('fltOrderAnalysisShipmentDateRange');
+    if (shipmentEl) {
+      this._fpShipmentRange = flatpickr(shipmentEl, {
+        ...rangeOpts,
+        onChange: selectedDates => {
+          if (selectedDates.length === 2) {
+            this._commitShipmentRange(selectedDates);
+          }
+        },
+        onClose: selectedDates => {
+          if (selectedDates.length !== 2) {
+            this._commitShipmentRange(selectedDates);
+          }
+        }
+      });
+    }
+  }
+
   /**
    * 绑定事件
    */
   bindEvents() {
-    const filterInputs = [
+    const textFilterInputs = [
       { id: 'fltOrderAnalysisContractNo', key: 'contractNo' },
       { id: 'fltOrderAnalysisInvoiceNo', key: 'invoiceNo' },
-      { id: 'fltOrderAnalysisCustomerName', key: 'customerName' },
-      { id: 'fltOrderAnalysisPickupDateFrom', key: 'pickupDateFrom' },
-      { id: 'fltOrderAnalysisPickupDateTo', key: 'pickupDateTo' }
+      { id: 'fltOrderAnalysisCustomerName', key: 'customerName' }
     ];
-    
-    filterInputs.forEach(({ id, key }) => {
+
+    textFilterInputs.forEach(({ id, key }) => {
       const input = document.getElementById(id);
       if (input) {
         const newInput = input.cloneNode(true);
@@ -912,15 +1065,27 @@ export class OrderAnalysisView {
         });
       }
     });
-    
+
+    this._initOrderAnalysisDatePickers();
+
     const btnClearFilters = document.getElementById('btnClearOrderAnalysisFilters');
     if (btnClearFilters) {
       eventManager.on(btnClearFilters, 'click', () => {
-        this.filters = { contractNo: '', invoiceNo: '', customerName: '', pickupDateFrom: '', pickupDateTo: '' };
-        filterInputs.forEach(({ id }) => {
+        this.filters = {
+          contractNo: '',
+          invoiceNo: '',
+          customerName: '',
+          pickupDateFrom: '',
+          pickupDateTo: '',
+          shipmentDateFrom: '',
+          shipmentDateTo: ''
+        };
+        textFilterInputs.forEach(({ id }) => {
           const input = document.getElementById(id);
           if (input) input.value = '';
         });
+        this._fpPickupRange?.clear();
+        this._fpShipmentRange?.clear();
         this.applyFilters();
         this.applySort();
         this.renderStats();
@@ -958,6 +1123,13 @@ export class OrderAnalysisView {
     if (btnExportExcel) {
       eventManager.on(btnExportExcel, 'click', () => {
         this.exportToExcel();
+      });
+    }
+
+    const btnExportMonthlyOrderSummary = document.getElementById('btnExportMonthlyOrderSummaryExcel');
+    if (btnExportMonthlyOrderSummary) {
+      eventManager.on(btnExportMonthlyOrderSummary, 'click', () => {
+        this.exportMonthlyOrderSummaryExcel();
       });
     }
 
@@ -1011,8 +1183,10 @@ export class OrderAnalysisView {
         { header: '产品型号', key: 'products', width: 35 },
         { header: '数量', key: 'quantity', width: 15 },
         { header: '净重(KGS)', key: 'netWeight', width: 15 },
+        { header: '目的港', key: 'shipTo', width: 18 },
         { header: '柜型', key: 'boxType', width: 12 },
         { header: '贸易方式', key: 'tradeMode', width: 12 },
+        { header: '发货日期', key: 'shipmentDate', width: 14 },
         { header: '拉货日期', key: 'pickupDate', width: 12 }
       ];
       
@@ -1026,6 +1200,7 @@ export class OrderAnalysisView {
         const stats = this.calculateOrderStats(order);
         const extras = order.extras || {};
         const pickupDate = extras.pickupDate ? fmtDateYMD(extras.pickupDate) : '';
+        const shipmentDate = order.shipmentDate ? fmtDateYMD(order.shipmentDate) : '';
         const items = Array.isArray(order.items) ? order.items : [];
         const productMap = new Map();
         
@@ -1050,8 +1225,10 @@ export class OrderAnalysisView {
           products: productsText || '',
           quantity: quantitiesText || '',
           netWeight: stats.totalNetWeight || 0,
+          shipTo: order.shipTo || '',
           boxType: stats.boxType || '',
           tradeMode: '一般贸易',
+          shipmentDate,
           pickupDate: pickupDate
         });
 
@@ -1094,7 +1271,128 @@ export class OrderAnalysisView {
   }
 
   /**
-   * 导出出库情况Excel
+   * 导出每月订单汇总表 Excel
+   * 列：客户名称、合同编号、数量（与出货内容行对应）、目的港、柜型、开船日期（同发货日期）、出货内容（产品型号多行汇总）
+   */
+  async exportMonthlyOrderSummaryExcel() {
+    if (this.filteredOrders.length === 0) {
+      window.NotificationSystem?.toast('没有数据可导出', 'warning');
+      return;
+    }
+
+    try {
+      if (!window.ExcelJS) {
+        try {
+          const ExcelJSModule = await import('exceljs');
+          window.ExcelJS = ExcelJSModule.default || ExcelJSModule;
+        } catch (importError) {
+          await new Promise((resolve, reject) => {
+            const s = document.createElement('script');
+            s.src = 'https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js';
+            s.onload = resolve;
+            s.onerror = reject;
+            document.head.appendChild(s);
+          });
+        }
+      }
+
+      const workbook = new window.ExcelJS.Workbook();
+      const worksheet = workbook.addWorksheet('每月订单汇总');
+
+      const titleInfo = this.buildMonthlyOrderSummaryTitleAndFileDate(this.filteredOrders);
+
+      worksheet.mergeCells('A1:G1');
+      const titleCell = worksheet.getCell('A1');
+      titleCell.value = `${titleInfo.titleRangeText}盛驰每月订单汇总`;
+      titleCell.font = { bold: true, size: 16 };
+      titleCell.alignment = { vertical: 'middle', horizontal: 'center' };
+      worksheet.getRow(1).height = 24;
+
+      worksheet.columns = [
+        { key: 'customerName', width: 30 },
+        { key: 'contractNo', width: 26 },
+        { key: 'quantity', width: 15 },
+        { key: 'shipTo', width: 18 },
+        { key: 'boxType', width: 12 },
+        { key: 'sailingDate', width: 14 },
+        { key: 'shipmentContent', width: 35 }
+      ];
+
+      const headerRow = worksheet.getRow(2);
+      headerRow.values = ['客户名称', '合同编号', '数量', '目的港', '柜型', '开船日期', '出货内容'];
+      headerRow.font = { bold: true, size: 12 };
+      headerRow.alignment = { vertical: 'middle', horizontal: 'center' };
+      headerRow.height = 18;
+
+      this.filteredOrders.forEach(order => {
+        const items = Array.isArray(order.items) ? order.items : [];
+        const hasItems = items.length > 0;
+        const stats = this.calculateOrderStats(order, hasItems);
+        const sailingDate = order.shipmentDate ? fmtDateYMD(order.shipmentDate) : '';
+
+        const productMap = new Map();
+        items.forEach(item => {
+          const model = item.model || item.productModel || item.product || '';
+          const quantity = Number(item.quantity || item.qty || 0);
+          if (model && model.trim() && Number.isFinite(quantity) && quantity > 0) {
+            const modelKey = model.trim();
+            productMap.set(modelKey, (productMap.get(modelKey) || 0) + quantity);
+          }
+        });
+
+        const entries = Array.from(productMap.entries());
+        const productsText = entries.length > 0
+          ? entries.map(([model]) => model).join('\n')
+          : '';
+        const quantitiesText = entries.length > 0
+          ? entries.map(([, qty]) => `${qty}条`).join('\n')
+          : '';
+
+        const row = worksheet.addRow({
+          customerName: order.customerName || '',
+          contractNo: order.contractNo || '',
+          quantity: quantitiesText,
+          shipTo: order.shipTo || '',
+          boxType: stats.boxType || '',
+          sailingDate,
+          shipmentContent: productsText
+        });
+
+        row.alignment = { vertical: 'middle', horizontal: 'center' };
+        row.height = Math.max(18, (entries.length || 1) * 15);
+
+        const quantityCell = row.getCell('quantity');
+        const shipmentContentCell = row.getCell('shipmentContent');
+        quantityCell.alignment = {
+          vertical: 'middle',
+          horizontal: 'center',
+          wrapText: true
+        };
+        shipmentContentCell.alignment = {
+          vertical: 'middle',
+          horizontal: 'center',
+          wrapText: true
+        };
+      });
+
+      worksheet.views = [{ state: 'frozen', ySplit: 2 }];
+
+      const buffer = await workbook.xlsx.writeBuffer();
+      const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      const fileName = `${titleInfo.fileDateText}每月订单汇总表.xlsx`;
+
+      const { FileExportService } = await import('../../services/file-export-service.js');
+      await FileExportService.exportExcel(blob, fileName);
+
+      window.NotificationSystem?.toast('每月订单汇总表Excel导出完成', 'success');
+    } catch (error) {
+      console.error('[每月订单汇总表Excel导出] 失败:', error);
+      window.NotificationSystem?.toast('每月订单汇总表Excel导出失败: ' + (error.message || '未知错误'), 'error');
+    }
+  }
+
+  /**
+   * 导出出货情况Excel（客户/柜型等，原「出库情况」导出逻辑）
    */
   async exportShipmentSummaryExcel() {
     if (this.filteredOrders.length === 0) {
@@ -1119,15 +1417,15 @@ export class OrderAnalysisView {
       }
 
       const workbook = new window.ExcelJS.Workbook();
-      const worksheet = workbook.addWorksheet('出库情况');
+      const worksheet = workbook.addWorksheet('出货情况');
 
       // 根据筛选日期生成标题和文件名日期部分
-      const titleInfo = this.buildShipmentTitleAndFileDate();
+      const titleInfo = this.buildShipmentTitleAndFileDate(this.filteredOrders);
 
-      // 第一行：大标题
-      worksheet.mergeCells('A1:F1');
+      // 第一行：大标题 = 日期范围 + 盛驰出货情况统计
+      worksheet.mergeCells('A1:E1');
       const titleCell = worksheet.getCell('A1');
-      titleCell.value = `${titleInfo.titleRangeText}盛驰出柜情况`;
+      titleCell.value = `${titleInfo.titleRangeText}盛驰出货情况统计`;
       titleCell.font = { bold: true, size: 16 };
       titleCell.alignment = { vertical: 'middle', horizontal: 'center' };
       worksheet.getRow(1).height = 24;
@@ -1138,14 +1436,13 @@ export class OrderAnalysisView {
         { key: 'products', width: 35 },      // 产品型号
         { key: 'quantity', width: 15 },      // 数量
         { key: 'pickupDate', width: 14 },    // 拉货日期
-        { key: 'tradeMode', width: 14 },     // 贸易方式
         { key: 'boxType', width: 12 }        // 柜型
       ];
 
       // 第二行：表头
       const headerRow = worksheet.getRow(2);
       // 直接使用 0 基索引的数组，确保各列与字段一一对应
-      headerRow.values = ['客户', '产品型号', '数量', '拉货日期', '贸易方式', '柜型'];
+      headerRow.values = ['客户', '产品型号', '数量', '拉货日期', '柜型'];
       headerRow.font = { bold: true, size: 12 };
       headerRow.alignment = { vertical: 'middle', horizontal: 'center' };
       headerRow.height = 18;
@@ -1181,7 +1478,6 @@ export class OrderAnalysisView {
           products: productsText,
           quantity: quantitiesText,
           pickupDate,
-          tradeMode: '一般贸易',
           boxType: (extras.boxType || '').toString()
         });
 
@@ -1213,15 +1509,15 @@ export class OrderAnalysisView {
       const { FileExportService } = await import('../../services/file-export-service.js');
       await FileExportService.exportExcel(blob, fileName);
 
-      window.NotificationSystem?.toast('出库情况Excel导出完成', 'success');
+      window.NotificationSystem?.toast('出货情况Excel导出完成', 'success');
     } catch (error) {
-      console.error('[出库情况Excel导出] 失败:', error);
-      window.NotificationSystem?.toast('出库情况Excel导出失败: ' + (error.message || '未知错误'), 'error');
+      console.error('[出货情况Excel导出] 失败:', error);
+      window.NotificationSystem?.toast('出货情况Excel导出失败: ' + (error.message || '未知错误'), 'error');
     }
   }
 
   /**
-   * 导出用料情况Excel（规则同出库情况）
+   * 导出用料情况Excel（合同/发票/净重等）
    */
   async exportMaterialUsageExcel() {
     if (this.filteredOrders.length === 0) {
@@ -1247,9 +1543,9 @@ export class OrderAnalysisView {
 
       const workbook = new window.ExcelJS.Workbook();
       const worksheet = workbook.addWorksheet('用料情况');
-      const titleInfo = this.buildShipmentTitleAndFileDate();
+      const titleInfo = this.buildShipmentTitleAndFileDate(this.filteredOrders);
 
-      worksheet.mergeCells('A1:F1');
+      worksheet.mergeCells('A1:G1');
       const titleCell = worksheet.getCell('A1');
       titleCell.value = `${titleInfo.titleRangeText}盛驰用料情况`;
       titleCell.font = { bold: true, size: 16 };
@@ -1262,11 +1558,12 @@ export class OrderAnalysisView {
         { key: 'netWeight', width: 14 },
         { key: 'products', width: 35 },
         { key: 'quantity', width: 15 },
-        { key: 'pickupDate', width: 14 }
+        { key: 'pickupDate', width: 14 },
+        { key: 'tradeMode', width: 14 }
       ];
 
       const headerRow = worksheet.getRow(2);
-      headerRow.values = ['合同编号', '发票号', '净重(KGS)', '产品型号', '数量', '拉货日期'];
+      headerRow.values = ['合同编号', '发票号', '净重(KGS)', '产品型号', '数量', '拉货日期', '贸易方式'];
       headerRow.font = { bold: true, size: 12 };
       headerRow.alignment = { vertical: 'middle', horizontal: 'center' };
       headerRow.height = 18;
@@ -1297,7 +1594,8 @@ export class OrderAnalysisView {
           netWeight: stats.totalNetWeight || 0,
           products: productsText,
           quantity: quantitiesText,
-          pickupDate
+          pickupDate,
+          tradeMode: '一般贸易'
         });
 
         row.alignment = { vertical: 'middle', horizontal: 'center' };
@@ -1329,105 +1627,176 @@ export class OrderAnalysisView {
   }
 
   /**
-   * 构建出库情况标题和文件名中的日期范围文本
+   * 从订单列表收集拉货日期的 {y,m,d}（去重后用于推导范围时取 min/max）
    */
-  buildShipmentTitleAndFileDate() {
-    const from = this.filters.pickupDateFrom;
-    const to = this.filters.pickupDateTo;
+  _collectPickupYmdFromOrders(orders) {
+    if (!Array.isArray(orders)) return [];
+    const list = [];
+    for (const order of orders) {
+      const raw = order.extras?.pickupDate;
+      if (!raw) continue;
+      try {
+        const d = new Date(raw);
+        if (Number.isNaN(d.getTime())) continue;
+        list.push({ y: d.getFullYear(), m: d.getMonth() + 1, d: d.getDate() });
+      } catch {
+        /* skip */
+      }
+    }
+    return list;
+  }
 
-    // 如果没有日期筛选，就退回到“订单分析”标题中的当前年月
+  /**
+   * 从订单列表收集发货日期的 {y,m,d}（用于每月订单汇总等按发货推导文件名）
+   */
+  _collectShipmentYmdFromOrders(orders) {
+    if (!Array.isArray(orders)) return [];
+    const list = [];
+    for (const order of orders) {
+      if (!order.shipmentDate) continue;
+      const ymd = fmtDateYMD(order.shipmentDate);
+      if (!ymd || ymd === '-') continue;
+      const parts = ymd.split('-').map(n => parseInt(n, 10));
+      const [y, m, d] = parts;
+      if (!Number.isFinite(y) || !Number.isFinite(m) || !Number.isFinite(d)) continue;
+      list.push({ y, m, d });
+    }
+    return list;
+  }
+
+  /**
+   * 将 yyyy-mm-dd 解析为 { y, m, d }
+   */
+  _parseFilterYmd(s) {
+    if (!s || typeof s !== 'string') return null;
+    const [y, m, d] = s.split('-').map(n => parseInt(n, 10));
+    if (!Number.isFinite(y) || !Number.isFinite(m)) return null;
+    return { y, m, d: Number.isFinite(d) ? d : 1 };
+  }
+
+  _lastDayOfMonth(y, m) {
+    return new Date(y, m, 0).getDate();
+  }
+
+  /**
+   * 起止日历日均为具体日时，生成中文日期范围文案（整月 / 同年整月连选 / 其他为 x日~y日）
+   */
+  _formatZhRangeLabel(fromP, toP) {
+    if (!fromP || !toP) return null;
+    const lastD = (y, mo) => this._lastDayOfMonth(y, mo);
+    if (fromP.y === toP.y && fromP.m === toP.m && fromP.d === toP.d) {
+      const s = `${fromP.y}年${fromP.m}月${fromP.d}日`;
+      return { label: s, fileText: s };
+    }
+    if (fromP.y === toP.y && fromP.m === toP.m && fromP.d === 1 && toP.d === lastD(fromP.y, fromP.m)) {
+      const s = `${fromP.y}年${fromP.m}月`;
+      return { label: s, fileText: s };
+    }
+    if (
+      fromP.y === toP.y &&
+      fromP.d === 1 &&
+      toP.d === lastD(toP.y, toP.m) &&
+      fromP.m < toP.m
+    ) {
+      const s = `${fromP.y}年${fromP.m}月~${toP.m}月`;
+      return { label: s, fileText: s };
+    }
+    const left = `${fromP.y}年${fromP.m}月${fromP.d}日`;
+    const right = `${toP.y}年${toP.m}月${toP.d}日`;
+    const s = `${left}~${right}`;
+    return { label: s, fileText: s };
+  }
+
+  _fallbackNowYearMonth() {
+    const now = new Date();
+    const ym = `${now.getFullYear()}年${now.getMonth() + 1}月`;
+    return { titleRangeText: ym, fileDateText: ym };
+  }
+
+  /**
+   * 按「起止筛选字符串 + 无筛选时从订单列表收集的日期」生成标题与文件名用日期文案
+   * @param {string} from - YYYY-MM-DD 或 ''
+   * @param {string} to - YYYY-MM-DD 或 ''
+   * @param {Array} orders - 用于无筛选时推导 min/max
+   * @param {() => Array<{y:number,m:number,d:number}>} collectYmd - 从 orders 收集 ymd
+   */
+  _buildTitleFileDateFromRange(from, to, orders, collectYmd) {
     if (!from && !to) {
-      const now = new Date();
-      const year = now.getFullYear();
-      const month = String(now.getMonth() + 1).padStart(2, '0');
-      const ym = `${year}年${month}月`;
+      const ymds = collectYmd();
+      if (ymds.length === 0) {
+        return this._fallbackNowYearMonth();
+      }
+      ymds.sort((a, b) => a.y - b.y || a.m - b.m || a.d - b.d);
+      const minP = ymds[0];
+      const maxP = ymds[ymds.length - 1];
+      const formatted = this._formatZhRangeLabel(minP, maxP);
       return {
-        titleRangeText: ym,
-        fileDateText: ym
+        titleRangeText: formatted.label,
+        fileDateText: formatted.fileText
       };
     }
 
-    // 辅助：把 yyyy-mm-dd 转成 Date 和 “年/月/日”片段
-    const parseDate = (s) => {
-      const [y, m, d] = s.split('-').map(n => parseInt(n, 10));
-      return { y, m, d, date: new Date(y, m - 1, d || 1) };
-    };
+    const fromP = from ? this._parseFilterYmd(from) : null;
+    const toP = to ? this._parseFilterYmd(to) : null;
 
-    const fromInfo = from ? parseDate(from) : null;
-    const toInfo = to ? parseDate(to) : null;
-
-    // 只有起始日期
-    if (fromInfo && !toInfo) {
-      const text = `${fromInfo.y}年${String(fromInfo.m).padStart(2, '0')}月${String(fromInfo.d).padStart(2, '0')}日`;
+    if (fromP && !toP) {
+      const s = `${fromP.y}年${fromP.m}月${fromP.d}日`;
       return {
-        titleRangeText: text + '起',
-        fileDateText: text
+        titleRangeText: `${s}起`,
+        fileDateText: s
       };
     }
 
-    // 只有结束日期
-    if (!fromInfo && toInfo) {
-      const text = `${toInfo.y}年${String(toInfo.m).padStart(2, '0')}月${String(toInfo.d).padStart(2, '0')}日`;
+    if (!fromP && toP) {
+      const s = `${toP.y}年${toP.m}月${toP.d}日`;
       return {
-        titleRangeText: '截至' + text,
-        fileDateText: text
+        titleRangeText: `截至${s}`,
+        fileDateText: s
       };
     }
 
-    // 同一天
-    if (fromInfo.y === toInfo.y && fromInfo.m === toInfo.m && fromInfo.d === toInfo.d) {
-      const text = `${fromInfo.y}年${String(fromInfo.m).padStart(2, '0')}月${String(fromInfo.d).padStart(2, '0')}日`;
-      return {
-        titleRangeText: text,
-        fileDateText: text
-      };
+    if (fromP && toP) {
+      const formatted = this._formatZhRangeLabel(fromP, toP);
+      if (formatted) {
+        return {
+          titleRangeText: formatted.label,
+          fileDateText: formatted.fileText
+        };
+      }
     }
 
-    // 同一年同一月、并且 from 是月初、to 是该月最后一天：YYYY年MM月
-    const isFullMonthRange = () => {
-      if (!(fromInfo && toInfo)) return false;
-      if (fromInfo.y !== toInfo.y || fromInfo.m !== toInfo.m) return false;
-      if (fromInfo.d !== 1) return false;
-      const lastDay = new Date(fromInfo.y, fromInfo.m, 0).getDate();
-      return toInfo.d === lastDay;
-    };
+    return this._fallbackNowYearMonth();
+  }
 
-    if (isFullMonthRange()) {
-      const ym = `${fromInfo.y}年${String(fromInfo.m).padStart(2, '0')}月`;
-      return {
-        titleRangeText: ym,
-        fileDateText: ym
-      };
-    }
+  /**
+   * 每月订单汇总表：文件名与表头日期段始终按「发货」。
+   * 有发货筛选时用筛选起止；无筛选时按当前列表（一般为 filteredOrders）中发货日期的最小~最大推导；
+   * 列表中全无发货日期时回退为当前年月。
+   * @param {Array} [ordersArg] - 一般为 this.filteredOrders
+   */
+  buildMonthlyOrderSummaryTitleAndFileDate(ordersArg = null) {
+    const orders = ordersArg ?? this.filteredOrders ?? [];
+    return this._buildTitleFileDateFromRange(
+      this.filters.shipmentDateFrom,
+      this.filters.shipmentDateTo,
+      orders,
+      () => this._collectShipmentYmdFromOrders(orders)
+    );
+  }
 
-    // 同一年，跨多个月，且 from 是起始月1号，to 是结束月最后一天：YYYY年MM月~MM月
-    const isFullMultiMonthRange = () => {
-      if (!(fromInfo && toInfo)) return false;
-      if (fromInfo.y !== toInfo.y) return false;
-      if (fromInfo.d !== 1) return false;
-      const lastDay = new Date(toInfo.y, toInfo.m, 0).getDate();
-      return toInfo.d === lastDay && fromInfo.m !== toInfo.m;
-    };
-
-    if (isFullMultiMonthRange()) {
-      const fromText = `${fromInfo.y}年${String(fromInfo.m).padStart(2, '0')}月`;
-      const toText = `${String(toInfo.m).padStart(2, '0')}月`;
-      const rangeText = `${fromText}~${toText}`;
-      return {
-        titleRangeText: rangeText,
-        fileDateText: rangeText
-      };
-    }
-
-    // 其他情况：完整显示起止日期 YYYY年MM月DD日~YYYY年MM月DD日
-    const fromTextFull = `${fromInfo.y}年${String(fromInfo.m).padStart(2, '0')}月${String(fromInfo.d).padStart(2, '0')}日`;
-    const toTextFull = `${toInfo.y}年${String(toInfo.m).padStart(2, '0')}月${String(toInfo.d).padStart(2, '0')}日`;
-    const rangeFull = `${fromTextFull}~${toTextFull}`;
-
-    return {
-      titleRangeText: rangeFull,
-      fileDateText: rangeFull
-    };
+  /**
+   * 构建出货/用料导出第一行标题前的日期段，以及文件名中的日期段。
+   * 有筛选：按筛选起止日格式化；无筛选：按当前导出数据中拉货日期的最小~最大推导。
+   * @param {Array} [ordersForPickup] - 一般为 this.filteredOrders
+   */
+  buildShipmentTitleAndFileDate(ordersForPickup = null) {
+    const orders = ordersForPickup ?? this.filteredOrders ?? [];
+    return this._buildTitleFileDateFromRange(
+      this.filters.pickupDateFrom,
+      this.filters.pickupDateTo,
+      orders,
+      () => this._collectPickupYmdFromOrders(orders)
+    );
   }
 }
 

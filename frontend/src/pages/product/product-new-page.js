@@ -142,9 +142,10 @@ export function initProductAddPage() {
     const form = event.target;
     const formData = new FormData(form);
 
-    // 构建产品数据
+    // 构建产品数据（productType 与库表联合唯一）
     const productData = {
       model: formData.get('model')?.trim() || '',
+      productType,
       description: formData.get('description')?.trim() || '',
       unit: formData.get('unit') || '',
       estimatedWeight: formData.get('estimatedWeight') ? parseFloat(formData.get('estimatedWeight')) : 0,

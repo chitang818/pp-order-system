@@ -64,6 +64,7 @@ import {
 import {
   createProductManager
 } from './order-product-manager.js';
+import { mountOrderProductTableHeader } from './order-product-table-header.js';
 
 import {
   createEventHandler
@@ -79,8 +80,25 @@ import {
 // 防止重复初始化
 let _orderPageInitialized = false;
 let _currentOrderId = null;
+// 防止并发初始化（两次快速调用间隔极短时，防重入标记尚未写入就被第二次调用绕过）
+let _orderPageInitializing = false;
+
+/**
+ * 订单编辑页当前产品类型（A=1,B=2,C=3）模块级单例。
+ * 每次 init 若新建 `const currentProductTypeRef = { current: 1 }`，可能与异步闭包/重复入口产生多个对象；
+ * Tauri 下易出现「界面已是 C 类、某路径仍读旧 ref=1」，添加明细仍渲染 A 类行。
+ */
+export const orderEditProductTypeRef = { current: 1 };
 
 export async function initOrderNewPage() {
+  // 互斥锁：如果上一次调用尚未执行完，直接跳过，避免两个并发闭包操作同一份 DOM
+  if (_orderPageInitializing) {
+    console.warn('[订单编辑] 正在初始化中，跳过重复调用');
+    return;
+  }
+  _orderPageInitializing = true;
+
+  try {
   // 检查是否已初始化（避免重复初始化）
   // 获取当前订单ID
   const hash = location.hash || '';
@@ -148,6 +166,9 @@ export async function initOrderNewPage() {
   // 标记为已初始化
   _orderPageInitialized = true;
   _currentOrderId = orderId;
+
+  // 每次完整进入编辑页重置为 A 类，再由合同号/加载订单改类型（与历史上每次 init 新建 ref 行为一致）
+  orderEditProductTypeRef.current = 1;
 
   // 获取参数配置
   let orderConfigs = {};
@@ -294,8 +315,8 @@ export async function initOrderNewPage() {
   const KEY_ORDER_DRAFT = 'erp.order_draft';
   // 编辑模式下待回填的产品明细（在表格DOM初始化后再渲染）
   let pendingEditItems = [];
-  // 当前选择的产品类型（默认为A类品）- 使用引用对象以便在模块间共享
-  const currentProductTypeRef = { current: 1 };
+  // 与模块单例同一引用，保证全文件/全异步回调共用一个 current
+  const currentProductTypeRef = orderEditProductTypeRef;
 
   // 使用模块化的工具函数
   const load = loadLocalStorage;
@@ -647,7 +668,11 @@ export async function initOrderNewPage() {
           // 检查合同编号格式，如果匹配SC2025-220(NO.28888)格式，优先使用C类品
           const contractNo = (o.contractNo || '').trim();
           const orderNo = extractOrderNoFromContractNo(contractNo);
-          let orderProductType = o.productType || 1;
+          // 兼容 Rust IPC 驼峰字段与 Node HTTP 蛇形字段
+          let orderProductType = Number(o.productType ?? o.product_type);
+          if (!(orderProductType === 1 || orderProductType === 2 || orderProductType === 3)) {
+            orderProductType = 1;
+          }
 
           // 如果合同编号格式匹配，强制使用C类品
           if (orderNo && /^SC\d{4}-\d+\(NO\.\s*\d+\s*\)/i.test(contractNo)) {
@@ -655,51 +680,10 @@ export async function initOrderNewPage() {
             orderProductType = 3;
           }
 
-          // 根据保存的产品类型或合同编号格式切换到对应类型
+          // 统一通过 switchTemplate 切换产品类型，确保 ref、section class、Tab active 原子同步
           console.log('[加载] 订单产品类型:', o.productType, '最终产品类型:', orderProductType, '当前产品类型:', currentProductTypeRef.current);
-          if (orderProductType && orderProductType !== currentProductTypeRef.current) {
-            console.log('[加载] 切换产品类型:', currentProductTypeRef.current, '→', orderProductType);
-            currentProductTypeRef.current = orderProductType;
-            updateProductTypeDisplay(); // 更新产品类型显示
-
-            // 更新产品明细标题区域背景色（通过添加类名）
-            const sectionProducts = document.getElementById('section-products');
-            if (sectionProducts) {
-              sectionProducts.classList.remove('template-1', 'template-2', 'template-3');
-              sectionProducts.classList.add('template-' + orderProductType);
-            }
-
-            updateTableHeader();
-            updateTotalRowColumns();
-            // 更新产品类型按钮状态
-            const btnTemplate1 = document.getElementById('btnTemplate1');
-            const btnTemplate2 = document.getElementById('btnTemplate2');
-            const btnTemplate3 = document.getElementById('btnTemplate3');
-            if (btnTemplate1 && btnTemplate2 && btnTemplate3) {
-              btnTemplate1.classList.remove('active');
-              btnTemplate2.classList.remove('active');
-              btnTemplate3.classList.remove('active');
-              if (currentProductTypeRef.current === 1) {
-                btnTemplate1.classList.add('active');
-              } else if (currentProductTypeRef.current === 2) {
-                btnTemplate2.classList.add('active');
-              } else if (currentProductTypeRef.current === 3) {
-                btnTemplate3.classList.add('active');
-              }
-            }
-            console.log('[加载] 产品类型切换完成，当前产品类型:', currentProductTypeRef.current);
-          } else {
-            console.log('[加载] 无需切换产品类型（productType:', orderProductType, '）');
-            // 即使无需切换，也要更新显示（确保显示正确）
-            updateProductTypeDisplay();
-
-            // 确保标题区域背景色正确（通过添加类名）
-            const sectionProducts = document.getElementById('section-products');
-            if (sectionProducts) {
-              sectionProducts.classList.remove('template-1', 'template-2', 'template-3');
-              sectionProducts.classList.add('template-' + orderProductType);
-            }
-          }
+          switchTemplate(orderProductType);
+          console.log('[加载] 产品类型切换完成，当前产品类型:', currentProductTypeRef.current);
           // 先设置选中值，待客户列表加载后会匹配到
           try { sel.value = String(o.customerId || ''); } catch (e) { }
           const btn = document.getElementById('btnSaveOrderNew');
@@ -830,11 +814,9 @@ export async function initOrderNewPage() {
   // 产品明细增删与采集
   const prodTbody = document.getElementById('prodTbody');
 
-  // 先定义包装函数（这些函数将在管理器创建后更新）
-  let productManager = null;
+  // 包装函数（通过 getter 延迟绑定，productManager 就绪后自动获取正确引用）
   let scheduleSaveDraft = null; // 将在后面定义
 
-  // 临时包装函数，待管理器创建后替换
   function updateTotalRowWrapper() {
     if (productManager) {
       updateTotalRow(prodTbody, productManager.addTotalRow);
@@ -845,746 +827,56 @@ export async function initOrderNewPage() {
     calculateTotalAmount(prodTbody);
   }
 
-  // 临时保留原函数定义，待管理器创建后替换
-  let addProdRow = function (data, isNewRow = false) {
-    const tr = document.createElement('tr');
-    const unit = (data && data.unit) || '';
-    // 容错解析已有的行级 extras（编辑模式回填）并挂载到行属性，便于后续保存时保留
-    function normalizeExtrasObj(ex) {
-      if (!ex) return {};
-      if (typeof ex === 'string') { try { const o = JSON.parse(ex); return (o && typeof o === 'object') ? o : {}; } catch (_) { return {}; } }
-      return (typeof ex === 'object' && ex) ? ex : {};
-    }
-    function renderItemExtrasInline(ex) {
-      const obj = normalizeExtrasObj(ex);
-      const parts = [];
-      if (obj.size) parts.push(`规格：${obj.size}`);
-      if (obj.color) parts.push(`颜色：${obj.color}`);
-      if (obj.spec) parts.push(`参数：${obj.spec}`);
-      if (obj.remark) parts.push(`备注：${obj.remark}`);
-      return parts.join('；');
-    }
-    // 如果 data 为 null 或 undefined，初始化为空对象（新建订单时 data 可能为 null）
-    if (!data) {
-      data = {};
-    }
-    const extrasText = renderItemExtrasInline((data && data.extras) || {});
-    // 从 extras 中提取 marks 字段（如果主字段中没有）
-    const itemExtras = normalizeExtrasObj((data && data.extras) || {});
-    if (!data.marks && itemExtras.marks) {
-      data = { ...data, marks: itemExtras.marks };
-    }
-
-    // 根据当前产品类型生成不同的HTML
-    // 注意：此函数将在产品明细管理器创建后被替换
-    const currentType = currentProductTypeRef.current;
-    if (currentType === 1) {
-      // A类品：标签重量、安全系数
-      tr.innerHTML = `
-              <td class="checkbox-col">
-                <span class="drag-handle" title="拖拽排序" aria-label="拖拽排序" draggable="true"></span>
-                <input type="checkbox" class="row-check" />
-              </td>
-              <td class="common-section"><div class="model-field"><span class="row-index"></span><input class="input" data-field="model" placeholder="型号" value="${(data && data.model) || ''}" autocomplete="off" /></div></td>
-              <td class="common-section"><input class="input" data-field="quantity" type="number" step="1" placeholder="数量" value="${(data && data.quantity) || ''}" /></td>
-              <td class="common-section"><input class="input" data-field="packages" type="number" step="1" placeholder="件数" value="${(data && data.packages) || ''}" /></td>
-              <td class="common-section">
-                <select class="select" data-field="unit" style="background-color: ${unit && unit !== '' ? '#ffffff' : '#ffcccc'};">
-                  <option value="">请选择</option>
-                  <option value="件"${unit === '件' ? ' selected' : ''}>件</option>
-                  <option value="托盘"${unit === '托盘' ? ' selected' : ''}>托盘</option>
-                  <option value="捆包"${unit === '捆包' ? ' selected' : ''}>捆包</option>
-                </select>
-              </td>
-              <td class="common-section"><input class="input" data-field="unitPrice" type="number" step="0.01" placeholder="单价" value="${(data && data.unitPrice) ? (isNaN(parseFloat(data.unitPrice)) ? data.unitPrice : parseFloat(data.unitPrice).toFixed(2)) : ''}" /></td>
-              <td class="common-section"><input class="input" data-field="actualWeight" type="number" step="0.01" placeholder="实际重量" value="${(data && data.actualWeight) ? (isNaN(parseFloat(data.actualWeight)) ? data.actualWeight : parseFloat(data.actualWeight).toFixed(2)) : ''}" /></td>
-              <td class="common-section"><input class="input" data-field="estimatedWeightInput" type="number" step="0.01" placeholder="预估重量" value="${(data && data.weight) ? (isNaN(parseFloat(data.weight)) ? data.weight : parseFloat(data.weight).toFixed(2)) : ''}" /></td>
-              <td class="common-section">
-                <select class="select" data-field="cleanliness" style="background-color: ${(data && data.cleanliness && data.cleanliness !== '') ? '#ffffff' : '#ffcccc'};">
-                  <option value="">请选择</option>
-                  <option value="A"${(data && data.cleanliness) == 'A' ? ' selected' : ''}>A</option>
-                  <option value="B"${(data && data.cleanliness) == 'B' ? ' selected' : ''}>B</option>
-                  <option value="B+"${(data && data.cleanliness) == 'B+' ? ' selected' : ''}>B+</option>
-                </select>
-              </td>
-              <td class="common-section">
-                <select class="select" data-field="wrappingCloth" style="background-color: ${(data && data.wrappingCloth && data.wrappingCloth !== '') ? '#ffffff' : '#ffcccc'};">
-                  <option value=""${!data || !data.wrappingCloth ? ' selected' : ''}>请选择</option>
-                  <option value="要"${(data && data.wrappingCloth) === '要' ? ' selected' : ''}>要</option>
-                  <option value="不要"${(data && data.wrappingCloth) === '不要' ? ' selected' : ''}>不要</option>
-                </select>
-              </td>
-              <td class="variable-section"><input class="input" data-field="labelWeight" type="text" placeholder="标签重量" value="${isNewRow ? '1000' : ((data && data.labelWeight !== undefined && data.labelWeight !== null) ? String(data.labelWeight) : '')}" style="background-color: #ffffff;" /></td>
-              <td class="variable-section">
-                <select class="select" data-field="safetyFactor" style="background-color: ${(data && data.safetyFactor && data.safetyFactor !== '') ? '#ffffff' : '#ffcccc'};">
-                  <option value="">请选择</option>
-                  <option value="不写"${(data && data.safetyFactor) == '不写' ? ' selected' : ''}>不写</option>
-                  <option value="5:1"${(data && data.safetyFactor) == '5:1' ? ' selected' : ''}>5:1</option>
-                  <option value="6:1"${(data && data.safetyFactor) == '6:1' ? ' selected' : ''}>6:1</option>
-                </select>
-              </td>
-              <td class="calc-section" style="background-color: #e8f5e8;"><input class="input" data-field="packing" type="text" placeholder="包装" readonly /></td>
-              <td class="calc-section" style="background-color: #e8f5e8;"><input class="input" data-field="estimatedWeight" type="number" step="0.01" placeholder="预估重量" readonly /></td>
-              <td class="calc-section">
-                <label class="switch">
-                  <input type="checkbox" data-field="enabled" ${(!data || data.enabled !== false) ? 'checked' : ''} />
-                  <span class="switch-slider"></span>
-                </label>
-              </td>
-            `;
-    } else if (currentType === 2) {
-      // B类品：标签批号、标签说明
-      tr.innerHTML = `
-              <td class="checkbox-col">
-                <span class="drag-handle" title="拖拽排序" aria-label="拖拽排序" draggable="true"></span>
-                <input type="checkbox" class="row-check" />
-              </td>
-              <td class="common-section"><div class="model-field"><span class="row-index"></span><input class="input" data-field="model" placeholder="型号" value="${(data && data.model) || ''}" autocomplete="off" /></div></td>
-              <td class="common-section"><input class="input" data-field="quantity" type="number" step="1" placeholder="数量" value="${(data && data.quantity) || ''}" /></td>
-              <td class="common-section"><input class="input" data-field="packages" type="number" step="1" placeholder="件数" value="${(data && data.packages) || ''}" /></td>
-              <td class="common-section">
-                <select class="select" data-field="unit" style="background-color: ${unit && unit !== '' ? '#ffffff' : '#ffcccc'};">
-                  <option value="">请选择</option>
-                  <option value="件"${unit === '件' ? ' selected' : ''}>件</option>
-                  <option value="托盘"${unit === '托盘' ? ' selected' : ''}>托盘</option>
-                  <option value="捆包"${unit === '捆包' ? ' selected' : ''}>捆包</option>
-                </select>
-              </td>
-              <td class="common-section"><input class="input" data-field="unitPrice" type="number" step="0.01" placeholder="单价" value="${(data && data.unitPrice) ? (isNaN(parseFloat(data.unitPrice)) ? data.unitPrice : parseFloat(data.unitPrice).toFixed(2)) : ''}" /></td>
-              <td class="common-section"><input class="input" data-field="actualWeight" type="number" step="0.01" placeholder="实际重量" value="${(data && data.actualWeight) ? (isNaN(parseFloat(data.actualWeight)) ? data.actualWeight : parseFloat(data.actualWeight).toFixed(2)) : ''}" /></td>
-              <td class="common-section"><input class="input" data-field="estimatedWeightInput" type="number" step="0.01" placeholder="预估重量" value="${(data && data.weight) ? (isNaN(parseFloat(data.weight)) ? data.weight : parseFloat(data.weight).toFixed(2)) : ''}" /></td>
-              <td class="common-section">
-                <select class="select" data-field="cleanliness" style="background-color: ${(data && data.cleanliness && data.cleanliness !== '') ? '#ffffff' : '#ffcccc'};">
-                  <option value="">请选择</option>
-                  <option value="A"${(data && data.cleanliness) == 'A' ? ' selected' : ''}>A</option>
-                  <option value="B"${(data && data.cleanliness) == 'B' ? ' selected' : ''}>B</option>
-                  <option value="B+"${(data && data.cleanliness) == 'B+' ? ' selected' : ''}>B+</option>
-                </select>
-              </td>
-              <td class="common-section">
-                <select class="select" data-field="wrappingCloth" style="background-color: ${(data && data.wrappingCloth && data.wrappingCloth !== '') ? '#ffffff' : '#ffcccc'};">
-                  <option value=""${!data || !data.wrappingCloth ? ' selected' : ''}>请选择</option>
-                  <option value="要"${(data && data.wrappingCloth) === '要' ? ' selected' : ''}>要</option>
-                  <option value="不要"${(data && data.wrappingCloth) === '不要' ? ' selected' : ''}>不要</option>
-                </select>
-              </td>
-              <td class="variable-section"><input class="input" data-field="labelBatchNo" type="text" placeholder="批号" value="${(data && data.labelBatchNo) || ''}" /></td>
-              <td class="variable-section">
-                <select class="select" data-field="label" style="background-color: ${(data && data.label && data.label !== '') ? '#ffffff' : '#ffcccc'};">
-                  <option value="">请选择</option>
-                  ${getLabelOptions('label_b', data && data.label).map(cfg =>
-        `<option value="${cfg.value}"${(data && data.label) === cfg.value ? ' selected' : ''}>${cfg.value}</option>`
-      ).join('')}
-                </select>
-              </td>
-              <td class="calc-section"><input class="input" data-field="packing" type="text" placeholder="包装" readonly style="background-color: #f5f5f5;" /></td>
-              <td class="calc-section"><input class="input" data-field="estimatedWeight" type="number" step="0.01" placeholder="预估重量" readonly /></td>
-              <td class="calc-section">
-                <label class="switch">
-                  <input type="checkbox" data-field="enabled" ${(!data || data.enabled !== false) ? 'checked' : ''} />
-                  <span class="switch-slider"></span>
-                </label>
-              </td>
-            `;
-    } else if (currentType === 3) {
-      // C类品：唛头、标签说明
-      tr.innerHTML = `
-              <td class="checkbox-col">
-                <span class="drag-handle" title="拖拽排序" aria-label="拖拽排序" draggable="true"></span>
-                <input type="checkbox" class="row-check" />
-              </td>
-              <td class="common-section"><div class="model-field"><span class="row-index"></span><input class="input" data-field="model" placeholder="型号" value="${(data && data.model) || ''}" autocomplete="off" /></div></td>
-              <td class="common-section"><input class="input" data-field="quantity" type="number" step="1" placeholder="数量" value="${(data && data.quantity) || ''}" /></td>
-              <td class="common-section"><input class="input" data-field="packages" type="number" step="1" placeholder="件数" value="${(data && data.packages) || ''}" /></td>
-              <td class="common-section">
-                <select class="select" data-field="unit" style="background-color: ${unit && unit !== '' ? '#ffffff' : '#ffcccc'};">
-                  <option value="">请选择</option>
-                  <option value="件"${unit === '件' ? ' selected' : ''}>件</option>
-                  <option value="托盘"${unit === '托盘' ? ' selected' : ''}>托盘</option>
-                  <option value="捆包"${unit === '捆包' ? ' selected' : ''}>捆包</option>
-                </select>
-              </td>
-              <td class="common-section"><input class="input" data-field="unitPrice" type="number" step="0.01" placeholder="单价" value="${(data && data.unitPrice) ? (isNaN(parseFloat(data.unitPrice)) ? data.unitPrice : parseFloat(data.unitPrice).toFixed(2)) : ''}" /></td>
-              <td class="common-section"><input class="input" data-field="actualWeight" type="number" step="0.01" placeholder="实际重量" value="${(data && data.actualWeight) ? (isNaN(parseFloat(data.actualWeight)) ? data.actualWeight : parseFloat(data.actualWeight).toFixed(2)) : ''}" /></td>
-              <td class="common-section"><input class="input" data-field="estimatedWeightInput" type="number" step="0.01" placeholder="预估重量" value="${(data && data.weight) ? (isNaN(parseFloat(data.weight)) ? data.weight : parseFloat(data.weight).toFixed(2)) : ''}" /></td>
-              <td class="common-section">
-                <select class="select" data-field="cleanliness" style="background-color: ${(data && data.cleanliness && data.cleanliness !== '') ? '#ffffff' : (isNewRow ? '#e8f5e8' : '#ffcccc')};">
-                  <option value="">请选择</option>
-                  <option value="A"${(data && data.cleanliness) == 'A' ? ' selected' : ''}>A</option>
-                  <option value="B"${(!data || !data.cleanliness || data.cleanliness == 'B') ? ' selected' : ''}>B</option>
-                  <option value="B+"${(data && data.cleanliness) == 'B+' ? ' selected' : ''}>B+</option>
-                </select>
-              </td>
-              <td class="common-section">
-                <select class="select" data-field="wrappingCloth" style="background-color: ${(data && data.wrappingCloth && data.wrappingCloth !== '') ? '#ffffff' : '#ffcccc'};">
-                  <option value=""${!data || !data.wrappingCloth ? ' selected' : ''}>请选择</option>
-                  <option value="要"${(data && data.wrappingCloth) === '要' ? ' selected' : ''}>要</option>
-                  <option value="不要"${(data && data.wrappingCloth) === '不要' ? ' selected' : ''}>不要</option>
-                </select>
-              </td>
-              <td class="variable-section">
-                <select class="select" data-field="label" style="background-color: ${(data && data.label && data.label !== '') ? '#ffffff' : '#ffffff'};">
-                  <option value="">请选择</option>
-                  ${getLabelOptions('label_c', data && data.label).map(cfg =>
-        `<option value="${cfg.value}"${(data && data.label) === cfg.value ? ' selected' : ''}>${cfg.value}</option>`
-      ).join('')}
-                </select>
-              </td>
-              <td class="variable-section"><input class="input" data-field="marks" type="text" placeholder="唛头" value="${(data && (data.marks || (data.extras && data.extras.marks))) || ''}" /></td>
-              <td class="calc-section"><input class="input" data-field="packing" type="text" placeholder="包装" readonly style="background-color: #f5f5f5;" /></td>
-              <td class="calc-section"><input class="input" data-field="estimatedWeight" type="number" step="0.01" placeholder="预估重量" readonly /></td>
-              <td class="calc-section">
-                <label class="switch">
-                  <input type="checkbox" data-field="enabled" ${(!data || data.enabled !== false) ? 'checked' : ''} />
-                  <span class="switch-slider"></span>
-                </label>
-              </td>
-            `;
-    }
-    // 将 extras 以 JSON 挂到行上，便于保存时合并保留
-    try { tr.dataset.itemExtras = JSON.stringify(normalizeExtrasObj((data && data.extras) || {})); } catch (_) { tr.dataset.itemExtras = '{}'; }
-    prodTbody.appendChild(tr);
-
-    // C类品：包皮布选择变化时，自动填充或清空唛头
-    if (currentType === 3) {
-      const wrappingClothSelect = tr.querySelector('select[data-field="wrappingCloth"]');
-      const marksInput = tr.querySelector('input[data-field="marks"]');
-
-      if (wrappingClothSelect && marksInput) {
-        // 处理包皮布选择变化
-        const handleWrappingClothChange = () => {
-          const wrappingClothValue = wrappingClothSelect.value;
-          // 更新背景色：有值时白色，无值时红色
-          if (wrappingClothValue && wrappingClothValue !== '') {
-            wrappingClothSelect.style.backgroundColor = '#ffffff';
-          } else {
-            wrappingClothSelect.style.backgroundColor = '#ffcccc';
-          }
-
-          const contractNoInput = document.getElementById('contractNo');
-
-          if (wrappingClothValue === '要') {
-            // 选择"要"时，自动填充唛头
-            const contractNoInputEl = document.getElementById('contractNo');
-            if (contractNoInputEl) {
-              const contractNo = contractNoInputEl.value.trim();
-              const orderNo = extractOrderNoFromContractNo(contractNo);
-              if (orderNo) {
-                marksInput.value = orderNo + ' QS';
-                marksInput.dispatchEvent(new Event('input', { bubbles: true }));
-              }
-            }
-          } else if (wrappingClothValue === '不要') {
-            // 选择"不要"时，自动填写唛头为"无"
-            marksInput.value = '无';
-            marksInput.dispatchEvent(new Event('input', { bubbles: true }));
-          } else if (wrappingClothValue === '') {
-            // 选择"请选择"时，清空唛头
-            marksInput.value = '';
-            marksInput.dispatchEvent(new Event('input', { bubbles: true }));
-          }
-        };
-
-        // 初始化背景色：未选择时显示红色
-        if (!wrappingClothSelect.value || wrappingClothSelect.value === '') {
-          wrappingClothSelect.style.backgroundColor = '#ffcccc';
-        } else {
-          wrappingClothSelect.style.backgroundColor = '#ffffff';
-        }
-
-        // 绑定change事件
-        wrappingClothSelect.addEventListener('change', handleWrappingClothChange);
-
-        // 如果是新行且包皮布已选择，立即填充唛头
-        if (isNewRow && (wrappingClothSelect.value === '要' || wrappingClothSelect.value === '不要')) {
-          requestAnimationFrame(() => {
-            handleWrappingClothChange();
-          });
-        }
-      }
-    }
-    // 单位变化时更新包装单位提示
-    const unitSel = tr.querySelector('select[data-field="unit"]');
-    const packUnitTip = tr.querySelector('[data-packunit]');
-    const qtyInput = tr.querySelector('input[data-field="quantity"]');
-    const pkgsInput = tr.querySelector('input[data-field="packages"]');
-    const estimatedWeightInput = tr.querySelector('input[data-field="estimatedWeightInput"]');
-    const readonlyEstimatedWeightInput = tr.querySelector('input[data-field="estimatedWeight"]');
-
-    // 计算预估重量
-    // 使用模块化的计算函数
-    function calculateEstimatedWeightWrapper() {
-      calculateEstimatedWeight(
-        qtyInput,
-        estimatedWeightInput,
-        readonlyEstimatedWeightInput,
-        () => updateTotalRow(prodTbody, addTotalRow)
-      );
-    }
-
-    // 监听数量和重量变化以自动计算预估重量
-    qtyInput.addEventListener('input', calculateEstimatedWeightWrapper);
-    estimatedWeightInput.addEventListener('input', calculateEstimatedWeightWrapper);
-
-    // 计算包装（数量/件数，显示为"XX条/件数单位"）- 使用模块化函数
-    const packingInput = tr.querySelector('input[data-field="packing"]');
-    function calculatePackingWrapper() {
-      calculatePacking(
-        packingInput,
-        qtyInput,
-        pkgsInput,
-        unitSel,
-        {
-          packingDecimalWarningShown,
-          scheduleSaveDraft
-        }
-      );
-    }
-
-    // 监听数量、件数、件数单位变化以自动计算包装
-    qtyInput.addEventListener('input', calculatePackingWrapper);
-    pkgsInput.addEventListener('input', calculatePackingWrapper);
-    if (unitSel) {
-      unitSel.addEventListener('change', calculatePackingWrapper);
-    }
-    // 初始化时计算一次包装
-    calculatePackingWrapper();
-
-    // 预估重量和实际重量字段格式化处理（自动补充为2位小数）
-    const estimatedWeightInputField = tr.querySelector('input[data-field="estimatedWeightInput"]');
-    const actualWeightField = tr.querySelector('input[data-field="actualWeight"]');
-
-    [estimatedWeightInputField, actualWeightField].forEach(field => {
-      if (field) {
-        field.addEventListener('blur', function () {
-          const value = parseFloat(this.value);
-          if (!isNaN(value)) {
-            this.value = value.toFixed(2);
-          }
-        });
-      }
-    });
-
-    // 标签重量字段处理：支持文字输入
-    const labelWeightField = tr.querySelector('input[data-field="labelWeight"]');
-    if (labelWeightField) {
-      labelWeightField.addEventListener('input', function () {
-        // 背景色始终保持白色
-        this.style.backgroundColor = '#ffffff';
-      });
-    }
-
-    // 单价字段格式化处理（自动补充为2位小数）
-    const unitPriceField = tr.querySelector('input[data-field="unitPrice"]');
-    if (unitPriceField) {
-      unitPriceField.addEventListener('blur', function () {
-        const value = parseFloat(this.value);
-        if (!isNaN(value)) {
-          this.value = value.toFixed(2);
-        }
-      });
-    }
-
-    // 监听数量和单价变化以自动计算总金额
-    qtyInput.addEventListener('input', calculateTotalAmountWrapper);
-    if (unitPriceField) {
-      unitPriceField.addEventListener('input', calculateTotalAmountWrapper);
-    }
-
-    // 初始化时计算一次
-    calculateEstimatedWeightWrapper();
-
-    // 绑定拖拽排序（鼠标与触摸）
-    bindDragSortForRow(tr);
-  }
-  // 拖拽排序实现
-  let draggingRow = null;
-  let dragIndicatorTarget = null;
-  let clearDragOverIndicator = function () {
-    if (!prodTbody) return;
-    const rows = Array.from(prodTbody.querySelectorAll('tr'));
-    rows.forEach(r => {
-      r.classList.remove('drag-over-before');
-      r.classList.remove('drag-over-after');
-    });
-    dragIndicatorTarget = null;
-  }
-  let applyDragOverIndicator = function (row, before) {
-    if (!row) return;
-    if (dragIndicatorTarget && dragIndicatorTarget !== row) {
-      dragIndicatorTarget.classList.remove('drag-over-before');
-      dragIndicatorTarget.classList.remove('drag-over-after');
-    }
-    dragIndicatorTarget = row;
-    if (before) {
-      row.classList.add('drag-over-before');
-      row.classList.remove('drag-over-after');
-    } else {
-      row.classList.add('drag-over-after');
-      row.classList.remove('drag-over-before');
-    }
-  }
-  let bindDragSortForRow = function (tr) {
-    const handle = tr.querySelector('.drag-handle');
-    if (!handle) return;
-    // 桌面：原生拖拽
-    handle.addEventListener('dragstart', function (e) {
-      draggingRow = tr;
-      tr.classList.add('dragging');
-      try { e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', ''); } catch (_) { }
-    });
-    handle.addEventListener('dragend', function () {
-      if (draggingRow) draggingRow.classList.remove('dragging');
-      draggingRow = null;
-      clearDragOverIndicator();
-    });
-    // 触摸/指针设备：Pointer 事件回退
-    let pointerDragging = null;
-    function onPointerMove(e) {
-      if (!pointerDragging) return;
-      const el = document.elementFromPoint(e.clientX, e.clientY);
-      const targetRow = el ? el.closest('tr') : null;
-      if (!targetRow || targetRow === pointerDragging) return;
-      const rect = targetRow.getBoundingClientRect();
-      const before = e.clientY < (rect.top + rect.height / 2);
-      if (before) prodTbody.insertBefore(pointerDragging, targetRow);
-      else prodTbody.insertBefore(pointerDragging, targetRow.nextSibling);
-      try { renderRowIndices(); } catch (_) { }
-      try { scheduleSaveDraft(); } catch (_) { }
-      applyDragOverIndicator(targetRow, before);
-    }
-    function endPointerDrag() {
-      if (pointerDragging) pointerDragging.classList.remove('dragging');
-      pointerDragging = null;
-      prodTbody.removeEventListener('pointermove', onPointerMove);
-      document.removeEventListener('touchmove', preventScrollDuringDrag);
-      clearDragOverIndicator();
-    }
-    function preventScrollDuringDrag(e) { e.preventDefault(); }
-    handle.addEventListener('pointerdown', function (e) {
-      // 在触摸或触控笔时启用 Pointer 拖拽；鼠标已用拖拽原生事件
-      const isTouchLike = e.pointerType && e.pointerType !== 'mouse';
-      if (!isTouchLike) return;
-      pointerDragging = tr;
-      tr.classList.add('dragging');
-      try { handle.setPointerCapture(e.pointerId); } catch (_) { }
-      prodTbody.addEventListener('pointermove', onPointerMove);
-      prodTbody.addEventListener('pointerup', endPointerDrag, { once: true });
-      // 阻止页面滚动以提升触摸拖拽流畅度
-      document.addEventListener('touchmove', preventScrollDuringDrag, { passive: false });
-    });
-  }
-  // 容器拖拽放置：在拖拽经过时动态重排
-  prodTbody.addEventListener('dragover', function (e) {
-    if (!draggingRow) return;
-    e.preventDefault();
-    const targetRow = e.target && e.target.closest ? e.target.closest('tr') : null;
-    if (!targetRow || targetRow === draggingRow) return;
-    const rect = targetRow.getBoundingClientRect();
-    const before = e.clientY < (rect.top + rect.height / 2);
-    if (before) prodTbody.insertBefore(draggingRow, targetRow);
-    else prodTbody.insertBefore(draggingRow, targetRow.nextSibling);
-    try { renderRowIndices(); } catch (_) { }
-    try { scheduleSaveDraft(); } catch (_) { }
-    applyDragOverIndicator(targetRow, before);
+  // 立即创建 productManager（依赖通过 getter 延迟绑定，无需等待后续代码就绪）
+  // orderConfigs 在 await 后才就绪，通过 getConfigs getter 延迟获取
+  const productManager = createProductManager({
+    prodTbody,
+    currentProductTypeRef,
+    getScheduleSaveDraft: () => scheduleSaveDraft,
+    getUpdateProductTypeDisplay: () => updateProductTypeDisplay,
+    getCalculateTotalAmount: () => calculateTotalAmountWrapper,
+    getUpdateTotalRow: () => updateTotalRowWrapper,
+    packingDecimalWarningShown: { value: packingDecimalWarningShown },
+    getConfigs: () => orderConfigs || {}
   });
-  prodTbody.addEventListener('drop', function (e) { if (draggingRow) { e.preventDefault(); clearDragOverIndicator(); } });
-  prodTbody.addEventListener('dragleave', function () { clearDragOverIndicator(); });
-  // 统一函数：DOM与方法就绪后渲染编辑模式的产品明细
-  let renderPendingItemsIfAny = function () {
-    if (!isEdit) return;
-    const itemsToFill = Array.isArray(pendingEditItems) ? pendingEditItems : [];
-    if (!itemsToFill.length) return;
-    if (prodTbody) prodTbody.innerHTML = '';
-    itemsToFill.forEach(it => addProdRow(it));
-    updateTotalRowWrapper(); // 编辑模式下渲染完成后更新合计
-  }
-  // 初始执行一次，若异步获取稍后返回，会再次调用
+
+  // 从 productManager 挂载所有外层变量引用（以下变量在后续代码中会用到）
+  let addProdRow = productManager.addProdRow;
+  let bindDragSortForRow = productManager.bindDragSortForRow;
+  let renderRowIndices = productManager.renderRowIndices;
+  let updateRowSelectionHighlight = productManager.updateRowSelectionHighlight;
+  let addTotalRow = productManager.addTotalRow;
+  let updateTotalRowColumns = productManager.updateTotalRowColumns;
+  let updateTableHeader = productManager.updateTableHeader;
+  let extractRowData = productManager.extractRowData;
+  let updateDeleteButtonVisibility = productManager.updateDeleteButtonVisibility;
+  let clearDragOverIndicator = productManager.clearDragOverIndicator;
+  let applyDragOverIndicator = productManager.applyDragOverIndicator;
+  let renderPendingItemsIfAny = () => productManager.renderPendingItemsIfAny(pendingEditItems, isEdit);
+
+  // 容器级拖拽事件已由 productManager 在内部绑定
   renderPendingItemsIfAny();
 
-  // 添加合计行
-  let addTotalRow = function () {
-    // 检查是否已存在合计行
-    let totalRow = document.getElementById('totalRow');
-    const currentProductType = currentProductTypeRef.current;
-    const calcSectionBgColor = (currentProductType === 1 || currentProductType === 3) ? '#e8f5e8' : '';
-
-    if (!totalRow) {
-      totalRow = document.createElement('tr');
-      totalRow.id = 'totalRow';
-      totalRow.className = 'total-row';
-      // 根据模板调整通用区的colspan：模板A和B时包皮布列隐藏，通用区8列；模板C时包皮布列显示，通用区9列
-      const commonColspan = (currentProductType === 3) ? 9 : 8; // C类品显示包皮布列，其他类型隐藏
-      // 合计行结构：复选框列(1) + "合计："(1) + 数量合计(1) + 件数合计(1) + 其他通用区(剩余列数) + 可变区(2) + 计算区(3)
-      const otherCommonColspan = commonColspan - 3; // 减去"合计："、数量、件数3列
-      totalRow.innerHTML = `
-                <td class="checkbox-col"></td>
-                <td class="common-section" style="text-align: left; font-weight: bold;">合计：</td>
-                <td class="common-section" style="text-align: center;"><input class="input total-quantity" type="text" readonly value="0" style="background-color: transparent; font-weight: bold; text-align: center;" /></td>
-                <td class="common-section" style="text-align: center;"><input class="input total-packages" type="text" readonly value="0" style="background-color: transparent; font-weight: bold; text-align: center;" /></td>
-                <td colspan="${otherCommonColspan}" class="common-section"></td>
-                <td colspan="2" class="variable-section"></td>
-                <td class="calc-section" style="background-color: ${calcSectionBgColor};"></td>
-                <td class="calc-section" style="background-color: ${calcSectionBgColor};"><input class="input total-weight" type="text" readonly value="0.00" style="background-color: transparent; font-weight: bold;" /></td>
-                <td class="calc-section"></td>
-              `;
-      prodTbody.parentNode.appendChild(totalRow);
-    } else {
-      // 如果合计行已存在，确保背景色正确（刷新页面时可能需要更新）
-      const calcSectionCells = totalRow.querySelectorAll('.calc-section');
-      // 包装列是第一个calc-section（在variable-section之后）
-      // 预估总净重列是包含.total-weight输入框的calc-section
-      calcSectionCells.forEach((cell, index) => {
-        const hasTotalWeight = cell.querySelector('.total-weight');
-        if (hasTotalWeight) {
-          // 这是预估总净重列
-          cell.style.backgroundColor = calcSectionBgColor;
-          const totalWeightInput = cell.querySelector('.total-weight');
-          if (totalWeightInput) {
-            totalWeightInput.style.backgroundColor = 'transparent';
-          }
-        } else if (index === 0 && !cell.querySelector('input, select, label')) {
-          // 这是包装列（第一个calc-section且没有输入框）
-          cell.style.backgroundColor = calcSectionBgColor;
-        }
-      });
-    }
-    return totalRow;
-  }
-
-  // 更新合计行以适配当前模板
-  let updateTotalRowColumns = function () {
-    const totalRow = document.getElementById('totalRow');
-    if (totalRow) {
-      // 根据模板调整通用区的colspan：模板A和B时包皮布列隐藏，通用区8列；模板C时包皮布列显示，通用区9列
-      const commonColspan = (currentProductTypeRef.current === 3) ? 9 : 8; // C类品显示包皮布列，其他类型隐藏
-      const currentProductType = currentProductTypeRef.current;
-      const calcSectionBgColor = (currentProductType === 1 || currentProductType === 3) ? '#e8f5e8' : '';
-      const otherCommonColspan = commonColspan - 3; // 减去"合计："、数量、件数3列
-      // 保存当前的数量和件数合计值
-      const currentQuantity = totalRow.querySelector('.total-quantity')?.value || '0';
-      const currentPackages = totalRow.querySelector('.total-packages')?.value || '0';
-      const currentWeight = totalRow.querySelector('.total-weight')?.value || '0.00';
-      totalRow.innerHTML = `
-                <td class="checkbox-col"></td>
-                <td class="common-section" style="text-align: left; font-weight: bold;">合计：</td>
-                <td class="common-section" style="text-align: center;"><input class="input total-quantity" type="text" readonly value="${currentQuantity}" style="background-color: transparent; font-weight: bold; text-align: center;" /></td>
-                <td class="common-section" style="text-align: center;"><input class="input total-packages" type="text" readonly value="${currentPackages}" style="background-color: transparent; font-weight: bold; text-align: center;" /></td>
-                <td colspan="${otherCommonColspan}" class="common-section"></td>
-                <td colspan="2" class="variable-section"></td>
-                <td class="calc-section" style="background-color: ${calcSectionBgColor};"></td>
-                <td class="calc-section" style="background-color: ${calcSectionBgColor};"><input class="input total-weight" type="text" readonly value="${currentWeight}" style="background-color: transparent; font-weight: bold;" /></td>
-                <td class="calc-section"></td>
-              `;
-      updateTotalRowWrapper(); // 重新计算合计
-    }
-  }
-
-  // 更新表头
-  let updateTableHeader = function () {
-    const thead = document.getElementById('prodTableHead');
-    const table = document.getElementById('prodTable');
-    if (!thead || !table) return;
-
-    // 移除所有模板类
-    table.classList.remove('template-2', 'template-3');
-
-    // 共用区表头部分（所有模板共用）
-    const commonSectionFields = `
-              <th class="checkbox-col"><input type="checkbox" id="checkAllRows" title="全选/取消全选" /></th>
-              <th class="common-section">产品型号</th>
-              <th class="common-section">数量</th>
-              <th class="common-section">件数</th>
-              <th class="common-section">件数<br/>单位</th>
-              <th class="common-section">单价<br/>(USD)</th>
-              <th class="common-section">实际<br/>重量</th>
-              <th class="common-section">预估<br/>重量</th>
-              <th class="common-section">清洁度</th>
-              <th class="common-section">包皮布</th>
-            `;
-
-    // 计算区表头部分（所有模板共用）- 包装列移到计算区
-    const calcSectionFields = `
-              <th class="calc-section">包装</th>
-              <th class="calc-section">预估<br/>总净重</th>
-              <th class="calc-section">启用</th>
-            `;
-
-    // 变化区表头部分（根据产品类型切换）
-    let variableSectionFields;
-    if (currentProductTypeRef.current === 1) {
-      // A类品：标签重量、安全系数
-      variableSectionFields = `
-                <th class="variable-section">标签<br/>重量</th>
-                <th class="variable-section">安全<br/>系数</th>
-              `;
-    } else if (currentProductTypeRef.current === 2) {
-      // B类品：标签批号、标签说明
-      table.classList.add('template-2');
-      variableSectionFields = `
-                <th class="variable-section">标签<br/>批号</th>
-                <th class="variable-section">标签<br/>说明</th>
-              `;
-    } else if (currentProductTypeRef.current === 3) {
-      // C类品：标签说明、唛头
-      table.classList.add('template-3');
-      variableSectionFields = `
-                <th class="variable-section">标签<br/>说明</th>
-                <th class="variable-section">唛头</th>
-              `;
-    }
-
-    // 组装完整的表头
-    thead.innerHTML = `
-              <tr>
-                ${commonSectionFields}
-                ${variableSectionFields}
-                ${calcSectionFields}
-              </tr>
-            `;
-
-    // 重新绑定全选事件
-    const headCk = document.getElementById('checkAllRows');
-    if (headCk) {
-      headCk.addEventListener('change', function () {
-        const rows = Array.from(prodTbody.querySelectorAll('.row-check'));
-        rows.forEach(ck => { ck.checked = headCk.checked; });
-      });
-    }
-  }
-
-  // 从行中提取数据（包括所有字段）
-  let extractRowData = function (row) {
-    const data = {};
-
-    // 提取所有可能的字段
-    const fields = [
-      'model', 'quantity', 'packages', 'unit', 'unitPrice',
-      'actualWeight', 'estimatedWeightInput', 'labelWeight',
-      'safetyFactor', 'cleanliness', 'labelBatchNo', 'label',
-      'packing', 'wrappingCloth', 'marks', 'enabled'
-    ];
-
-    fields.forEach(field => {
-      const input = row.querySelector(`[data-field="${field}"]`);
-      if (input) {
-        if (input.type === 'checkbox') {
-          data[field] = input.checked;
-        } else {
-          data[field] = input.value || '';
-        }
-      }
-    });
-
-    // 特殊处理：estimatedWeightInput 对应 weight 字段
-    if (data.estimatedWeightInput !== undefined) {
-      data.weight = data.estimatedWeightInput;
-    }
-
-    // 提取 extras
-    try {
-      if (row.dataset.itemExtras) {
-        data.extras = JSON.parse(row.dataset.itemExtras);
-      }
-    } catch (_) { }
-
-    return data;
-  }
-
-  // 切换产品类型
+  // 切换产品类型 - 统一通过 productManager.switchTemplate 实现
   let switchTemplate = function (templateNum) {
-    if (currentProductTypeRef.current === templateNum) {
-      console.log('[产品类型切换] 已经是' + (templateNum === 1 ? 'A类品' : templateNum === 2 ? 'B类品' : 'C类品') + '，无需切换');
-      return;
+    if (productManager && typeof productManager.switchTemplate === 'function') {
+      productManager.switchTemplate(templateNum);
+    } else {
+      console.warn('[产品类型切换] productManager 尚未初始化，暂无法切换模板');
     }
+  };
 
-    // 注意：此函数将在产品明细管理器创建后被替换
-    // 临时保留原函数定义，待管理器创建后删除
-    console.log('[产品类型切换] 从' + (currentProductTypeRef.current === 1 ? 'A类品' : currentProductTypeRef.current === 2 ? 'B类品' : 'C类品') + '切换到' + (templateNum === 1 ? 'A类品' : templateNum === 2 ? 'B类品' : 'C类品'));
 
-    // 获取prodTbody元素（动态获取，避免作用域问题）
-    const tbody = document.getElementById('prodTbody');
-    if (!tbody) {
-      console.error('[产品类型切换] prodTbody元素不存在，无法切换');
-      return;
+  // 添加明细按钮的事件绑定在 scheduleSaveDraft 就绪后统一绑定
+
+  // 模板切换按钮事件监听（加去重保护，SPA 重载时 DOM 重建后属性消失，无需手动清理）
+  [[1, 'btnTemplate1'], [2, 'btnTemplate2'], [3, 'btnTemplate3']].forEach(([num, id]) => {
+    const btn = document.getElementById(id);
+    if (btn && !btn.hasAttribute('data-template-bound')) {
+      btn.setAttribute('data-template-bound', '1');
+      btn.addEventListener('click', function () { switchTemplate(num); });
     }
-
-    // 保存当前所有行的数据
-    const rows = Array.from(tbody.querySelectorAll('tr'));
-    const rowsData = rows.map(row => extractRowData(row));
-
-    // 更新当前产品类型
-    currentProductTypeRef.current = templateNum;
-    console.log('[产品类型切换] currentProductType 已更新为:', currentProductTypeRef.current);
-
-    // 更新产品类型显示
-    updateProductTypeDisplay();
-
-    // 更新产品明细标题区域背景色（通过添加类名）
-    const sectionProducts = document.getElementById('section-products');
-    if (sectionProducts) {
-      sectionProducts.classList.remove('template-1', 'template-2', 'template-3');
-      sectionProducts.classList.add('template-' + templateNum);
-    }
-
-    // 更新表头
-    updateTableHeader();
-
-    // 清空表格内容
-    tbody.innerHTML = '';
-
-    // 重新渲染所有行（保留相同字段的数据）
-    rowsData.forEach(data => {
-      addProdRow(data);
-    });
-
-    // 更新合计行
-    updateTotalRowColumns();
-
-    // 更新按钮状态
-    document.querySelectorAll('.btn-template').forEach(btn => {
-      btn.classList.remove('active');
-    });
-    const activeBtn = document.querySelector(`.btn-template[data-template="${templateNum}"]`);
-    if (activeBtn) {
-      activeBtn.classList.add('active');
-    }
-
-    console.log('[产品类型切换] 切换完成！当前产品类型:', currentProductTypeRef.current);
-
-    // 重新渲染行号
-    renderRowIndices();
-  }
-
-  // 计算并更新预估重量合计
-  // 使用模块化的计算函数
-  function updateTotalRowWrapper() {
-    updateTotalRow(prodTbody, addTotalRow);
-  }
-
-  // 使用模块化的计算函数
-  function calculateTotalAmountWrapper() {
-    calculateTotalAmount(prodTbody);
-  }
-  // 更新删除按钮显示状态的函数（移到外部作用域，供多个地方调用）
-  let updateDeleteButtonVisibility = function () {
-    const btnDel = document.getElementById('btnDelSelected');
-    if (!btnDel) return;
-    const rows = Array.from(prodTbody.querySelectorAll('tr'));
-    const hasChecked = rows.some(r => {
-      const ck = r.querySelector('.row-check');
-      return ck && ck.checked;
-    });
-    btnDel.style.display = hasChecked ? 'inline-block' : 'none';
-  }
-
-  // 注意：添加明细按钮的事件绑定将在 productManager 创建后重新绑定（见第1900行）
-  // 这里先不绑定，避免使用旧的 addProdRow 函数
-
-  // 模板切换按钮事件监听
-  document.getElementById('btnTemplate1').addEventListener('click', function () { switchTemplate(1); });
-  document.getElementById('btnTemplate2').addEventListener('click', function () { switchTemplate(2); });
-  document.getElementById('btnTemplate3').addEventListener('click', function () { switchTemplate(3); });
+  });
 
   // 批量删除按钮逻辑：删除勾选的行
   (function () {
@@ -1709,21 +1001,7 @@ export async function initOrderNewPage() {
       row.classList.add('row-active');
     }
   }, true); // 使用捕获阶段
-  // 行选中高亮与行号渲染
-  let renderRowIndices = function () {
-    const rows = Array.from(prodTbody.querySelectorAll('tr'));
-    rows.forEach((r, idx) => {
-      const idxEl = r.querySelector('.row-index');
-      if (idxEl) idxEl.textContent = String(idx + 1);
-    });
-  }
-  let updateRowSelectionHighlight = function () {
-    const rows = Array.from(prodTbody.querySelectorAll('tr'));
-    rows.forEach(r => {
-      const ck = r.querySelector('.row-check');
-      if (ck && ck.checked) r.classList.add('selected'); else r.classList.remove('selected');
-    });
-  }
+  // renderRowIndices 和 updateRowSelectionHighlight 已由 productManager 提供，此处直接使用
   renderRowIndices();
   const observer = new MutationObserver(function () { renderRowIndices(); updateRowSelectionHighlight(); });
   observer.observe(prodTbody, { childList: true, subtree: false });
@@ -1884,46 +1162,7 @@ export async function initOrderNewPage() {
   // 创建草稿保存调度函数的包装
   scheduleSaveDraft = createScheduleSaveDraft(isEdit, collectDraftWrapper);
 
-  // 计算并更新预估重量合计的包装函数
-  function updateTotalRowWrapper() {
-    if (productManager) {
-      updateTotalRow(prodTbody, productManager.addTotalRow);
-    }
-  }
-
-  // 计算总金额的包装函数
-  function calculateTotalAmountWrapper() {
-    calculateTotalAmount(prodTbody);
-  }
-
-  // 创建产品明细管理器实例
-  productManager = createProductManager({
-    prodTbody,
-    currentProductTypeRef,
-    scheduleSaveDraft,
-    updateProductTypeDisplay,
-    packingDecimalWarningShown: { value: packingDecimalWarningShown },
-    calculateTotalAmountWrapper,
-    updateTotalRowWrapper,
-    configs: orderConfigs // 传入配置项
-  });
-
-  // 使用管理器的方法替换原函数
-  addProdRow = productManager.addProdRow;
-  bindDragSortForRow = productManager.bindDragSortForRow;
-  renderRowIndices = productManager.renderRowIndices;
-  updateRowSelectionHighlight = productManager.updateRowSelectionHighlight;
-  addTotalRow = productManager.addTotalRow;
-  updateTotalRowColumns = productManager.updateTotalRowColumns;
-  updateTableHeader = productManager.updateTableHeader;
-  extractRowData = productManager.extractRowData;
-  switchTemplate = (templateNum) => productManager.switchTemplate(templateNum, currentProductTypeRef, updateProductTypeDisplay);
-  renderPendingItemsIfAny = () => productManager.renderPendingItemsIfAny(pendingEditItems, isEdit);
-  updateDeleteButtonVisibility = productManager.updateDeleteButtonVisibility;
-  clearDragOverIndicator = productManager.clearDragOverIndicator;
-  applyDragOverIndicator = productManager.applyDragOverIndicator;
-
-  // 重新绑定添加明细按钮事件（在 productManager 创建后，确保使用正确的方法）
+  // 绑定添加明细按钮事件（productManager 已在文件顶部创建，addProdRow 已就绪）
   const btnAddProd = document.getElementById('btnAddProd');
   if (btnAddProd) {
     // 移除旧的事件监听器（通过克隆节点）
@@ -2169,36 +1408,13 @@ export async function initOrderNewPage() {
     }
   }, true); // 使用捕获阶段，确保在其他事件处理器之前执行
 
-}
-
-// DOM 加载完成后自动初始化（仅当在订单编辑页面时）
-function tryAutoInit() {
-  // 检查当前路由是否为订单编辑页面
-  const hash = location.hash || '';
-  const isOrderEditView = hash.includes('orders/edit') || hash.includes('orders/new');
-  // 也检查 DOM 中是否存在订单编辑视图
-  const orderEditView = document.querySelector('#view-orders-edit.view-active');
-
-  if (isOrderEditView || orderEditView) {
-    initOrderNewPage();
+  } finally {
+    // 无论初始化成功还是异常，都释放互斥锁
+    _orderPageInitializing = false;
   }
-  // 如果不在订单编辑页面，跳过初始化（等待 viewLoaded 事件或路由切换）
 }
 
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', tryAutoInit);
-} else {
-  // DOM 已经加载完成，检查并执行
-  tryAutoInit();
-}
-
-// 监听视图加载事件（SPA路由切换时触发）
-// 使用捕获阶段监听，确保在container上触发的非冒泡事件也能被捕获
-document.addEventListener('viewLoaded', function (e) {
-  if (e.detail && (e.detail.viewPath === 'orders/edit')) {
-    console.log('[Order New Page] 检测到视图加载事件:', e.detail.viewPath);
-    initOrderNewPage();
-  }
-}, true);
+// 初始化入口：仅由 app.js 的 onRouteInit('orders') 调用，不再使用 tryAutoInit 或 viewLoaded 监听
+// 这样确保只有一个可靠的初始化入口，消除多入口竞争问题
 
 

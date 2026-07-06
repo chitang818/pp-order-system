@@ -2,11 +2,14 @@
   <div class="panel-header">
     <div class="panel-title">订单分析</div>
     <div class="panel-actions">
-      <button class="btn" id="btnExportMaterialUsageExcel" style="margin-right: 8px; background: #F472B6; border-color: #F472B6; color: #111827;">
-        <span style="margin-right: 4px;">🧾</span>用料情况Excel
+      <button class="btn" id="btnExportMonthlyOrderSummaryExcel" style="margin-right: 8px; background: #38BDF8; border-color: #38BDF8; color: #111827;">
+        <span style="margin-right: 4px;">📅</span>每月订单汇总表Excel
       </button>
-      <button class="btn" id="btnExportShipmentSummaryExcel" style="margin-right: 8px; background: #FBBF24; border-color: #FBBF24; color: #111827;">
-        <span style="margin-right: 4px;">🚢</span>出库情况Excel
+      <button class="btn" id="btnExportShipmentSummaryExcel" style="margin-right: 8px; background: #F472B6; border-color: #F472B6; color: #111827;">
+        <span style="margin-right: 4px;">🚢</span>出货情况Excel
+      </button>
+      <button class="btn" id="btnExportMaterialUsageExcel" style="margin-right: 8px; background: #FBBF24; border-color: #FBBF24; color: #111827;">
+        <span style="margin-right: 4px;">🧾</span>用料情况Excel
       </button>
       <button class="btn success" id="btnExportOrderAnalysisCsv" style="background: #10B981; border-color: #10B981;">
         <span style="margin-right: 4px;">📊</span>导出Excel
@@ -90,15 +93,15 @@
           </div>
           <div class="form-item">
             <label style="display: flex; align-items: center; gap: 3px; font-size: 12px; font-weight: 600; color: #475569; margin-bottom: 4px;">
-              <span>📅</span> 拉货日期起
+              <span>📅</span> 拉货日期
             </label>
-            <input class="input" id="fltOrderAnalysisPickupDateFrom" type="date" style="border: 1px solid #e2e8f0; border-radius: 6px; padding: 6px 10px; font-size: 13px; height: 32px;" />
+            <input class="input" id="fltOrderAnalysisPickupDateRange" type="text" readonly placeholder="选择拉货日期范围" style="border: 1px solid #e2e8f0; border-radius: 6px; padding: 6px 10px; font-size: 13px; height: 32px; cursor: pointer; background: #fff;" />
           </div>
           <div class="form-item">
             <label style="display: flex; align-items: center; gap: 3px; font-size: 12px; font-weight: 600; color: #475569; margin-bottom: 4px;">
-              <span>📅</span> 拉货日期止
+              <span>📅</span> 发货日期
             </label>
-            <input class="input" id="fltOrderAnalysisPickupDateTo" type="date" style="border: 1px solid #e2e8f0; border-radius: 6px; padding: 6px 10px; font-size: 13px; height: 32px;" />
+            <input class="input" id="fltOrderAnalysisShipmentDateRange" type="text" readonly placeholder="选择发货日期范围" style="border: 1px solid #e2e8f0; border-radius: 6px; padding: 6px 10px; font-size: 13px; height: 32px; cursor: pointer; background: #fff;" />
           </div>
         </div>
       </div>
@@ -115,17 +118,19 @@
       }
     </style>
     <div class="order-analysis-table-container" style="background: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); overflow-y: auto; overflow-x: auto; position: relative; max-height: calc(100vh - 300px);">
-      <table class="table order-analysis-table" id="orderAnalysisTable" style="table-layout: fixed; width: 100%; min-width: 1500px; border-collapse: collapse;">
+      <table class="table order-analysis-table" id="orderAnalysisTable" style="table-layout: fixed; width: 100%; min-width: 1700px; border-collapse: collapse;">
         <colgroup>
-          <col style="width: 9%;">
-          <col style="width: 9%;">
-          <col style="width: 11%;">
-          <col style="width: 22%;">
-          <col style="width: 9%;">
-          <col style="width: 9%;">
           <col style="width: 8%;">
-          <col style="width: 12%;">
-          <col style="width: 11%;">
+          <col style="width: 8%;">
+          <col style="width: 9%;">
+          <col style="width: 16%;">
+          <col style="width: 8%;">
+          <col style="width: 8%;">
+          <col style="width: 8%;">
+          <col style="width: 6%;">
+          <col style="width: 10%;">
+          <col style="width: 9%;">
+          <col style="width: 10%;">
         </colgroup>
         <thead>
           <tr>
@@ -135,8 +140,10 @@
             <th style="text-align: center; cursor: pointer; padding: 8px 6px; font-size: 13px;" data-sort="products">📦 产品型号 <span class="sort-icon">⇅</span></th>
             <th style="text-align: center; cursor: pointer; padding: 8px 6px; font-size: 13px;" data-sort="quantity">📊 数量 <span class="sort-icon">⇅</span></th>
             <th style="text-align: center; cursor: pointer; padding: 8px 6px; font-size: 13px;" data-sort="netWeight">⚖️ 净重(KGS) <span class="sort-icon">⇅</span></th>
+            <th style="text-align: center; cursor: pointer; padding: 8px 6px; font-size: 13px;" data-sort="shipTo">🌍 目的港 <span class="sort-icon">⇅</span></th>
             <th style="text-align: center; cursor: pointer; padding: 8px 6px; font-size: 13px;" data-sort="boxType">📦 柜型 <span class="sort-icon">⇅</span></th>
             <th style="text-align: center; cursor: pointer; padding: 8px 6px; font-size: 13px;" data-sort="tradeMode">📋 贸易方式 <span class="sort-icon">⇅</span></th>
+            <th style="text-align: center; cursor: pointer; padding: 8px 6px; font-size: 13px;" data-sort="shipmentDate">🚢 发货日期 <span class="sort-icon">⇅</span></th>
             <th style="text-align: center; cursor: pointer; padding: 8px 6px; font-size: 13px;" data-sort="pickupDate">📅 拉货日期 <span class="sort-icon">⇅</span></th>
           </tr>
         </thead>
@@ -152,15 +159,6 @@
             <td style="text-align: center; padding: 8px 6px;"><div class="skeleton-line short" style="margin: 0 auto;"></div></td>
             <td style="text-align: center; padding: 8px 6px;"><div class="skeleton-line short" style="margin: 0 auto;"></div></td>
             <td style="text-align: center; padding: 8px 6px;"><div class="skeleton-line short" style="margin: 0 auto;"></div></td>
-          </tr>
-          <tr class="skeleton-row">
-            <td style="text-align: center; padding: 8px 6px;"><div class="skeleton-line" style="margin: 0 auto;"></div></td>
-            <td style="text-align: center; padding: 8px 6px;"><div class="skeleton-line" style="margin: 0 auto;"></div></td>
-            <td style="text-align: center; padding: 8px 6px;"><div class="skeleton-line" style="margin: 0 auto;"></div></td>
-            <td style="text-align: center; padding: 8px 6px;"><div class="skeleton-line" style="margin: 0 auto;"></div></td>
-            <td style="text-align: center; padding: 8px 6px;"><div class="skeleton-line short" style="margin: 0 auto;"></div></td>
-            <td style="text-align: center; padding: 8px 6px;"><div class="skeleton-line short" style="margin: 0 auto;"></div></td>
-            <td style="text-align: center; padding: 8px 6px;"><div class="skeleton-line short" style="margin: 0 auto;"></div></td>
             <td style="text-align: center; padding: 8px 6px;"><div class="skeleton-line short" style="margin: 0 auto;"></div></td>
             <td style="text-align: center; padding: 8px 6px;"><div class="skeleton-line short" style="margin: 0 auto;"></div></td>
           </tr>
@@ -169,6 +167,21 @@
             <td style="text-align: center; padding: 8px 6px;"><div class="skeleton-line" style="margin: 0 auto;"></div></td>
             <td style="text-align: center; padding: 8px 6px;"><div class="skeleton-line" style="margin: 0 auto;"></div></td>
             <td style="text-align: center; padding: 8px 6px;"><div class="skeleton-line" style="margin: 0 auto;"></div></td>
+            <td style="text-align: center; padding: 8px 6px;"><div class="skeleton-line short" style="margin: 0 auto;"></div></td>
+            <td style="text-align: center; padding: 8px 6px;"><div class="skeleton-line short" style="margin: 0 auto;"></div></td>
+            <td style="text-align: center; padding: 8px 6px;"><div class="skeleton-line short" style="margin: 0 auto;"></div></td>
+            <td style="text-align: center; padding: 8px 6px;"><div class="skeleton-line short" style="margin: 0 auto;"></div></td>
+            <td style="text-align: center; padding: 8px 6px;"><div class="skeleton-line short" style="margin: 0 auto;"></div></td>
+            <td style="text-align: center; padding: 8px 6px;"><div class="skeleton-line short" style="margin: 0 auto;"></div></td>
+            <td style="text-align: center; padding: 8px 6px;"><div class="skeleton-line short" style="margin: 0 auto;"></div></td>
+          </tr>
+          <tr class="skeleton-row">
+            <td style="text-align: center; padding: 8px 6px;"><div class="skeleton-line" style="margin: 0 auto;"></div></td>
+            <td style="text-align: center; padding: 8px 6px;"><div class="skeleton-line" style="margin: 0 auto;"></div></td>
+            <td style="text-align: center; padding: 8px 6px;"><div class="skeleton-line" style="margin: 0 auto;"></div></td>
+            <td style="text-align: center; padding: 8px 6px;"><div class="skeleton-line" style="margin: 0 auto;"></div></td>
+            <td style="text-align: center; padding: 8px 6px;"><div class="skeleton-line short" style="margin: 0 auto;"></div></td>
+            <td style="text-align: center; padding: 8px 6px;"><div class="skeleton-line short" style="margin: 0 auto;"></div></td>
             <td style="text-align: center; padding: 8px 6px;"><div class="skeleton-line short" style="margin: 0 auto;"></div></td>
             <td style="text-align: center; padding: 8px 6px;"><div class="skeleton-line short" style="margin: 0 auto;"></div></td>
             <td style="text-align: center; padding: 8px 6px;"><div class="skeleton-line short" style="margin: 0 auto;"></div></td>

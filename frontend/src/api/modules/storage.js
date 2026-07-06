@@ -1,4 +1,5 @@
 import { apiClient } from '../../core/api-client.js';
+import { getHttpApiBase } from '../../utils/tauri-env.js';
 
 // Function to assist with fallback JSON requests (mimicking request logic from api.js)
 // But since apiClient already handles this, we can rely on it mostly.
@@ -9,12 +10,10 @@ import { apiClient } from '../../core/api-client.js';
 
 // Re-implementing a simple json helper for the specific fallback cases that don't go through apiClient.invoke
 async function json(url, opts) {
-    // Simple fetch wrapper matching the original one's intent
-    const API_BASE_URL = 'http://127.0.0.1:3000'; // Hardcoded as per original api.js logic for isTauriLikeEnv check fallback
-
+    const base = getHttpApiBase();
     let requestUrl = url;
     if (url.startsWith('/')) {
-        requestUrl = API_BASE_URL + url;
+        requestUrl = base + url;
     }
 
     const method = ((opts && opts.method) || 'GET').toUpperCase();

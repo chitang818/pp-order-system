@@ -3,6 +3,13 @@
  * 使用模块化架构，路由和服务分离
  */
 
+const BACKEND_BOOT_T0 = Date.now();
+/** 分段记录 Node 进程从 app.js 入口到各阶段的耗时（用于首启分析） */
+function bootLog(label) {
+  console.log(`[BackendBoot] ${label} +${Date.now() - BACKEND_BOOT_T0}ms`);
+}
+bootLog('app.js 开始');
+
 const path = require('path');
 const fs = require('fs');
 const express = require('express');
@@ -36,17 +43,17 @@ const productsRoutes = require('./routes/products');
 const ordersRoutes = require('./routes/orders');
 const companyRoutes = require('./routes/company');
 
-// 未迁移的路由
+// 未迁移的路由（document-center / export 含 puppeteer、docx 等重依赖，见下方懒加载挂载）
 const storageRoutes = require('./routes/storage');
-const exportRoutes = require('./routes/export');
 const dashboardRoutes = require('./routes/dashboard');
 const remindersRoutes = require('./routes/reminders');
-const documentCenterRoutes = require('./routes/document-center');
 const logsRoutes = require('./routes/logs');
 const orderConfigsRoutes = require('./routes/order-configs');
 
 // 引入服务
 const LogService = require('./services/LogService');
+
+bootLog('顶层 sync require 完成（document-center/export 未加载）');
 // const OrderService = require('./services/OrderService');
 
 // 异步初始化数据库（不阻塞服务器启动）
@@ -61,6 +68,15 @@ if (db.db && !db.db.isMock) {
 
       // 数据库初始化完成后，再执行种子数据检查
       seedCompanyIfEmpty();
+
+      try {
+        const ProductSyncService = require('./services/ProductSyncService');
+        if (db.db && !db.db.isMock) {
+          ProductSyncService.startScheduler(db.db);
+        }
+      } catch (e) {
+        logger.warn('[ProductSyncScheduler] 启动失败:', e.message);
+      }
     }
   });
 } else {
@@ -89,6 +105,22 @@ function seedCompanyIfEmpty() {
 }
 
 const app = express();
+
+/**
+ * 首次命中对应路径时再 require。
+ * 收益：显著缩短进程启动到 app.listen 的时间（Tauri 轮询 3000 更快结束）。
+ * 代价：第一次访问单据中心/导出相关接口时可能多一次磁盘加载；后续请求走缓存模块。
+ */
+function lazyApiRouter(relativePath) {
+  let router = null;
+  return (req, res, next) => {
+    if (!router) {
+      router = require(relativePath);
+      bootLog(`懒加载路由 ${relativePath}`);
+    }
+    return router(req, res, next);
+  };
+}
 
 // 添加请求日志中间件（生产环境可禁用或简化以减少I/O开销）
 if (config.nodeEnv === 'development') {
@@ -176,12 +208,26 @@ app.use('/api/company', companyRoutes);
 app.use('/api/order-configs', orderConfigsRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/reminders', remindersRoutes);
-app.use('/api/document-center', documentCenterRoutes);
+app.use('/api/document-center', lazyApiRouter('./routes/document-center'));
+
+// 导出服务预热端点：前端进入单据生成页时调用，后台异步加载重型依赖
+app.post('/api/export/warmup', (req, res) => {
+  res.json({ success: true, message: '预热任务已启动' });
+  setImmediate(() => {
+    try {
+      require('./routes/document-center');
+      require('./routes/export');
+      bootLog('warmup: document-center + export 路由已加载');
+    } catch (e) {
+      console.warn('[warmup] 预热加载失败:', e.message);
+    }
+  });
+});
 app.use('/api/logs', logsRoutes);
 
 // Node.js 保留的服务（需要 Puppeteer 或复杂文件操作）
 app.use('/api/storage', storageRoutes);  // 数据库导入/导出/备份
-app.use('/api/export', exportRoutes);    // PDF/Word/Excel 导出
+app.use('/api/export', lazyApiRouter('./routes/export'));    // PDF/Word/Excel 导出
 
 // ==================== 兼容旧接口 ====================
 
@@ -467,16 +513,19 @@ app.use((req, res, next) => {
 app.use(errorHandler);
 
 // ==================== 启动服务器 ====================
+bootLog('即将 app.listen（端口绑定后 TCP 即可连通）');
 const startTime = Date.now();
 const server = app.listen(config.port, () => {
   const startupTime = Date.now() - startTime;
+  bootLog(`HTTP listen 回调（绑定耗时约 ${startupTime}ms）`);
   logger.info('================================================================');
   logger.info('🚀 PP订单管理系统 - 混合架构后端服务');
   logger.info('================================================================');
   logger.info(`[Status]  Server running at http://127.0.0.1:${config.port}/`);
   logger.info(`[Info]    Mode: ${config.nodeEnv}`);
   logger.info(`[Info]    Database: ${config.db.path}`);
-  logger.info(`[Perf]    Startup Time: ${startupTime}ms`);
+  logger.info(`[Perf]    Listen bind latency: ${startupTime}ms`);
+  logger.info(`[Perf]    Process start → listening: ${Date.now() - BACKEND_BOOT_T0}ms (sync require + 路由注册)`);
   logger.info('----------------------------------------------------------------');
   logger.info('✅ 运行模式: Tauri (Rust) + Node.js (辅助服务)');
   logger.info('');
@@ -496,15 +545,13 @@ const server = app.listen(config.port, () => {
 });
 
 // ==================== 优雅关闭处理 ====================
-// 引入 PDF 导出服务以便关闭浏览器实例
-const PdfExportService = require('./services/PdfExportService');
-
-// 优雅关闭函数
+// 优雅关闭函数（按需 require PdfExportService，避免 listen 后再同步拉起重依赖）
 async function gracefulShutdown(signal) {
   logger.info(`[Shutdown] 收到 ${signal} 信号，正在优雅关闭...`);
 
   // 1. 关闭 Puppeteer 浏览器实例
   try {
+    const PdfExportService = require('./services/PdfExportService');
     if (PdfExportService.browserInstance) {
       logger.info('[Shutdown] 正在关闭 Puppeteer 浏览器实例...');
       await PdfExportService.browserInstance.close();

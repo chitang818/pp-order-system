@@ -20,6 +20,66 @@ function formatDate(dateStr) {
 }
 
 /**
+ * 释放滚动条上的 Observer / 悬停监听，避免重复渲染堆积
+ */
+function teardownReminderScrollUi(messageContainer) {
+  if (!messageContainer) return;
+  if (messageContainer._reminderScrollObserver) {
+    messageContainer._reminderScrollObserver.disconnect();
+    messageContainer._reminderScrollObserver = null;
+  }
+  if (messageContainer._reminderScrollAbort) {
+    messageContainer._reminderScrollAbort.abort();
+    messageContainer._reminderScrollAbort = null;
+  }
+}
+
+/**
+ * 根据容器实际宽度决定滚动字幕（避免首帧 offsetWidth 为 0 时误判溢出，WebView 下会整段被裁切）
+ * @param {boolean} fromResize - ResizeObserver 回调里用单次 rAF，避免与布局反馈打架
+ */
+function applyReminderScrollAnimation(messageContainer, scrollText, fromResize = false) {
+  const runMeasure = () => {
+    const containerWidth = messageContainer.offsetWidth;
+    const textWidth = scrollText.scrollWidth;
+    if (containerWidth < 8) {
+      messageContainer.style.overflow = 'visible';
+      scrollText.style.animation = 'none';
+      return false;
+    }
+    if (textWidth > containerWidth) {
+      messageContainer.style.overflow = 'hidden';
+      const duration = Math.max(10, textWidth / 50);
+      scrollText.style.animation = `scroll-message ${duration}s linear infinite`;
+      scrollText.style.animationDelay = '0s';
+      scrollText.style.animationPlayState = 'running';
+    } else {
+      messageContainer.style.overflow = 'visible';
+      scrollText.style.animation = 'none';
+    }
+    return true;
+  };
+
+  if (fromResize) {
+    requestAnimationFrame(runMeasure);
+    return;
+  }
+
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      if (runMeasure()) return;
+      let retries = 0;
+      const retry = () => {
+        retries += 1;
+        if (runMeasure() || retries >= 12) return;
+        requestAnimationFrame(retry);
+      };
+      requestAnimationFrame(retry);
+    });
+  });
+}
+
+/**
  * 格式化金额
  */
 function formatMoney(amount) {
@@ -230,7 +290,7 @@ export function renderShipmentReminder(container, remindersData, settings, onSet
     console.warn('[DashboardReminders] 发货提醒数据为空');
     list.style.display = 'none';
     empty.style.display = 'block';
-    // 即使没有数据，也要绑定设置按钮
+    renderScrollMessage(container, []);
     bindSettingsButton(container, settings, onSettingsClick);
     return;
   }
@@ -239,12 +299,7 @@ export function renderShipmentReminder(container, remindersData, settings, onSet
   if (orders.length === 0) {
     list.style.display = 'none';
     empty.style.display = 'block';
-    // 隐藏滚动消息条
-    const messageContainer = container.querySelector('#shipmentScrollMessage');
-    if (messageContainer) {
-      messageContainer.style.display = 'none';
-    }
-    // 即使没有数据，也要绑定设置按钮
+    renderScrollMessage(container, []);
     bindSettingsButton(container, settings, onSettingsClick);
     return;
   }
@@ -339,9 +394,14 @@ function renderScrollMessage(container, orders) {
     return;
   }
 
+  teardownReminderScrollUi(messageContainer);
+
   // 如果没有订单，隐藏消息条
   if (!orders || orders.length === 0) {
+    messageContainer.innerHTML = '';
+    messageContainer.className = 'reminder-scroll-message';
     messageContainer.style.display = 'none';
+    messageContainer.style.overflow = '';
     return;
   }
 
@@ -354,13 +414,19 @@ function renderScrollMessage(container, orders) {
 
   const nearestOrder = sortedOrders[0];
   if (!nearestOrder) {
+    messageContainer.innerHTML = '';
+    messageContainer.className = 'reminder-scroll-message';
     messageContainer.style.display = 'none';
+    messageContainer.style.overflow = '';
     return;
   }
 
   const daysUntil = nearestOrder.daysUntilShipment;
   if (daysUntil === null || daysUntil === undefined) {
+    messageContainer.innerHTML = '';
+    messageContainer.className = 'reminder-scroll-message';
     messageContainer.style.display = 'none';
+    messageContainer.style.overflow = '';
     return;
   }
 
@@ -383,55 +449,43 @@ function renderScrollMessage(container, orders) {
     colorClass = 'reminder-scroll-message-blue';
   }
 
-  // 清空并设置内容 - 立即显示
+  // 清空并设置内容 - 立即显示（用类名而非依赖 style 属性选择器，避免 WebView 与 Chrome 差异）
   messageContainer.innerHTML = '';
-  messageContainer.className = `reminder-scroll-message ${colorClass}`;
-  messageContainer.style.display = 'flex'; // 立即显示容器
-  
+  messageContainer.className = `reminder-scroll-message ${colorClass} reminder-scroll-visible`;
+  messageContainer.style.display = '';
+
   // 创建滚动文本元素 - 立即显示文本内容
   const scrollText = document.createElement('span');
   scrollText.className = 'reminder-scroll-text';
   scrollText.textContent = message;
   messageContainer.appendChild(scrollText);
-  
-  // 先让文本可见，不等待动画设置
+
   messageContainer.style.overflow = 'visible';
-  
-  // 添加鼠标悬停事件，暂停/恢复动画
+
+  messageContainer._reminderScrollAbort = new AbortController();
+  const { signal } = messageContainer._reminderScrollAbort;
   messageContainer.addEventListener('mouseenter', () => {
     if (scrollText.style.animation && scrollText.style.animation !== 'none') {
       scrollText.style.animationPlayState = 'paused';
     }
-  });
-  
+  }, { signal });
+
   messageContainer.addEventListener('mouseleave', () => {
     if (scrollText.style.animation && scrollText.style.animation !== 'none') {
       scrollText.style.animationPlayState = 'running';
     }
-  });
-  
-  // 异步检查是否需要滚动（不影响文本立即显示）
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => {
-      const containerWidth = messageContainer.offsetWidth;
-      const textWidth = scrollText.scrollWidth;
-      
-      if (textWidth > containerWidth) {
-        // 文本超出容器，启用滚动动画
-        messageContainer.style.overflow = 'hidden';
-        // 计算动画时长（根据文本长度动态调整）
-        const duration = Math.max(10, (textWidth / 50)); // 每50px需要1秒
-        scrollText.style.animation = `scroll-message ${duration}s linear infinite`;
-        scrollText.style.animationDelay = '0s'; // 立即开始滚动，无延迟
-        scrollText.style.animationPlayState = 'running'; // 确保动画运行
-      } else {
-        // 文本不超出，直接显示，不需要滚动
-        messageContainer.style.overflow = 'visible';
-        scrollText.style.animation = 'none';
-      }
+  }, { signal });
+
+  applyReminderScrollAnimation(messageContainer, scrollText);
+
+  if (typeof ResizeObserver !== 'undefined') {
+    const ro = new ResizeObserver(() => {
+      applyReminderScrollAnimation(messageContainer, scrollText, true);
     });
-  });
-  
+    ro.observe(messageContainer);
+    messageContainer._reminderScrollObserver = ro;
+  }
+
   console.log('[DashboardReminders] 滚动消息已渲染:', message, '天数:', daysUntil, '颜色:', colorClass);
 }
 
@@ -646,9 +700,14 @@ function renderPaymentScrollMessage(container, orders, messageTemplate) {
     return;
   }
 
+  teardownReminderScrollUi(messageContainer);
+
   // 如果没有订单，隐藏消息条
   if (!orders || orders.length === 0) {
+    messageContainer.innerHTML = '';
+    messageContainer.className = 'reminder-scroll-message';
     messageContainer.style.display = 'none';
+    messageContainer.style.overflow = '';
     return;
   }
 
@@ -664,13 +723,19 @@ function renderPaymentScrollMessage(container, orders, messageTemplate) {
 
   const longestOrder = sortedOrders[0];
   if (!longestOrder) {
+    messageContainer.innerHTML = '';
+    messageContainer.className = 'reminder-scroll-message';
     messageContainer.style.display = 'none';
+    messageContainer.style.overflow = '';
     return;
   }
 
   const daysSince = longestOrder.daysSinceShipment;
   if (daysSince === null || daysSince === undefined || daysSince <= 0) {
+    messageContainer.innerHTML = '';
+    messageContainer.className = 'reminder-scroll-message';
     messageContainer.style.display = 'none';
+    messageContainer.style.overflow = '';
     return;
   }
 
@@ -694,53 +759,40 @@ function renderPaymentScrollMessage(container, orders, messageTemplate) {
 
   // 清空并设置内容 - 立即显示
   messageContainer.innerHTML = '';
-  messageContainer.className = `reminder-scroll-message ${colorClass}`;
-  messageContainer.style.display = 'flex'; // 立即显示容器
-  
-  // 创建滚动文本元素 - 立即显示文本内容
+  messageContainer.className = `reminder-scroll-message ${colorClass} reminder-scroll-visible`;
+  messageContainer.style.display = '';
+
   const scrollText = document.createElement('span');
   scrollText.className = 'reminder-scroll-text';
   scrollText.textContent = message;
   messageContainer.appendChild(scrollText);
-  
-  // 先让文本可见，不等待动画设置
+
   messageContainer.style.overflow = 'visible';
-  
-  // 添加鼠标悬停事件，暂停/恢复动画
+
+  messageContainer._reminderScrollAbort = new AbortController();
+  const paySignal = messageContainer._reminderScrollAbort.signal;
   messageContainer.addEventListener('mouseenter', () => {
     if (scrollText.style.animation && scrollText.style.animation !== 'none') {
       scrollText.style.animationPlayState = 'paused';
     }
-  });
-  
+  }, { signal: paySignal });
+
   messageContainer.addEventListener('mouseleave', () => {
     if (scrollText.style.animation && scrollText.style.animation !== 'none') {
       scrollText.style.animationPlayState = 'running';
     }
-  });
-  
-  // 异步检查是否需要滚动（不影响文本立即显示）
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => {
-      const containerWidth = messageContainer.offsetWidth;
-      const textWidth = scrollText.scrollWidth;
-      
-      if (textWidth > containerWidth) {
-        // 文本超出容器，启用滚动动画
-        messageContainer.style.overflow = 'hidden';
-        // 计算动画时长（根据文本长度动态调整）
-        const duration = Math.max(10, (textWidth / 50)); // 每50px需要1秒
-        scrollText.style.animation = `scroll-message ${duration}s linear infinite`;
-        scrollText.style.animationDelay = '0s'; // 立即开始滚动，无延迟
-        scrollText.style.animationPlayState = 'running'; // 确保动画运行
-      } else {
-        // 文本不超出，直接显示，不需要滚动
-        messageContainer.style.overflow = 'visible';
-        scrollText.style.animation = 'none';
-      }
+  }, { signal: paySignal });
+
+  applyReminderScrollAnimation(messageContainer, scrollText);
+
+  if (typeof ResizeObserver !== 'undefined') {
+    const ro = new ResizeObserver(() => {
+      applyReminderScrollAnimation(messageContainer, scrollText, true);
     });
-  });
-  
+    ro.observe(messageContainer);
+    messageContainer._reminderScrollObserver = ro;
+  }
+
   console.log('[DashboardReminders] 收款提醒滚动消息已渲染:', message, '天数:', daysSince, '颜色:', colorClass);
 }
 
@@ -856,12 +908,7 @@ export function renderPaymentReminder(container, remindersData, settings, onSett
     console.warn('[DashboardReminders] 收款提醒数据为空');
     list.style.display = 'none';
     empty.style.display = 'block';
-    // 隐藏消息条
-    const messageContainer = container.querySelector('#paymentScrollMessage');
-    if (messageContainer) {
-      messageContainer.style.display = 'none';
-    }
-    // 即使没有数据，也要绑定设置按钮
+    renderPaymentScrollMessage(container, [], settings?.messageTemplate);
     bindPaymentSettingsButton(container, settings, onSettingsClick);
     return;
   }
@@ -870,12 +917,7 @@ export function renderPaymentReminder(container, remindersData, settings, onSett
   if (orders.length === 0) {
     list.style.display = 'none';
     empty.style.display = 'block';
-    // 隐藏消息条
-    const messageContainer = container.querySelector('#paymentScrollMessage');
-    if (messageContainer) {
-      messageContainer.style.display = 'none';
-    }
-    // 即使没有数据，也要绑定设置按钮
+    renderPaymentScrollMessage(container, [], settings?.messageTemplate);
     bindPaymentSettingsButton(container, settings, onSettingsClick);
     return;
   }
@@ -944,7 +986,8 @@ export function renderPaymentReminder(container, remindersData, settings, onSett
     amountIcon.textContent = '💰';
     const amountInfo = document.createElement('span');
     amountInfo.className = 'reminder-item-amount';
-    amountInfo.textContent = `$${formatMoney(order.totalAmount)}`;
+    const payAmount = order.totalUSD ?? order.totalAmount;
+    amountInfo.textContent = `$${formatMoney(payAmount)}`;
     amountSection.appendChild(amountIcon);
     amountSection.appendChild(amountInfo);
     

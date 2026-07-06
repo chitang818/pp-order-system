@@ -15,6 +15,23 @@ mod backend;
 use db::pool::DbPoolHolder;
 use backend::BackendProcess;
 
+/// 显示/唤醒主窗口：已可见时只做 unminimize + focus，避免重复 maximize 导致闪动
+#[tauri::command]
+fn app_show_window(app: tauri::AppHandle) -> Result<(), String> {
+    if let Some(window) = app.get_webview_window("main") {
+        let _ = window.unminimize();
+        let visible = window.is_visible().unwrap_or(false);
+        if !visible {
+            let _ = window.maximize();
+            let _ = window.show();
+        }
+        let _ = window.set_focus();
+        Ok(())
+    } else {
+        Err("主窗口未找到".to_string())
+    }
+}
+
 #[tauri::command]
 fn app_open_external(url: String) -> Result<(), String> {
     #[cfg(target_os = "windows")]
@@ -66,6 +83,7 @@ fn main() {
             commands::app::app_open_dir,
             commands::app::app_restart,
             app_open_external,
+            app_show_window,
             commands::database::db_init_connection,
             commands::database::db_get_connection_info,
             commands::storage::db_get_path,
@@ -226,10 +244,9 @@ fn main() {
             let db_holder = DbPoolHolder::new();
             app.manage(db_holder);
 
-            // 3. UI 优先显示
+            // 3. 主窗口启动即显示（与任务栏对齐），避免仅托盘可见、晚几秒再闪窗
             if let Some(window) = app.get_webview_window("main") {
                 let _ = window.maximize();
-                // 窗口将在前端页面准备好后显示，或者在这里显示
                 let _ = window.show();
             }
 
@@ -407,10 +424,6 @@ fn main() {
                     }
                 })
                 .build(app)?;
-            
-            if let Some(window) = app.get_webview_window("main") {
-                let _ = window.maximize();
-            }
             
             // 启动自动备份管理器
             db::backup::start_backup_manager(app.handle().clone());

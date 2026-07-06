@@ -8,26 +8,6 @@ let users = [];
 let currentEditingUserId = null;
 let isEventBound = false; // 标记事件是否已绑定，防止重复绑定
 
-async function invokeIfTauri(cmd, payload) {
-  try {
-    console.log(`[invokeIfTauri] 尝试调用命令: ${cmd}`, payload);
-    const core = await import('@tauri-apps/api/core');
-    console.log('[invokeIfTauri] core模块已导入:', core);
-
-    if (!core?.invoke) {
-      console.warn('[invokeIfTauri] core.invoke不存在，返回null');
-      return null;
-    }
-
-    console.log(`[invokeIfTauri] 调用 ${cmd}...`);
-    const result = await core.invoke(cmd, payload);
-    console.log(`[invokeIfTauri] ${cmd} 返回结果:`, result);
-    return result;
-  } catch (err) {
-    console.error(`[invokeIfTauri] ${cmd} 调用失败:`, err);
-    return null;
-  }
-}
 
 // 获取Token
 function getToken() {
@@ -79,9 +59,8 @@ async function loadUsers() {
   }
 
   try {
-    // 桌面端优先走 Rust command
-    const ipc = await invokeIfTauri('users_list', { token });
-    const result = ipc || await ApiService.json('/api/users');
+    const data = await ApiService.users.list();
+    const result = Array.isArray(data) ? { success: true, data } : data;
 
     if (result.success) {
       users = result.data || [];
@@ -305,41 +284,28 @@ async function showAddUserDialog() {
       const loading = window.ModalDialog.loading('正在添加用户...');
 
       try {
-        const ipc = await invokeIfTauri('users_create', {
-          payload: {
-            token,
-            username,
-            password,
-            displayName: displayName || username,
-            role,
-            avatar: avatar || null
-          }
-        });
-        const result = ipc || await ApiService.json('/api/users', {
-          method: 'POST',
-          body: JSON.stringify({
-            username,
-            displayName: displayName || username,
-            password,
-            role,
-            avatar: avatar || null
-          })
+        const result = await ApiService.users.create({
+          username,
+          password,
+          displayName: displayName || username,
+          role,
+          avatar: avatar || null
         });
         loading.close();
 
-        if (result.success) {
+        if (result && result.success !== false) {
           showToast('添加成功', 'success');
           loadUsers();
-          return true; // 关闭弹窗
+          return true;
         } else {
-          showToast(result.message || '添加失败', 'error');
-          return false; // 不关闭弹窗
+          showToast((result && result.message) || '添加失败', 'error');
+          return false;
         }
       } catch (error) {
         console.error('添加用户失败:', error);
         loading.close();
-        showToast('网络错误', 'error');
-        return false; // 不关闭弹窗
+        showToast(error.message || '网络错误', 'error');
+        return false;
       }
     }
   });
@@ -421,45 +387,28 @@ async function editUser(userId) {
       const loading = window.ModalDialog.loading('正在保存...');
 
       try {
-        const ipc = await invokeIfTauri('users_update', {
-          payload: {
-            token,
-            id: userId,
-            displayName,
-            role,
-            status,
-            avatar: avatar || null
-          }
-        });
-        const result = ipc || await ApiService.json(`/api/users/${userId}`, {
-          method: 'PUT',
-          body: JSON.stringify({
-            displayName,
-            role,
-            status,
-            avatar: avatar || null
-          })
+        const result = await ApiService.users.update(userId, {
+          displayName,
+          role,
+          status,
+          avatar: avatar || null
         });
         loading.close();
 
-        if (result && result.success) {
+        if (result && result.success !== false) {
           showToast('更新成功', 'success');
-          // 重新加载用户列表
-          setTimeout(() => {
-            loadUsers();
-          }, 300);
-          return true; // 关闭弹窗
+          setTimeout(() => { loadUsers(); }, 300);
+          return true;
         } else {
           const errorMsg = (result && (result.message || result.error)) || '更新失败';
           showToast(errorMsg, 'error');
-          return false; // 不关闭弹窗
+          return false;
         }
       } catch (error) {
         console.error('[用户管理] 更新用户异常:', error);
         loading.close();
-        const errorMsg = error.message || '网络错误，请检查网络连接';
-        showToast(errorMsg, 'error');
-        return false; // 不关闭弹窗
+        showToast(error.message || '网络错误，请检查网络连接', 'error');
+        return false;
       }
     }
   });
@@ -532,23 +481,7 @@ async function resetPassword(userId) {
       const loading = window.ModalDialog.loading('正在重置密码...');
 
       try {
-        // 优先使用 Tauri Command
-        let result = await invokeIfTauri('users_reset_password', {
-          payload: {
-            token,
-            id: userId,
-            newPassword: newPassword
-          }
-        });
-
-        if (!result) {
-          // 回退到 HTTP API
-          result = await ApiService.json(`/api/users/${userId}/reset-password`, {
-            method: 'POST',
-            body: JSON.stringify({ newPassword })
-          });
-        }
-
+        const result = await ApiService.users.resetPassword(userId, newPassword);
         loading.close();
 
         if (result.success) {
@@ -617,22 +550,18 @@ function deleteUser(userId, username) {
       return;
     }
 
-    (async () => {
-      const ipc = await invokeIfTauri('users_delete', { token, id: userId });
-      if (ipc) return ipc;
-      return ApiService.json(`/api/users/${userId}`, { method: 'DELETE' });
-    })()
+    ApiService.users.remove(userId)
       .then(result => {
-        if (result.success) {
+        if (result && result.success !== false) {
           showToast('删除成功', 'success');
           loadUsers();
         } else {
-          showToast(result.message || '删除失败', 'error');
+          showToast((result && result.message) || '删除失败', 'error');
         }
       })
       .catch(error => {
         console.error('删除用户失败:', error);
-        showToast('网络错误', 'error');
+        showToast(error.message || '网络错误', 'error');
       });
   });
 }

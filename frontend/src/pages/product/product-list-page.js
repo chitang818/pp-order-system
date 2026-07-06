@@ -7,32 +7,9 @@
 import { ApiService } from '../../api/api.js';
 import { debounce } from '../../utils/binding-utils.js';
 import { timerManager } from '../../utils/timer-manager.js';
+import { getHttpApiBase } from '../../utils/tauri-env.js';
 
-async function invokeIfTauri(cmd, payload) {
-  try {
-    const core = await import('@tauri-apps/api/core');
-    if (!core?.invoke) return null;
-    return await core.invoke(cmd, payload);
-  } catch (_) {
-    return null;
-  }
-}
-
-// 兼容 Tauri/file:// 环境：避免 fetch('/api/...') 命中前端资源协议返回 HTML
-function isTauriLikeEnv() {
-  try {
-    if (typeof window !== 'undefined') {
-      if (window.__TAURI__ || window.__TAURI_INTERNALS__ || window.__TAURI_METADATA__) return true;
-    }
-    const p = String(window.location.protocol || '').toLowerCase();
-    if (p === 'tauri:' || p === 'file:') return true;
-    const host = String(window.location.hostname || '').toLowerCase();
-    if (host === 'tauri.localhost') return true;
-  } catch (_) {}
-  return false;
-}
-
-const API_BASE_URL = isTauriLikeEnv() ? 'http://127.0.0.1:3000' : '';
+const API_BASE_URL = getHttpApiBase();
 function withApiBase(url) {
   if (typeof url === 'string' && url.startsWith('/')) return API_BASE_URL + url;
   return url;
@@ -261,6 +238,11 @@ export function initProductsPage() {
             if (syncBtn) {
                 syncBtn.addEventListener('click', syncProducts);
             }
+
+            const btnSaveSync = document.getElementById('btnSaveProductSyncSettings');
+            if (btnSaveSync) {
+                btnSaveSync.addEventListener('click', saveProductSyncSettings);
+            }
             
             // 清空按钮
             const clearBtn = document.getElementById('btnClearAllProducts');
@@ -282,6 +264,7 @@ export function initProductsPage() {
             // 确保按钮状态正确初始化
             ensureActionButtonsEnabled();
             updateActionButtons();
+            loadProductSyncSettings();
         }
 
         // 加载产品列表
@@ -298,10 +281,9 @@ export function initProductsPage() {
             // 显示骨架屏作为加载占位
             renderSkeleton(8);
             try {
-                // 桌面端（Tauri）优先走 Rust command；失败则回退到旧 HTTP API
-                const token = localStorage.getItem('token') || '';
-                const ipc = await invokeIfTauri('products_list', { token });
-                const result = ipc || await ApiService.json('/api/products');
+                // 走统一 ApiService（Tauri 走 IPC，浏览器走 HTTP fallback）
+                const data = await ApiService.products.list();
+                const result = Array.isArray(data) ? { success: true, data } : data;
                 
                 console.log('[产品管理] 产品列表加载成功:', result.success ? `${result.data?.length || 0} 条` : '失败');
                 
@@ -350,8 +332,8 @@ export function initProductsPage() {
 
             // 判断产品类型的辅助函数
             function getProductType(product) {
-                // 确保 productType 有默认值，避免 null/undefined 导致的问题
-                let type = product.productType;
+                // 兼容 Rust IPC 返回的驼峰字段，也兼容 Node HTTP 可能返回的蛇形字段
+                let type = product.productType ?? product.product_type;
                 
                 // 如果 productType 为 null、undefined 或 0，则根据字段判断（兼容旧数据）
                 if (type === null || type === undefined || type === 0) {
@@ -604,11 +586,21 @@ export function initProductsPage() {
                 return;
             }
 
+            const pt = product.productType === 2 || product.productType === 3 ? product.productType : 1;
+
             // 创建编辑表单HTML
             const formHTML = `
                         <div class="form-group">
                             <label for="editModel">产品型号 <span style="color: red;">*</span></label>
                             <input type="text" id="editModel" value="${escapeHtml(product.model || '')}" placeholder="请输入产品型号">
+                        </div>
+                        <div class="form-group">
+                            <label for="editProductType">产品类型</label>
+                            <select id="editProductType">
+                                <option value="1" ${pt === 1 ? 'selected' : ''}>A类品</option>
+                                <option value="2" ${pt === 2 ? 'selected' : ''}>B类品</option>
+                                <option value="3" ${pt === 3 ? 'selected' : ''}>C类品</option>
+                            </select>
                         </div>
                         <div class="form-group">
                             <label for="editDescription">产品描述</label>
@@ -675,6 +667,7 @@ export function initProductsPage() {
                     const unitSelect = document.getElementById('editUnit');
                     const labelBatchNoInput = document.getElementById('editLabelBatchNo');
                     const labelInput = document.getElementById('editLabel');
+                    const productTypeSelect = document.getElementById('editProductType');
                     
                     // 检查元素是否存在
                     if (!modelInput) {
@@ -691,6 +684,8 @@ export function initProductsPage() {
                     const unit = unitSelect ? unitSelect.value : '';
                     const labelBatchNo = labelBatchNoInput ? (labelBatchNoInput.value || '').trim() : '';
                     const label = labelInput ? (labelInput.value || '').trim() : '';
+                    const productTypeRaw = productTypeSelect ? parseInt(productTypeSelect.value, 10) : 1;
+                    const productType = productTypeRaw === 2 || productTypeRaw === 3 ? productTypeRaw : 1;
                     
                     console.log('[产品编辑] 表单数据:', {
                         model: model,
@@ -728,6 +723,7 @@ export function initProductsPage() {
                     // description 使用 .optional().isString()，所以空字符串或 undefined 都可以，但 null 可能不行
                     const requestData = {
                         model: model, // 必填，不能为空
+                        productType,
                         description: description || undefined, // 可选，空字符串转为 undefined
                         actualWeight: actualWeight !== null && actualWeight !== undefined ? actualWeight : undefined, // 可选数字
                         safetyFactor: safetyFactor || undefined, // 可选字符串
@@ -766,114 +762,22 @@ export function initProductsPage() {
                     }
                     
                     try {
-                        // 获取 CSRF token
-                        const getCookie = (name) => {
-                            const value = `; ${document.cookie}`;
-                            const parts = value.split(`; ${name}=`);
-                            if (parts.length === 2) return parts.pop().split(';').shift();
-                            return null;
-                        };
-                        
-                        const csrfToken = getCookie('csrf_token');
-                        const headers = {
-                            'Content-Type': 'application/json'
-                        };
-                        if (csrfToken) {
-                            headers['x-csrf-token'] = csrfToken;
-                        }
-                        
-                        // 桌面端（Tauri）优先走 Rust command
-                        const token = localStorage.getItem('token') || '';
-                        const ipc = await invokeIfTauri('products_update', { token, id: Number(id), ...requestData });
-                        if (ipc && ipc.success) {
-                            loading.close();
-                            toast('产品更新成功', 'success', 2000);
-                            await loadProducts();
-                            return true; // 关闭弹窗
-                        }
-
-                        // 回退：使用 fetch 直接调用，以便更好地处理错误响应
-                        const response = await fetch(withApiBase(`/api/products/${id}`), {
-                            method: 'PUT',
-                            headers: headers,
-                            credentials: 'include',
-                            body: JSON.stringify(requestData)
-                        });
-                        
-                        const responseText = await response.text();
-                        let result;
-                        try {
-                            result = JSON.parse(responseText);
-                        } catch (e) {
-                            console.error('[产品编辑] 解析响应失败:', responseText);
-                            throw new Error('服务器返回格式错误');
-                        }
-                        
+                        const result = await ApiService.products.update(id, requestData);
                         loading.close();
                         
-                        if (!response.ok) {
-                            // 处理错误响应
-                            console.error('[产品编辑] 更新失败:', { 
-                                status: response.status, 
-                                error: result,
-                                requestData: requestData
-                            });
-                            
-                            // 尝试显示详细的错误信息
-                            let errorMessage = '更新产品失败';
-                            if (result && result.message) {
-                                errorMessage = result.message;
-                            } else if (result && result.error) {
-                                errorMessage = result.error;
-                            } else if (result && result.details && Array.isArray(result.details) && result.details.length > 0) {
-                                // 显示第一个验证错误的详细信息
-                                const firstError = result.details[0];
-                                errorMessage = firstError.msg || firstError.message || '输入验证失败';
-                            }
-                            
-                            toast(errorMessage, 'error', 3000);
-                            return false; // 返回false不关闭弹窗
-                        }
-                        
-                        if (result.success) {
+                        if (result && result.success !== false) {
                             toast('产品更新成功', 'success', 2000);
-                            
-                            // 清除产品列表缓存，确保数据同步
-                            if (window.CacheService && window.CacheService.products) {
-                                try {
-                                    if (typeof window.CacheService.products.clear === 'function') {
-                                        window.CacheService.products.clear();
-                                    }
-                                } catch (e) {
-                                    console.warn('[产品编辑] 清除缓存失败:', e);
-                                }
-                            }
-                            
-                            // 重新加载产品列表，确保显示最新数据
-                            console.log('[产品编辑] 保存成功，重新加载产品列表');
                             await loadProducts();
-                            
                             return true; // 返回true关闭弹窗
                         } else {
-                            toast(result.message || '更新产品失败', 'error', 2000);
-                            return false; // 返回false不关闭弹窗
+                            toast((result && result.message) || '更新产品失败', 'error', 2000);
+                            return false;
                         }
                     } catch (error) {
                         console.error('更新产品失败:', error);
                         loading.close();
-                        
-                        // 尝试解析错误信息，显示更详细的错误提示
-                        let errorMessage = '更新产品失败';
-                        if (error.message) {
-                            if (error.message.includes('网络') || error.message.includes('fetch') || error.message.includes('Failed to fetch')) {
-                                errorMessage = '网络连接异常，请检查网络后重试';
-                            } else {
-                                errorMessage = error.message;
-                            }
-                        }
-                        
-                        toast(errorMessage, 'error', 3000);
-                        return false; // 返回false不关闭弹窗
+                        toast(error.message || '更新产品失败', 'error', 3000);
+                        return false;
                     }
                 }
             });
@@ -895,6 +799,9 @@ export function initProductsPage() {
             const unit = document.getElementById('editUnit').value;
             const labelBatchNo = document.getElementById('editLabelBatchNo').value.trim();
             const label = document.getElementById('editLabel').value.trim();
+            const ptEl = document.getElementById('editProductType');
+            const ptRaw = ptEl ? parseInt(ptEl.value, 10) : 1;
+            const productType = ptRaw === 2 || ptRaw === 3 ? ptRaw : 1;
             
             if (!model) {
                 toast('产品型号不能为空', 'warning');
@@ -911,78 +818,39 @@ export function initProductsPage() {
                 }
             }
 
-            let loadingToast = toast('正在更新产品...', 'info', 2000); // 缩短到2秒
+            let loadingToast = toast('正在更新产品...', 'info', 2000);
             
             try {
-                const token = localStorage.getItem('token') || '';
-                const ipc = await invokeIfTauri('products_update', {
-                    token,
-                    id: Number(id),
-                    model: model,
-                    description: description,
-                    actualWeight: actualWeight,
-                    safetyFactor: safetyFactor,
-                    cleanliness: cleanliness,
-                    unit: unit,
+                const result = await ApiService.products.update(id, {
+                    model,
+                    productType,
+                    description: description || null,
+                    actualWeight,
+                    safetyFactor: safetyFactor || null,
+                    cleanliness: cleanliness || null,
+                    unit: unit || null,
                     labelBatchNo: labelBatchNo || null,
                     label: label || null
                 });
-
-                // 桌面端优先走 Rust command；失败回退旧接口
-                const result = ipc || await ApiService.json(`/api/products/${id}`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        model: model,
-                        description: description,
-                        actualWeight: actualWeight,
-                        safetyFactor: safetyFactor,
-                        cleanliness: cleanliness,
-                        unit: unit,
-                        labelBatchNo: labelBatchNo || null,
-                        label: label || null
-                    })
-                });
                 
-                // 立即关闭加载提示
                 if (loadingToast) {
                     const toastEl = document.querySelector('.toast.info');
                     if (toastEl) removeToast(toastEl);
                 }
                 
-                if (result.success) {
+                if (result && result.success !== false) {
                     toast('产品更新成功', 'success', 2000);
-                    
-                    // 清除产品列表缓存，确保数据同步
-                    if (window.CacheService && window.CacheService.products) {
-                        try {
-                            if (typeof window.CacheService.products.clear === 'function') {
-                                window.CacheService.products.clear();
-                            }
-                        } catch (e) {
-                            console.warn('[产品编辑] 清除缓存失败:', e);
-                        }
-                    }
-                    
-                    // 重新加载产品列表，确保显示最新数据
-                    console.log('[产品编辑] 保存成功，重新加载产品列表');
                     await loadProducts();
-                    
                     closeEditModal();
                 } else {
-                    toast('更新产品失败: ' + (result.message || '未知错误'), 'error', 2000);
+                    toast('更新产品失败: ' + ((result && result.message) || '未知错误'), 'error', 2000);
                 }
             } catch (error) {
                 console.error('更新产品失败:', error);
-                
-                // 立即关闭加载提示
                 if (loadingToast) {
                     const toastEl = document.querySelector('.toast.info');
                     if (toastEl) removeToast(toastEl);
                 }
-                
                 toast('更新产品失败: ' + error.message, 'error', 2000);
             }
         }
@@ -1039,16 +907,9 @@ export function initProductsPage() {
                 
                 for (const id of selectedIds) {
                     try {
-                        const token = localStorage.getItem('token') || '';
-                        const ipc = await invokeIfTauri('products_delete', { token, id: Number(id) });
-                        // 桌面端优先走 Rust command；失败回退旧接口
-                        const result = ipc || await ApiService.json(`/api/products/${id}`, {
-                            method: 'DELETE'
-                        });
-                        
-                        if (result.success) {
+                        const result = await ApiService.products.remove(id);
+                        if (result && result.success !== false) {
                             successCount++;
-                            // 从本地数据中移除
                             products = products.filter(p => p.id !== id);
                             filteredProducts = filteredProducts.filter(p => p.id !== id);
                         } else {
@@ -1094,41 +955,30 @@ export function initProductsPage() {
         async function confirmDeleteProduct(id) {
             let loadingToast = null;
             try {
-                loadingToast = toast('正在删除产品...', 'info', 2000); // 缩短到2秒
+                loadingToast = toast('正在删除产品...', 'info', 2000);
+                const result = await ApiService.products.remove(id);
                 
-                const token = localStorage.getItem('token') || '';
-                const ipc = await invokeIfTauri('products_delete', { token, id: Number(id) });
-                // 桌面端优先走 Rust command；失败回退旧接口
-                const result = ipc || await ApiService.json(`/api/products/${id}`, {
-                    method: 'DELETE'
-                });
-                
-                // 立即关闭加载提示
                 if (loadingToast) {
                     const toastEl = document.querySelector('.toast.info');
                     if (toastEl) removeToast(toastEl);
                 }
                 
-                if (result.success) {
+                if (result && result.success !== false) {
                     toast('产品删除成功', 'success', 2000);
-                    // 立即从本地数组中移除该产品
                     products = products.filter(p => p.id !== id);
                     filteredProducts = filteredProducts.filter(p => p.id !== id);
                     renderProducts();
                     updateStats();
                     closeDeleteModal();
                 } else {
-                    toast('删除产品失败: ' + (result.message || '未知错误'), 'error', 2000);
+                    toast('删除产品失败: ' + ((result && result.message) || '未知错误'), 'error', 2000);
                 }
             } catch (error) {
                 console.error('删除产品失败:', error);
-                
-                // 立即关闭加载提示
                 if (loadingToast) {
                     const toastEl = document.querySelector('.toast.info');
                     if (toastEl) removeToast(toastEl);
                 }
-                
                 toast('删除产品失败: ' + error.message, 'error', 2000);
             }
         }
@@ -1156,6 +1006,54 @@ export function initProductsPage() {
             return div.innerHTML;
         }
 
+        async function loadProductSyncSettings() {
+            const enabledEl = document.getElementById('productSyncAutoEnabled');
+            const daysEl = document.getElementById('productSyncIntervalDays');
+            const lastEl = document.getElementById('productSyncLastRun');
+            if (!enabledEl || !daysEl || !lastEl) return;
+            try {
+                const result = await ApiService.json(withApiBase('/api/products/sync-settings'));
+                if (!result || !result.success || !result.data) return;
+                const { enabled, intervalDays, lastRunAt } = result.data;
+                enabledEl.checked = !!enabled;
+                daysEl.value = String(intervalDays || 3);
+                if (lastRunAt) {
+                    const d = new Date(lastRunAt);
+                    lastEl.textContent = Number.isNaN(d.getTime())
+                        ? `上次同步：${lastRunAt}`
+                        : `上次同步：${d.toLocaleString('zh-CN')}`;
+                } else {
+                    lastEl.textContent = '上次同步：—';
+                }
+            } catch (e) {
+                console.warn('[产品管理] 加载同步设置失败', e);
+            }
+        }
+
+        async function saveProductSyncSettings() {
+            const enabledEl = document.getElementById('productSyncAutoEnabled');
+            const daysEl = document.getElementById('productSyncIntervalDays');
+            if (!enabledEl || !daysEl) return;
+            const enabled = enabledEl.checked;
+            const intervalDays = Math.max(1, Math.min(365, parseInt(daysEl.value, 10) || 3));
+            try {
+                const result = await ApiService.json(withApiBase('/api/products/sync-settings'), {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ enabled, intervalDays })
+                });
+                if (result && result.success) {
+                    toast('同步设置已保存', 'success', 2000);
+                    loadProductSyncSettings();
+                } else {
+                    toast(result?.message || '保存失败', 'error', 2000);
+                }
+            } catch (e) {
+                console.error(e);
+                toast('保存失败，请确认后端服务已启动', 'error', 2500);
+            }
+        }
+
         // 手动同步产品数据
         async function syncProducts() {
             let loadingToastElement = null;
@@ -1172,7 +1070,7 @@ export function initProductsPage() {
                 toastContainer.appendChild(loadingToastElement);
                 
                 // 使用 ApiService.json 自动处理 CSRF token
-                const result = await ApiService.json('/api/products/sync-from-orders', {
+                const result = await ApiService.json(withApiBase('/api/products/sync-from-orders'), {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -1190,6 +1088,7 @@ export function initProductsPage() {
                     // 延迟重新加载以确保用户看到成功消息
                     setTimeout(() => {
                         loadProducts(); // 重新加载产品列表
+                        loadProductSyncSettings();
                     }, 1000);
                 } else {
                     toast(result.message || '同步失败', 'error', 2000);
@@ -1242,17 +1141,9 @@ export function initProductsPage() {
                 }
                 
                 loadingToast = toast('正在清空产品库...', 'info', 2000);
-                console.log('[产品管理] 发送清空请求到 /api/products/clear');
+                console.log('[产品管理] 发送清空请求');
                 
-                const token = localStorage.getItem('token') || '';
-                const ipc = await invokeIfTauri('products_clear', { token });
-                // 桌面端优先走 Rust command；失败回退旧接口
-                const result = ipc || await ApiService.json('/api/products/clear', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                });
+                const result = await ApiService.products.clear();
                 
                 console.log('[产品管理] 清空请求响应:', result);
                 

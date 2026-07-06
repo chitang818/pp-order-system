@@ -56,18 +56,23 @@ export function createProductAutocomplete(dependencies) {
       console.log('API返回数据:', result);
 
       if (Array.isArray(result)) {
-        productModelsCache = result.map(p => ({
-          model: p.model,
-          description: p.description || '',
-          estimatedWeight: p.estimatedWeight || null,
-          labelWeight: p.labelWeight || null,
-          safetyFactor: p.safetyFactor || null,
-          cleanliness: p.cleanliness || null,
-          unit: p.unit || null,  // 添加件数单位字段
-          productType: p.productType || 1,  // 添加产品类型字段（1=A类品，2=B类品，3=C类品）
-          labelBatchNo: p.labelBatchNo || null,  // 添加标签批号字段（B类品）
-          label: p.label || null  // 添加标签说明字段（B类品和C类品）
-        })).filter(item => item.model && item.model.trim());
+        productModelsCache = result.map(p => {
+          const rawPt = p.productType ?? p.product_type;
+          const nPt = Number(rawPt);
+          const productType = nPt === 2 || nPt === 3 ? nPt : 1;
+          return {
+            model: p.model,
+            description: p.description || '',
+            estimatedWeight: p.estimatedWeight ?? p.estimated_weight ?? null,
+            labelWeight: p.labelWeight ?? p.label_weight ?? null,
+            safetyFactor: p.safetyFactor ?? p.safety_factor ?? null,
+            cleanliness: p.cleanliness || null,
+            unit: p.unit || null,
+            productType,
+            labelBatchNo: p.labelBatchNo ?? p.label_batch_no ?? null,
+            label: p.label || null
+          };
+        }).filter(item => item.model && item.model.trim());
         lastFetchTime = now;
         console.log('产品型号缓存（包含件数单位）:', productModelsCache);
 
@@ -106,29 +111,62 @@ export function createProductAutocomplete(dependencies) {
     return { modal, dropdown };
   }
 
-  // 过滤匹配的产品型号 - 优化搜索算法和缓存，按当前产品类型排序
-  function filterProductModels(query, models) {
+  // 以当前输入所在订单编辑面板为准（Tauri/WebView 下避免 document 级 getElementById 与可见视图不一致）
+  function getEffectiveOrderProductType(contextEl) {
+    try {
+      let root = null;
+      if (contextEl && typeof contextEl.closest === 'function') {
+        root = contextEl.closest('#view-orders-edit');
+      }
+      if (!root) {
+        root = document.querySelector('#view-orders-edit.view-active');
+      }
+      if (!root) {
+        root = document.getElementById('view-orders-edit');
+      }
+      if (root) {
+        const activeBtn = root.querySelector('.btn-template.active[data-template]');
+        if (activeBtn) {
+          const t = Number(activeBtn.getAttribute('data-template'));
+          if (t === 1 || t === 2 || t === 3) return t;
+        }
+        const section = root.querySelector('#section-products');
+        if (section) {
+          if (section.classList.contains('template-3')) return 3;
+          if (section.classList.contains('template-2')) return 2;
+          if (section.classList.contains('template-1')) return 1;
+        }
+      }
+    } catch (_) {}
+    const raw = currentProductTypeRef?.current;
+    const n = Number(raw);
+    if (n === 2 || n === 3) return n;
+    return 1;
+  }
+
+  /**
+   * 过滤匹配的产品型号
+   * @param {string} query
+   * @param {Array} models
+   * @param {boolean} includeAllTypes - true 时与旧版一致（含 A/B/C，当前类型优先排序）；false 时仅保留与当前订单类品一致的产品
+   */
+  function filterProductModels(query, models, includeAllTypes = false, contextEl) {
     if (!query || !query.trim()) return [];
 
-    // 获取当前产品类型（1=A类品，2=B类品，3=C类品）
-    const currentProductType = currentProductTypeRef && currentProductTypeRef.current ? currentProductTypeRef.current : 1;
+    const effectiveType = getEffectiveOrderProductType(contextEl);
 
-    // 缓存键包含查询和当前产品类型，确保不同产品类型下的排序结果独立缓存
-    const cacheKey = `${query.toLowerCase().trim()}_type${currentProductType}`;
+    const cacheKey = `${query.toLowerCase().trim()}_t${effectiveType}_${includeAllTypes ? 'all' : 'strict'}`;
 
-    // 检查搜索缓存
     if (searchCache.has(cacheKey)) {
       return searchCache.get(cacheKey);
     }
 
     const lowerQuery = query.toLowerCase().trim();
 
-    // 优化搜索算法：使用更高效的过滤和排序
     const exactMatches = [];
     const prefixMatches = [];
     const containsMatches = [];
 
-    // 分类匹配结果
     for (const item of models) {
       const modelLower = item.model.toLowerCase();
       const descLower = item.description ? item.description.toLowerCase() : '';
@@ -142,37 +180,41 @@ export function createProductAutocomplete(dependencies) {
       }
     }
 
-    // 按当前产品类型排序：当前类型的产品排在最前面
     const sortByProductType = (a, b) => {
-      const aType = a.productType || 1;
-      const bType = b.productType || 1;
-
-      // 如果一个是当前类型，另一个不是，当前类型排在前面
-      if (aType === currentProductType && bType !== currentProductType) return -1;
-      if (bType === currentProductType && aType !== currentProductType) return 1;
-
-      // 如果都是当前类型或都不是，保持原有顺序（精确匹配 > 前缀匹配 > 包含匹配）
+      const aType = Number(a.productType) || 1;
+      const bType = Number(b.productType) || 1;
+      if (aType === effectiveType && bType !== effectiveType) return -1;
+      if (bType === effectiveType && aType !== effectiveType) return 1;
       return 0;
     };
 
-    // 对每类结果按产品类型排序
-    exactMatches.sort(sortByProductType);
-    prefixMatches.sort(sortByProductType);
-    containsMatches.sort(sortByProductType);
+    if (!includeAllTypes) {
+      const sameType = (item) => (Number(item.productType) || 1) === effectiveType;
+      const ex = exactMatches.filter(sameType);
+      const pr = prefixMatches.filter(sameType);
+      const co = containsMatches.filter(sameType);
+      exactMatches.length = 0;
+      prefixMatches.length = 0;
+      containsMatches.length = 0;
+      exactMatches.push(...ex);
+      prefixMatches.push(...pr);
+      containsMatches.push(...co);
+    } else {
+      exactMatches.sort(sortByProductType);
+      prefixMatches.sort(sortByProductType);
+      containsMatches.sort(sortByProductType);
+    }
 
-    // 按优先级合并结果，限制每类结果数量
     const results = [];
     results.push(...exactMatches.slice(0, 3));
     results.push(...prefixMatches.slice(0, 4));
     results.push(...containsMatches.slice(0, 3));
 
-    // 最终限制为10个结果，并确保当前产品类型的产品排在最前面
     const finalResults = results.slice(0, 10);
+    if (includeAllTypes) {
+      finalResults.sort(sortByProductType);
+    }
 
-    // 再次排序，确保当前产品类型的产品在最前面（即使已经排序过，也要确保）
-    finalResults.sort(sortByProductType);
-
-    // 缓存搜索结果
     if (searchCache.size >= SEARCH_CACHE_SIZE) {
       const firstKey = searchCache.keys().next().value;
       searchCache.delete(firstKey);
@@ -569,17 +611,20 @@ export function createProductAutocomplete(dependencies) {
     return container;
   }
 
-  // 显示自动完成下拉框 - 使用固定定位，增加重量信息显示
+  // 显示自动完成下拉框 - 使用固定定位，增加重量信息显示（仅展示当前订单类品下的匹配）
   function showAutocompleteDropdown(dropdown, modal, matches, input) {
     dropdown.innerHTML = '';
 
     // 获取当前输入框的值作为查询字符串
     const query = input ? (input.value || '').trim() : '';
 
+    const typeNameMap = { 1: 'A类品', 2: 'B类品', 3: 'C类品' };
+    const orderTypeName = typeNameMap[getEffectiveOrderProductType(input)] || 'A类品';
+
     if (matches.length === 0) {
       const noResults = document.createElement('div');
       noResults.className = 'product-autocomplete-no-results';
-      noResults.textContent = '暂无匹配的产品型号';
+      noResults.textContent = `当前为「${orderTypeName}」，暂无匹配的产品型号`;
       dropdown.appendChild(noResults);
     } else {
       matches.forEach((item, index) => {
@@ -591,13 +636,14 @@ export function createProductAutocomplete(dependencies) {
         const modelSpan = document.createElement('div');
         modelSpan.style.fontWeight = 'bold';
 
-        // 产品类型映射：1=A类品，2=B类品，3=C类品
+        // 产品类型映射：1=A类品，2=B类品，3=C类品（统一使用数字 key，避免字符串 \"2\" 导致映射失败）
         const productTypeMap = {
           1: 'A类品',
           2: 'B类品',
           3: 'C类品'
         };
-        const productType = productTypeMap[item.productType] || 'A类品';
+        const productTypeKey = Number(item.productType) || 1;
+        const productType = productTypeMap[productTypeKey] || 'A类品';
 
         // 产品型号（高亮匹配部分为红色，其他部分为蓝色）
         const modelTextSpan = highlightMatch(item.model, query);
@@ -666,9 +712,9 @@ export function createProductAutocomplete(dependencies) {
 
         // 点击选择
         itemDiv.addEventListener('click', async () => {
-          // 获取当前订单的产品类型和选择的产品类型
-          const currentOrderType = currentProductTypeRef && currentProductTypeRef.current ? currentProductTypeRef.current : 1;
-          const selectedProductType = item.productType || 1;
+          // 获取当前订单的产品类型（与下拉过滤使用同一来源，避免 ref 未同步时误弹不匹配警告）
+          const currentOrderType = getEffectiveOrderProductType(input);
+          const selectedProductType = Number(item.productType) || 1;
 
           // 产品类型映射
           const productTypeMap = {
@@ -794,7 +840,10 @@ export function createProductAutocomplete(dependencies) {
 
     // 计算弹窗位置
     const inputRect = input.getBoundingClientRect();
-    const dropdownHeight = Math.min(300, matches.length * 50 + 20);
+    const dropdownHeight = Math.min(
+      300,
+      Math.max(matches.length * 50 + 20, matches.length === 0 ? 56 : 24)
+    );
 
     // 优先显示在输入框下方，如果空间不够则显示在上方
     let top = inputRect.bottom + 5;
@@ -918,8 +967,8 @@ export function createProductAutocomplete(dependencies) {
           try {
             // 使用预加载的数据或获取新数据
             const models = await (preloadPromise || fetchProductModels());
-            const matches = filterProductModels(query, models);
-            showAutocompleteDropdown(dropdown, modal, matches, input);
+            const strictMatches = filterProductModels(query, models, false, input);
+            showAutocompleteDropdown(dropdown, modal, strictMatches, input);
           } catch (error) {
             console.error('获取产品型号数据时发生错误:', error);
             window.NotificationSystem.toast('获取产品数据失败，请稍后重试', 'error', 3000);

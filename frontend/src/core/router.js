@@ -27,6 +27,7 @@ import { timerManager } from '../utils/timer-manager.js';
 import { eventManager } from '../utils/event-manager.js';
 import { updateNavigation } from '../utils/navigation-utils.js';
 import { updateSidebarRoute } from '../components/layout.js';
+import { isDocumentCenterNavEnabled, isAnalyticsSummaryNavEnabled } from '../utils/ui-preferences.js';
 
 /**
  * 路由管理器类
@@ -115,7 +116,7 @@ export class Router {
     this._authCache = {
       isAuthenticated: null,
       timestamp: 0,
-      ttl: 5000 // 5秒缓存
+      ttl: 120000 // 2分钟缓存（桌面端用户会话稳定，减少重复 IPC）
     };
 
     /**
@@ -409,8 +410,30 @@ export class Router {
    * ```
    */
   async setActiveRoute(path) {
-    const routeInfo = this.parseRoute(path);
-    const { route, base } = routeInfo;
+    const pathStr = path === undefined || path === null ? '' : String(path);
+    const preCheck = this.parseRoute(pathStr.split('?')[0] || '');
+    let effectivePath = pathStr;
+    if (preCheck.base === 'document-center' && !isDocumentCenterNavEnabled()) {
+      window.NotificationSystem?.toast('单据中心已在系统设置中关闭', 'warning', 2600);
+      effectivePath = 'home';
+      const baseUrl = location.pathname + (location.search || '');
+      if (location.hash.includes('document-center')) {
+        history.replaceState(null, '', `${baseUrl}#/home`);
+      }
+    }
+
+    if (preCheck.base === 'analytics' && !isAnalyticsSummaryNavEnabled()) {
+      const aSub = (preCheck.sub || '').trim();
+      if (!aSub || aSub === 'summary') {
+        window.NotificationSystem?.toast('统计概览已在系统设置中关闭', 'warning', 2600);
+        effectivePath = 'analytics/export';
+        const baseUrl = location.pathname + (location.search || '');
+        history.replaceState(null, '', `${baseUrl}#/analytics/export`);
+      }
+    }
+
+    const routeInfo = this.parseRoute(effectivePath);
+    const { base } = routeInfo;
     const viewPath = this.buildViewPath(routeInfo);
 
     // 防止重复初始化：如果当前路由和视图路径相同，且正在加载，则跳过
@@ -469,9 +492,20 @@ export class Router {
       const now = Date.now();
       let isAuthenticated = this._authCache.isAuthenticated;
 
+      // 优先复用 initAuth 写入的全局缓存（避免启动时双重 IPC）
+      if (
+        isAuthenticated === null &&
+        typeof window.__authReady === 'boolean' &&
+        window.__authReadyTimestamp &&
+        (now - window.__authReadyTimestamp) < this._authCache.ttl
+      ) {
+        isAuthenticated = window.__authReady;
+        this._authCache.isAuthenticated = isAuthenticated;
+        this._authCache.timestamp = window.__authReadyTimestamp;
+      }
+
       // 如果缓存过期或不存在，重新检查
       if (isAuthenticated === null || (now - this._authCache.timestamp) > this._authCache.ttl) {
-        // 只在需要重新验证时显示加载状态
         container.innerHTML = '<div class="loading-view" style="padding: 40px; text-align: center; color: #6c757d;"><div class="loading-spinner" style="display: inline-block; width: 20px; height: 20px; border: 3px solid #f3f3f3; border-top: 3px solid #667eea; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 10px;"></div><div>正在验证登录状态...</div></div>';
 
         const guardFn = this.guardCallback || guard;
@@ -489,8 +523,25 @@ export class Router {
         return;
       }
 
-      // 认证成功后，显示正在加载页面状态
-      container.innerHTML = '<div class="loading-view" style="padding: 40px; text-align: center; color: #6c757d;"><div class="loading-spinner" style="display: inline-block; width: 20px; height: 20px; border: 3px solid #f3f3f3; border-top: 3px solid #667eea; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 10px;"></div><div>正在加载页面...</div></div>';
+      // 认证成功后，如果视图已缓存则跳过 loading 占位（减少 DOM 重建 + 闪烁）
+      const viewAlreadyCached = this.viewLoader?.cache?.has(viewPath);
+      if (!viewAlreadyCached) {
+        const mainLoadingHtml = '<div class="loading-view" style="padding: 40px; text-align: center; color: #6c757d;"><div class="loading-spinner" style="display: inline-block; width: 20px; height: 20px; border: 3px solid #f3f3f3; border-top: 3px solid #667eea; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 10px;"></div><div>正在加载页面...</div></div>';
+        const deferMainLoadingPaint =
+          viewPath.startsWith('orders/') ||
+          viewPath.startsWith('document-center/') ||
+          viewPath.startsWith('partners/');
+        if (deferMainLoadingPaint) {
+          await new Promise((resolve) => {
+            requestAnimationFrame(() => {
+              container.innerHTML = mainLoadingHtml;
+              resolve();
+            });
+          });
+        } else {
+          container.innerHTML = mainLoadingHtml;
+        }
+      }
 
       // 刷新用户信息显示（使用微任务，不阻塞路由切换）
       const userInfoFn = this.userInfoCallback || initUserInfo;

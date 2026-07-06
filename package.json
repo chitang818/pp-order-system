@@ -1,6 +1,6 @@
 {
   "name": "pp-foreign-trade-order-system",
-  "version": "2.0.5",
+  "version": "2.2.1",
   "description": "PP外贸订单管理系统 - 支持订单管理、发票、装箱单、销售确认书生成",
   "main": "src-tauri/src/main.rs",
   "scripts": {
@@ -13,11 +13,11 @@
     "dev:all:comment": "🌐 日常开发 - 前端+后端(5-10秒) | 推荐：95%开发时间 | 脚本：快速启动.bat",
     "//tauri": "=== 🖥️  桌面应用开发 ===",
     "tauri": "tauri",
-    "tauri:dev": "cross-env DB_PATH=%APPDATA%\\com.pp.ordermanagement\\data\\erp.sqlite DATA_ROOT=%APPDATA%\\com.pp.ordermanagement\\data CONFIG_ROOT=%APPDATA%\\com.pp.ordermanagement\\config concurrently \"npm run dev:backend\" \"tauri dev\" --names \"backend,tauri\" --prefix-colors \"blue,green\" --kill-others-on-fail",
+    "tauri:dev": "cross-env CARGO_BUILD_JOBS=1 DB_PATH=%APPDATA%\\com.pp.ordermanagement\\data\\erp.sqlite DATA_ROOT=%APPDATA%\\com.pp.ordermanagement\\data CONFIG_ROOT=%APPDATA%\\com.pp.ordermanagement\\config concurrently \"npm run dev:backend\" \"tauri dev\" --names \"backend,tauri\" --prefix-colors \"blue,green\" --kill-others-on-fail",
     "tauri:dev:comment": "🖥️  桌面应用开发(15-30秒首次启动) | 适合：测试原生功能、完整功能验证 | 功能：文件对话框、托盘图标、开机自启等",
-    "tauri:build": "tauri build",
+    "tauri:build": "cross-env CARGO_BUILD_JOBS=1 tauri build",
     "tauri:build:comment": "📦 生产构建 - 打包桌面应用",
-    "tauri:build:debug": "tauri build --debug",
+    "tauri:build:debug": "cross-env CARGO_BUILD_JOBS=1 tauri build --debug",
     "//build": "=== 📦 构建 ===",
     "build": "vite build",
     "build:prod": "vite build --mode production",
@@ -78,6 +78,7 @@
   "dependencies": {
     "@tauri-apps/api": "^2.9.1",
     "chart.js": "^4.5.1",
-    "exceljs": "^4.4.0"
+    "exceljs": "^4.4.0",
+    "flatpickr": "^4.6.13"
   }
 }

@@ -157,6 +157,14 @@
             <input class="input" id="productModel" name="model" required placeholder="产品型号" />
           </div>
           <div class="form-item">
+            <label>产品类型</label>
+            <select class="input" id="productProductType" name="productType">
+              <option value="1">A类品</option>
+              <option value="2">B类品</option>
+              <option value="3">C类品</option>
+            </select>
+          </div>
+          <div class="form-item">
             <label>描述</label>
             <input class="input" id="productDescription" name="description" placeholder="产品描述" />
           </div>
@@ -235,6 +243,29 @@
         </div>
       </div>
 
+      <!-- 定时从订单同步 -->
+      <div class="products-card">
+        <div class="products-card-header">
+          <div class="products-card-icon primary">⏱</div>
+          <div class="products-card-title-group">
+            <h3>从订单自动同步</h3>
+            <p>按「型号 + 产品类型」更新产品库；同类型多订单取最新订单明细。依赖本机 Node 辅助服务运行。</p>
+          </div>
+        </div>
+        <div style="display: flex; flex-wrap: wrap; gap: 16px; align-items: center; padding: 4px 0 8px;">
+          <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+            <input type="checkbox" id="productSyncAutoEnabled" />
+            启用定时同步
+          </label>
+          <label style="display: flex; align-items: center; gap: 8px;">
+            间隔（天）
+            <input type="number" class="input" id="productSyncIntervalDays" min="1" max="365" value="3" style="width: 80px;" />
+          </label>
+          <span id="productSyncLastRun" style="color: #64748b; font-size: 13px;">上次同步：—</span>
+          <button type="button" class="products-btn primary small" id="btnSaveProductSyncSettings">保存设置</button>
+        </div>
+      </div>
+
       <!-- 产品列表卡片 -->
       <div class="products-card">
         <div class="list-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px;">
@@ -274,7 +305,7 @@
           <div class="products-help-icon">?</div>
           <div class="products-help-content">
             <h4>使用说明</h4>
-            <p>产品库支持手动添加和订单自动同步两种方式。手动添加的产品可以编辑和删除，订单同步的产品会自动更新重量信息。清空操作将删除所有产品数据，请谨慎使用。</p>
+            <p>产品库按「型号 + 产品类型（A/B/C）」唯一；同类型下多笔订单同步时取<strong>订单更新时间最新</strong>的明细。支持手动添加与从订单同步；已删除订单不参与同步。清空将删除全部产品，请谨慎操作。</p>
           </div>
         </div>
       </div>

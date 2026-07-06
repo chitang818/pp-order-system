@@ -5,9 +5,24 @@
 
 import { NAVIGATION_CONFIG } from '../config/navigation.js';
 import { initUserInfo, initEventListeners } from '../utils/auth.js';
-import { updateNavigation } from '../utils/navigation-utils.js';
+import { updateNavigation, clearNavCache } from '../utils/navigation-utils.js';
+import { isDocumentCenterNavEnabled, isAnalyticsSummaryNavEnabled } from '../utils/ui-preferences.js';
 
 const config = NAVIGATION_CONFIG;
+
+function getSidebarMainMenuItems() {
+  if (!isDocumentCenterNavEnabled()) {
+    return config.mainMenu.filter(item => item.route !== 'document-center');
+  }
+  return config.mainMenu;
+}
+
+function getAnalyticsSubmenuForSidebar() {
+  if (!isAnalyticsSummaryNavEnabled()) {
+    return config.analyticsSubmenu.filter((s) => s.tab !== 'summary');
+  }
+  return config.analyticsSubmenu;
+}
 
 /**
  * HTML转义函数，防止XSS攻击
@@ -125,8 +140,8 @@ export function generateSidebar(options = {}) {
     '<nav class="nav" id="nav">'
   ];
 
-  // 生成主导航菜单
-  config.mainMenu.forEach(item => {
+  // 生成主导航菜单（可按系统设置隐藏「单据中心」）
+  getSidebarMainMenuItems().forEach(item => {
     const isActive = currentRoute === item.route;
     const activeClass = isActive ? 'active' : '';
     // 有子菜单的项，默认跳转到第一个子菜单项，或主路由
@@ -152,7 +167,7 @@ export function generateSidebar(options = {}) {
     // 如果是订单管理且有子菜单
     if (item.hasSubmenu && item.route === 'orders') {
       const shouldOpen = currentRoute === 'orders';
-      htmlParts.push(`<div class="nav-submenu ${shouldOpen ? 'open' : ''}" id="ordersSubnav">`);
+      htmlParts.push(`<div class="nav-submenu ${shouldOpen ? 'open' : ''}" id="ordersSubnav"><div class="nav-submenu-inner">`);
 
       config.ordersSubmenu.forEach(subItem => {
         const isSubActive = shouldOpen && currentTab === subItem.tab;
@@ -164,13 +179,13 @@ export function generateSidebar(options = {}) {
         );
       });
 
-      htmlParts.push('</div>');
+      htmlParts.push('</div></div>');
     }
 
     // 处理所有子菜单（统一处理，减少重复代码）
     const submenuConfigs = [
       { route: 'document-center', subnavId: 'documentCenterSubnav', items: config.documentCenterSubmenu },
-      { route: 'analytics', subnavId: 'analyticsSubnav', items: config.analyticsSubmenu },
+      { route: 'analytics', subnavId: 'analyticsSubnav', items: getAnalyticsSubmenuForSidebar() },
       { route: 'partners', subnavId: 'partnersSubnav', items: config.partnersSubmenu },
       { route: 'products', subnavId: 'productsSubnav', items: config.productsSubmenu },
       { route: 'settings', subnavId: 'settingsSubnav', items: config.settingsSubmenu }
@@ -179,7 +194,7 @@ export function generateSidebar(options = {}) {
     submenuConfigs.forEach(submenuConfig => {
       if (item.hasSubmenu && item.route === submenuConfig.route) {
         const shouldOpen = currentRoute === submenuConfig.route;
-        htmlParts.push(`<div class="nav-submenu ${shouldOpen ? 'open' : ''}" id="${submenuConfig.subnavId}">`);
+        htmlParts.push(`<div class="nav-submenu ${shouldOpen ? 'open' : ''}" id="${submenuConfig.subnavId}"><div class="nav-submenu-inner">`);
 
         submenuConfig.items.forEach(subItem => {
           const isSubActive = shouldOpen && currentTab === subItem.tab;
@@ -191,7 +206,7 @@ export function generateSidebar(options = {}) {
           );
         });
 
-        htmlParts.push('</div>');
+        htmlParts.push('</div></div>');
       }
     });
   });
@@ -364,14 +379,14 @@ function initOrdersSubmenu() {
           updateNavigation('orders', seg);
         }
       } else {
-        // 非订单管理视图：跳到 orders 并展开子菜单，同时选中订单列表
+        ordersSubnav.classList.add('open');
+        navOrders.classList.add('expanded');
         const isSPA = !location.href.includes('index.html');
-        const prefix = isSPA ? '' : 'index.html';
-        window.location.href = `${prefix}#/orders/list`;
-        // 立即更新导航状态，确保订单列表被选中
-        setTimeout(() => {
-          updateNavigation('orders', 'list');
-        }, 50);
+        if (isSPA) {
+          location.hash = '#/orders/list';
+        } else {
+          window.location.href = 'index.html#/orders/list';
+        }
       }
     });
   }
@@ -414,14 +429,15 @@ function initProductsSubmenu() {
           updateNavigation('products', seg);
         }
       } else {
-        // 非产品库管理视图：跳到 products 并展开子菜单，同时选中产品列表
+        // 与侧栏其它模块一致：先展开再导航（同 spa 中交易统计逻辑），避免子菜单展开滞后
+        productsSubnav.classList.add('open');
+        navProducts.classList.add('expanded');
         const isSPA = !location.href.includes('index.html');
-        const prefix = isSPA ? '' : 'index.html';
-        window.location.href = `${prefix}#/products/list`;
-        // 立即更新导航状态，确保产品列表被选中
-        setTimeout(() => {
-          updateNavigation('products', 'list');
-        }, 50);
+        if (isSPA) {
+          location.hash = '#/products/list';
+        } else {
+          window.location.href = 'index.html#/products/list';
+        }
       }
     });
   }
@@ -496,14 +512,14 @@ function initPartnersSubmenu() {
           updateNavigation('partners', seg);
         }
       } else {
-        // 非合作方管理视图：跳到 partners 并展开子菜单，同时选中客户管理
+        partnersSubnav.classList.add('open');
+        navPartners.classList.add('expanded');
         const isSPA = !location.href.includes('index.html');
-        const prefix = isSPA ? '' : 'index.html';
-        window.location.href = `${prefix}#/partners/customers`;
-        // 立即更新导航状态，确保客户管理被选中
-        setTimeout(() => {
-          updateNavigation('partners', 'customers');
-        }, 50);
+        if (isSPA) {
+          location.hash = '#/partners/customers';
+        } else {
+          window.location.href = 'index.html#/partners/customers';
+        }
       }
     });
   }
@@ -677,12 +693,11 @@ export function initLayout(options = {}) {
     existingSidebar.outerHTML = sidebarHTML;
   }
 
-  // 初始化子菜单交互（优化：使用 requestAnimationFrame 延迟执行）
+  // 子菜单点击由 spa.js 的 setupNavMenuHandlers 统一处理（订单/统计/设置/单据中心），
+  // 此处只绑定 spa 未覆盖的「产品库」「合作方」，避免同一菜单项重复监听导致一次点击触发两次 toggle、动画卡顿。
   requestAnimationFrame(() => {
-    initOrdersSubmenu();
     initProductsSubmenu();
     initPartnersSubmenu();
-    initSettingsSubmenu();
   });
 
   // 初始化用户信息显示（优化：延迟执行，不阻塞渲染）
@@ -790,10 +805,59 @@ function initHamburgerMenu() {
 }
 
 // 导出 LayoutComponent 对象
+/**
+ * 侧栏 DOM 被整体替换后，仅重绑 layout 负责的产品/合作方子菜单（其余由 spa 的 setupNavMenuHandlers 绑定）
+ */
+export function reinitSidebarSubmenuInteractions() {
+  requestAnimationFrame(() => {
+    initProductsSubmenu();
+    initPartnersSubmenu();
+  });
+}
+
+/**
+ * 按界面偏好重建左侧栏并刷新高亮（用于「显示单据中心」开关等）
+ */
+export function refreshMainSidebarFromPreferences(options = {}) {
+  const contentDiv = document.querySelector('.content');
+  const existingSidebar = contentDiv?.querySelector('.sidebar');
+  if (!contentDiv || !existingSidebar) {
+    return;
+  }
+
+  const raw = (location.hash.replace('#/', '') || '').trim().split('?')[0];
+  const segs = raw.split('/');
+  const currentRoute = options.currentRoute ?? (segs[0] || 'home');
+  const currentTab = options.currentTab ?? (segs[1] || '');
+  const isSPA = options.isSPA !== false;
+
+  const sidebarHTML = generateSidebar({
+    currentRoute,
+    currentTab,
+    isSPA
+  }).replace(/<div class="sidebar-overlay"[^>]*><\/div>\s*/, '');
+
+  existingSidebar.outerHTML = sidebarHTML;
+  sidebarCache.nav = null;
+  sidebarCache.lastUpdate = 0;
+  clearNavCache();
+  updateSidebarRoute(currentRoute, currentTab);
+
+  if (typeof window.__rebindSpaNavAfterSidebarRefresh === 'function') {
+    window.__rebindSpaNavAfterSidebarRefresh();
+  }
+  if (window.app && typeof window.app._bindNavigationEvents === 'function') {
+    window.app._bindNavigationEvents();
+  }
+  reinitSidebarSubmenuInteractions();
+}
+
 export const LayoutComponent = {
   init: initLayout,
   generateTopbar: generateTopbar,
-  generateSidebar: generateSidebar
+  generateSidebar: generateSidebar,
+  refreshMainSidebarFromPreferences,
+  reinitSidebarSubmenuInteractions
 };
 
 // 导出到全局作用域（保持向后兼容）

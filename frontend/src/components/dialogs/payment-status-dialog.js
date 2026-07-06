@@ -219,9 +219,7 @@ export async function showPaymentStatusDialog(order, apiService = null) {
                 <span>货款状态 <span style="color: #dc2626;">*</span></span>
               </label>
               <div style="display: flex; gap: 16px; padding: 12px; background: #f9fafb; border-radius: 12px; border: 1.5px solid #e5e7eb;">
-                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; flex: 1; padding: 8px; border-radius: 8px; transition: all 0.2s;" 
-                       onmouseover="this.style.background='#f3f4f6'" 
-                       onmouseout="this.style.background='transparent'">
+                <label class="payment-status-option-label" style="display: flex; align-items: center; gap: 8px; cursor: pointer; flex: 1; padding: 8px; border-radius: 8px; transition: all 0.2s;">
                   <input type="radio" 
                          name="paymentStatus" 
                          value="unpaid" 
@@ -230,9 +228,7 @@ export async function showPaymentStatusDialog(order, apiService = null) {
                          style="width: 18px; height: 18px; cursor: pointer; accent-color: #1f2937;">
                   <span style="font-size: 14px; color: #1f2937; font-weight: 500;">未到账</span>
                 </label>
-                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; flex: 1; padding: 8px; border-radius: 8px; transition: all 0.2s;" 
-                       onmouseover="this.style.background='#f3f4f6'" 
-                       onmouseout="this.style.background='transparent'">
+                <label class="payment-status-option-label" style="display: flex; align-items: center; gap: 8px; cursor: pointer; flex: 1; padding: 8px; border-radius: 8px; transition: all 0.2s;">
                   <input type="radio" 
                          name="paymentStatus" 
                          value="paid" 
@@ -241,9 +237,7 @@ export async function showPaymentStatusDialog(order, apiService = null) {
                          style="width: 18px; height: 18px; cursor: pointer; accent-color: #dc2626;">
                   <span style="font-size: 14px; color: #dc2626; font-weight: 500;">已到账</span>
                 </label>
-                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; flex: 1; padding: 8px; border-radius: 8px; transition: all 0.2s;" 
-                       onmouseover="this.style.background='#f3f4f6'" 
-                       onmouseout="this.style.background='transparent'">
+                <label class="payment-status-option-label" style="display: flex; align-items: center; gap: 8px; cursor: pointer; flex: 1; padding: 8px; border-radius: 8px; transition: all 0.2s;">
                   <input type="radio" 
                          name="paymentStatus" 
                          value="pending" 

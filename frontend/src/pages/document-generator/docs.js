@@ -13,6 +13,9 @@
  * 
  * ES6 模块化版本
  */
+import { isOldDocsExportPdfButtonHidden } from '../../utils/ui-preferences.js';
+import { formatCClassMarksPlainText } from '../order/order-item-marks.js';
+
 // 前端偏好：仅样式模式使用本地存储，其余业务数据统一走后端
 const KEY_DOCS_STYLE = (window.StorageService && StorageService.keys && StorageService.keys.DOCS_STYLE) ? StorageService.keys.DOCS_STYLE : 'erp.docs.style';
 
@@ -156,6 +159,17 @@ const btnPDF = document.getElementById('btnExportPDF');
 const btnExcel = document.getElementById('btnExportExcel');
 const btnWord = document.getElementById('btnExportWord');
 const btnEditablePDF = document.getElementById('btnExportEditablePDF');
+
+function syncOldDocsExportPdfButton() {
+  if (!btnPDF) return;
+  const hide = isOldDocsExportPdfButtonHidden();
+  btnPDF.style.display = hide ? 'none' : '';
+  btnPDF.hidden = hide;
+}
+syncOldDocsExportPdfButton();
+if (typeof window !== 'undefined' && btnPDF) {
+  window.addEventListener('pp:old-docs-export-pdf-hidden-changed', syncOldDocsExportPdfButton);
+}
 // 右侧布局按钮已移除，功能已移植到预览窗口标题栏
 // const btnStyleUltraCompact = document.getElementById('btnStyleUltraCompact');
 // const btnStyleCompact = document.getElementById('btnStyleCompact');
@@ -166,6 +180,8 @@ const zoomInBtn = document.getElementById('zoomIn');
 const zoomLevelEl = document.getElementById('zoomLevel');
 const fitToPageToggle = document.getElementById('fitToPageToggle');
 const pageDragToggle = document.getElementById('pageDragToggle');
+// 与主应用共用 foundation chunk 时会一并执行本模块；仅 docs.html 含 #preview
+const isLegacyDocsHtmlPage = Boolean(preview);
 // 模板表头内容配置已移除，不再使用保存模板按钮
 
 // 单据表头内容配置 UI 已移除
@@ -175,14 +191,16 @@ let zoomLevel = 100;
 
 // 将关键变量和函数暴露到全局作用域，供预览窗口标题栏按钮使用
 // 使用 getter/setter 确保全局变量与局部变量同步
-Object.defineProperty(window, 'styleMode', {
-  get: function () { return styleMode; },
-  set: function (value) { styleMode = value; }
-});
-Object.defineProperty(window, 'zoomLevel', {
-  get: function () { return zoomLevel; },
-  set: function (value) { zoomLevel = value; }
-});
+if (isLegacyDocsHtmlPage) {
+  Object.defineProperty(window, 'styleMode', {
+    get: function () { return styleMode; },
+    set: function (value) { styleMode = value; }
+  });
+  Object.defineProperty(window, 'zoomLevel', {
+    get: function () { return zoomLevel; },
+    set: function (value) { zoomLevel = value; }
+  });
+}
 window.save = save;
 window.renderPreview = null; // 将在函数定义后赋值
 window.autoFitPreviewToA4 = null; // 将在函数定义后赋值
@@ -646,7 +664,7 @@ function buildCompanyBlock(customer = null) {
 function tplProduction(o, items, sv) {
   const ex = o.extras || {};
   // 检查订单产品类型
-  const productType = o.productType || 1;
+  const productType = (o.productType ?? o.product_type) || 1;
   const isTemplate2 = productType === 2;
   const isTemplate3 = productType === 3;
   const isTemplate1 = !isTemplate2 && !isTemplate3;
@@ -737,22 +755,15 @@ function tplProduction(o, items, sv) {
     // 根据模板类型显示不同的字段
     // 第6列：模板1显示标签重量，模板2显示标签批号，模板3显示包皮布
     // 包皮布字段可能存储在 it.wrappingCloth 或 it.extras.wrappingCloth 中
-    const wrappingClothValue = isTemplate3 ? (it.wrappingCloth || itemExtras.wrappingCloth || '') : '';
+    const wrappingClothValue = isTemplate3
+      ? (it.wrappingCloth || itemExtras.wrappingCloth || itemExtras.wrapping_cloth || '')
+      : '';
     const col6Content = isTemplate2 ? (it.labelBatchNo || '') : (isTemplate3 ? wrappingClothValue : (it.labelWeight ? Math.floor(Number(it.labelWeight)) : ''));
 
-    // 第7列：模板1显示安全系数，模板2显示标签说明，模板3显示唛头（从产品明细中读取，支持从extras中读取）
-    // 唛头字段可能存储在 it.marks 或 it.extras.marks 中
-    const marksValue = isTemplate3 ? (it.marks || itemExtras.marks || '') : '';
-    // C类品（模板3）的唛头列：若包皮布为"要"，则第一行显示产品型号，第二行显示唛头信息
+    // 第7列：模板1显示安全系数，模板2显示标签说明，模板3显示唛头（与订单预览、编辑共用 order-item-marks）
     let col7Content;
     if (isTemplate3) {
-      const marksText = marksValue || '';
-      // 如果包皮布为"要"，则第一行显示产品型号，第二行显示唛头信息
-      if (wrappingClothValue === '要' && it.model) {
-        col7Content = `${it.model || ''}${marksText ? '<br/>' + marksText : ''}`;
-      } else {
-        col7Content = marksText;
-      }
+      col7Content = formatCClassMarksPlainText(it, o.contractNo || '').replace(/\n/g, '<br/>');
     } else {
       col7Content = isTemplate1 ? (it.safetyFactor || '') : (it.label || '');
     }
@@ -1043,7 +1054,7 @@ function tplPickup(o, items, sv) {
 
   // 计算毛重（GROSS WEIGHT）- 与PACKING LIST保持一致
   // 获取产品类型（从订单或产品项）
-  const productType = o.productType || 1;
+  const productType = (o.productType ?? o.product_type) || 1;
   const totalGrossWeight = items.reduce((sum, it) => {
     const qty = Number(it.quantity || 0);
     const actualWeight = it.actualWeight ? Number(it.actualWeight) : null;
@@ -1298,7 +1309,7 @@ function tplPacking(o, items, sv) {
 
     // 计算皮重：根据件数单位、产品类型和包皮布选择计算
     // 获取产品类型（从订单或产品项）
-    const productType = o.productType || it.productType || 1;
+    const productType = (o.productType ?? o.product_type) || (it.productType ?? it.product_type) || 1;
     // 获取包皮布字段（可能存储在 it.wrappingCloth 或 it.extras.wrappingCloth 中）
     const wrappingCloth = it.wrappingCloth || (it.extras && it.extras.wrappingCloth) || '';
     let tareWeight = 0;
@@ -1349,7 +1360,7 @@ function tplPacking(o, items, sv) {
       let tareWeight = 0;
       const packages = Number(it.packages || 0);
       // 获取产品类型（从订单或产品项）
-      const productType = o.productType || it.productType || 1;
+      const productType = (o.productType ?? o.product_type) || (it.productType ?? it.product_type) || 1;
       // 获取包皮布字段（可能存储在 it.wrappingCloth 或 it.extras.wrappingCloth 中）
       const wrappingCloth = it.wrappingCloth || (it.extras && it.extras.wrappingCloth) || '';
       // C类品（productType === 3）且包皮布为"不要"且件数单位为"件"时，使用0.045系数
@@ -1518,7 +1529,7 @@ function tplSales(o, items, sv) {
           const unitEng = (it && it.unit === '托盘') ? getPluralUnit(packValRaw, 'PALLET') : ((it && it.unit === '捆包') ? getPluralUnit(packValRaw, 'SACK') : ((it && it.unit === '件') ? getPluralUnit(packValRaw, 'BALE') : ''));
           const packText = unitEng ? `${packNumStr}PCS/${unitEng}` : `${packNumStr}PCS`;
           // 如果订单使用B类品且有标签批号，使用flex布局让批号右对齐
-          const orderProductType = o.productType || 1;
+          const orderProductType = (o.productType ?? o.product_type) || 1;
           if (orderProductType === 2 && it.labelBatchNo) {
             packLine = `<div style="display: flex; justify-content: space-between; align-items: center;"><span>${packText}</span><span style="font-weight: 600;">SC:${it.labelBatchNo}</span></div>`;
           } else {
@@ -1616,7 +1627,9 @@ async function renderPreview(skipAutoFit = false) {
       }
     } catch (err) {
       console.error('获取订单详情失败:', err);
-      preview.innerHTML = '<div style="padding:30px; color:#f56c6c; text-align:center; font-size:14px;">获取订单详情失败，请重试</div>';
+      if (preview) {
+        preview.innerHTML = '<div style="padding:30px; color:#f56c6c; text-align:center; font-size:14px;">获取订单详情失败，请重试</div>';
+      }
       return;
     }
   }
@@ -1791,6 +1804,10 @@ function validateRequiredFields(order, docType) {
 
 // 导出PDF：优化版 - 提高速度与清晰度
 async function exportPDF() {
+  if (isOldDocsExportPdfButtonHidden()) {
+    window.NotificationSystem?.toast('已在系统设置 → 导出设置中关闭「导出 PDF」', 'info', 3500);
+    return;
+  }
   // 校验必要字段
   const order = currentOrder();
   if (!order || Object.keys(order).length === 0) {
@@ -2039,7 +2056,7 @@ async function exportExcel() {
       if (type === 'production') {
         // 生产通知单专用列宽设置，优化A4打印效果，确保长产品型号完整显示
         // 根据订单产品类型确定列内容：C类品显示包皮布、唛头、标签说明（不显示清洁度），A类品和B类品显示标签重量/标签批号、安全系数/标签说明、清洁度
-        const orderProductType = o.productType || 1;
+        const orderProductType = (o.productType ?? o.product_type) || 1;
         const isTemplate3 = (orderProductType === 3);
         if (isTemplate3) {
           // C类品：8列（产品型号、数量、包装件数、重量、包装、包皮布、唛头、标签说明）
@@ -2601,7 +2618,7 @@ async function exportExcel() {
             row.height = rowHeight;
           } else {
             // C类品生产通知单：增大产品内容行行高，确保唛头的2行内容不被遮挡
-            const orderProductType = o.productType || 1;
+            const orderProductType = (o.productType ?? o.product_type) || 1;
             const isTemplate3 = (orderProductType === 3);
             let rowHeight = 28; // 默认普通行高度
 
@@ -4362,7 +4379,7 @@ async function generateWordContent(order, extras, docType) {
           const packText = unitEng ? `${packNumStr}PCS/${unitEng}` : `${packNumStr}PCS`;
 
           // 组合包装信息和批号（同一行）
-          const orderProductType = order.productType || 1;
+          const orderProductType = (order.productType ?? order.product_type) || 1;
           if (orderProductType === 2 && item.labelBatchNo) {
             // B类品：包装 + 空格 + 批号
             specTextParts.push(new TextRun({ text: packText, size: 22 }));
@@ -4675,7 +4692,7 @@ async function generateWordContent(order, extras, docType) {
 
     // 计算毛重（GROSS WEIGHT）- 与PACKING LIST保持一致
     // 获取产品类型（从订单或产品项）
-    const productType = o.productType || 1;
+    const productType = (o.productType ?? o.product_type) || 1;
     const totalGrossWeight = items.reduce((sum, it) => {
       const qty = Number(it.quantity || 0);
       const actualWeight = it.actualWeight ? Number(it.actualWeight) : null;
@@ -5183,7 +5200,7 @@ function showDocHeaderInfo(type) {
 
         // 计算皮重：根据件数单位、产品类型和包皮布选择计算
         // 获取产品类型（从订单或产品项）
-        const productType = o.productType || it.productType || 1;
+        const productType = (o.productType ?? o.product_type) || (it.productType ?? it.product_type) || 1;
         // 获取包皮布字段（可能存储在 it.wrappingCloth 或 it.extras.wrappingCloth 中）
         const wrappingCloth = it.wrappingCloth || (it.extras && it.extras.wrappingCloth) || '';
         // C类品（productType === 3）且包皮布为"不要"且件数单位为"件"时，使用0.045系数
@@ -5283,28 +5300,30 @@ function showDocHeaderInfo(type) {
   docHeaderInfo.style.display = 'block';
 }
 
-// 页面加载完成后初始化
-document.addEventListener('DOMContentLoaded', function () {
-  // 延迟显示表头信息，等待订单数据加载完成
-  setTimeout(() => {
-    const defaultType = docType();
-    showDocHeaderInfo(defaultType);
-  }, 100);
+// 页面加载完成后初始化（仅独立 docs.html，避免在 SPA 主入口误跑）
+if (isLegacyDocsHtmlPage) {
+  document.addEventListener('DOMContentLoaded', function () {
+    // 延迟显示表头信息，等待订单数据加载完成
+    setTimeout(() => {
+      const defaultType = docType();
+      showDocHeaderInfo(defaultType);
+    }, 100);
 
-  // 🚀 预启动后端服务（Tauri 打包环境需要）
-  // 在页面加载时就启动后端，确保用户点击导出时能立即响应
-  (async () => {
-    try {
-      const { backendManager } = await import('../../utils/backend-manager.js');
-      console.log('[单据生成] 页面加载，预启动后端服务...');
-      await backendManager.ensureBackendWithNotification();
-      console.log('[单据生成] 后端服务已就绪，导出功能可用');
-    } catch (err) {
-      // 预启动失败不阻塞页面，用户点击导出时会再次尝试
-      console.warn('[单据生成] 后端服务预启动失败（将在导出时重试）:', err.message);
-    }
-  })();
-});
+    // 🚀 预启动后端服务（Tauri 打包环境需要）
+    // 在页面加载时就启动后端，确保用户点击导出时能立即响应
+    (async () => {
+      try {
+        const { backendManager } = await import('../../utils/backend-manager.js');
+        console.log('[单据生成] 页面加载，预启动后端服务...');
+        await backendManager.ensureBackendWithNotification();
+        console.log('[单据生成] 后端服务已就绪，导出功能可用');
+      } catch (err) {
+        // 预启动失败不阻塞页面，用户点击导出时会再次尝试
+        console.warn('[单据生成] 后端服务预启动失败（将在导出时重试）:', err.message);
+      }
+    })();
+  });
+}
 
 // 订单选择已移除，不需要绑定事件
 // 保存当前缩放比例，切换单据类型时保持不变
@@ -5342,10 +5361,15 @@ document.querySelectorAll('input[name="docType"]').forEach(r => r.addEventListen
   showDocHeaderInfo(type); // 显示表头信息
   console.log('单据类型已切换为:', type);
 }));
-btnBack.addEventListener('click', () => goto('/index.html#/orders'));
-btnPDF.addEventListener('click', exportPDF);
-btnExcel.addEventListener('click', exportExcel);
-btnWord.addEventListener('click', exportWord);
+if (btnBack) btnBack.addEventListener('click', () => goto('/index.html#/orders'));
+if (btnPDF) {
+  btnPDF.addEventListener('click', async () => {
+    if (isOldDocsExportPdfButtonHidden()) return;
+    await exportPDF();
+  });
+}
+if (btnExcel) btnExcel.addEventListener('click', exportExcel);
+if (btnWord) btnWord.addEventListener('click', exportWord);
 if (btnEditablePDF) btnEditablePDF.addEventListener('click', exportEditablePDF);
 
 // 右侧布局按钮事件监听器已移除，功能已移植到预览窗口标题栏
@@ -5433,20 +5457,22 @@ if (fitToPageToggle) fitToPageToggle.addEventListener('change', () => {
 // 🔍 响应式适配：窗口大小变化时自动重新计算
 // 使用防抖优化性能，避免频繁计算
 let resizeTimer = null;
-window.addEventListener('resize', () => {
-  // 清除之前的定时器
-  if (resizeTimer) {
-    clearTimeout(resizeTimer);
-  }
-
-  // 300ms后执行，避免resize过程中频繁计算
-  resizeTimer = setTimeout(() => {
-    if (fitToPageToggle && fitToPageToggle.checked) {
-      console.log('🔄 窗口大小变化，重新计算适配比例');
-      autoFitPreviewToA4();
+if (isLegacyDocsHtmlPage) {
+  window.addEventListener('resize', () => {
+    // 清除之前的定时器
+    if (resizeTimer) {
+      clearTimeout(resizeTimer);
     }
-  }, 300);
-});
+
+    // 300ms后执行，避免resize过程中频繁计算
+    resizeTimer = setTimeout(() => {
+      if (fitToPageToggle && fitToPageToggle.checked) {
+        console.log('🔄 窗口大小变化，重新计算适配比例');
+        autoFitPreviewToA4();
+      }
+    }, 300);
+  });
+}
 
 // 默认勾选适配复选框
 if (fitToPageToggle) {
@@ -5649,28 +5675,30 @@ if (fitToPageToggle) {
   });
 })();
 
-// 初始渲染
-syncCompanyFromServer(renderPreview);
-// 再次渲染以确保无网络时也有本地预览
-renderPreview();
+// 初始渲染（仅 docs.html；SPA 主入口无 #preview，不能执行）
+if (isLegacyDocsHtmlPage) {
+  syncCompanyFromServer(renderPreview);
+  // 再次渲染以确保无网络时也有本地预览
+  renderPreview();
 
-// 启动后刷新订单列表：若提供了 id 则按需加载该订单，否则才拉取全量列表
-(function refreshOrdersFromServer() {
-  try {
-    if (urlId != null && Number.isFinite(urlId)) {
-      // 已在 renderPreview 中按需拉取详情并填充选择，这里不再拉取列表
-      return;
-    }
-    ApiService.orders.list().then(rows => {
-      if (Array.isArray(rows)) {
-        orders = rows;
-        // 刷新订单选择并保持当前索引或URL索引
-        renderOrderSelect(currentOrderIndex());
-        renderPreview();
+  // 启动后刷新订单列表：若提供了 id 则按需加载该订单，否则才拉取全量列表
+  (function refreshOrdersFromServer() {
+    try {
+      if (urlId != null && Number.isFinite(urlId)) {
+        // 已在 renderPreview 中按需拉取详情并填充选择，这里不再拉取列表
+        return;
       }
-    }).catch(() => { });
-  } catch (e) { }
-})();
+      ApiService.orders.list().then(rows => {
+        if (Array.isArray(rows)) {
+          orders = rows;
+          // 刷新订单选择并保持当前索引或URL索引
+          renderOrderSelect(currentOrderIndex());
+          renderPreview();
+        }
+      }).catch(() => { });
+    } catch (e) { }
+  })();
+}
 
 // 🔍 视觉缩放功能 - 参考WPS/Word打印预览的智能适配算法
 function autoFitPreviewToA4() {

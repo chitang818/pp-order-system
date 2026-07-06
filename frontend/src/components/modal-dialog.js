@@ -426,8 +426,6 @@ export class ModalDialog {
       modalDialog.style.maxWidth = options.width;
       modalDialog.style.width = '95%'; // 确保在小屏幕下不会超过屏幕宽度
     }
-    
-    modalDialog.setAttribute('onclick', 'event.stopPropagation()');
 
     // 头部
     if (options.showHeader !== false && options.title) {

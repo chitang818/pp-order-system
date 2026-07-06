@@ -10,6 +10,7 @@ const { asyncHandler } = require('../middleware/errorHandler');
 const LogService = require('../services/LogService');
 const { validateProduct, validateId } = require('../middleware/validation');
 const ProductService = require('../services/ProductService');
+const ProductSyncService = require('../services/ProductSyncService');
 
 /**
  * 获取产品列表
@@ -55,6 +56,31 @@ router.get('/search', asyncHandler(async (req, res) => {
 }));
 
 /**
+ * 产品库自动同步设置（必须在 /:id 之前注册）
+ * GET /api/products/sync-settings
+ */
+router.get('/sync-settings', asyncHandler(async (req, res) => {
+  const sqlite = db.db;
+  const settings = await ProductSyncService.getSyncSettings(sqlite);
+  res.json({ success: true, data: settings });
+}));
+
+/**
+ * PUT /api/products/sync-settings
+ */
+router.put('/sync-settings', asyncHandler(async (req, res) => {
+  const sqlite = db.db;
+  const { enabled, intervalDays } = req.body || {};
+  const data = await ProductSyncService.setSyncSettings(sqlite, {
+    enabled: !!enabled,
+    intervalDays: intervalDays != null ? Number(intervalDays) : 3
+  });
+  await LogService.logOperation(req, '保存产品同步设置', '产品库管理', '', JSON.stringify(data));
+  const full = await ProductSyncService.getSyncSettings(sqlite);
+  res.json({ success: true, data: full });
+}));
+
+/**
  * 获取单个产品
  * GET /api/products/:id
  */
@@ -84,6 +110,13 @@ router.post('/', validateProduct, asyncHandler(async (req, res) => {
     res.json({ success: true, data: product });
   } catch (err) {
     LogService.logOperation(req, '创建产品', '产品库管理', req.body?.model || '', '创建失败', 'failure', err.message);
+    if (err.code === 'DUPLICATE_MODEL_TYPE' || String(err.message || '').includes('该型号在此产品类型下已存在')) {
+      return res.status(409).json({
+        success: false,
+        error: 'DUPLICATE',
+        message: err.message || '该型号在此产品类型下已存在'
+      });
+    }
     throw err;
   }
 }));
@@ -101,6 +134,13 @@ router.put('/:id', validateId, validateProduct, asyncHandler(async (req, res) =>
     res.json({ success: true, result });
   } catch (err) {
     LogService.logOperation(req, '更新产品', '产品库管理', id, '更新失败', 'failure', err.message);
+    if (String(err.message || '').includes('该型号在此产品类型下已存在')) {
+      return res.status(409).json({
+        success: false,
+        error: 'DUPLICATE',
+        message: err.message
+      });
+    }
     throw err;
   }
 }));
@@ -196,227 +236,13 @@ router.post('/clear', asyncHandler(async (req, res) => {
  */
 router.post('/sync-from-orders', asyncHandler(async (req, res) => {
   console.log('开始手动同步产品...');
-
-  // 使用事务确保数据一致性
   const sqlite = db.db;
-
-  // 获取所有订单项，提取产品型号和所有重量相关字段，包括标签批号、标签说明和产品类型
-  // 对于同一产品型号，优先级：B类品(2) > C类品(3) > A类品(1) > 最新记录
-  const orderItems = await new Promise((resolve, reject) => {
-    sqlite.all(`
-      SELECT 
-        oi.model, 
-        oi.weight as estimatedWeight, 
-        oi.labelWeight, 
-        oi.safetyFactor, 
-        oi.cleanliness, 
-        oi.unit, 
-        oi.labelBatchNo, 
-        oi.label,
-        oi.extras,
-        o.productType,
-        o.createdAt
-      FROM order_items oi
-      LEFT JOIN orders o ON oi.orderId = o.id
-      WHERE oi.model IS NOT NULL AND oi.model != '' 
-      ORDER BY 
-        oi.model,
-        CASE 
-          WHEN o.productType = 2 THEN 0
-          WHEN o.productType = 3 THEN 1
-          ELSE 2
-        END,
-        o.createdAt DESC
-    `, [], (err, rows) => {
-      if (err) reject(err);
-      else {
-        // 对于每个产品型号，只保留第一条记录（优先B类品，其次C类品，再次A类品，最后最新）
-        const uniqueProducts = {};
-        rows.forEach(row => {
-          if (!uniqueProducts[row.model]) {
-            uniqueProducts[row.model] = { ...row };
-          }
-        });
-        resolve(Object.values(uniqueProducts));
-      }
-    });
-  });
-
-  if (!orderItems || orderItems.length === 0) {
-    return res.json({
-      success: true,
-      message: '没有找到可同步的产品数据',
-      data: { added: 0, updated: 0, total: 0 }
-    });
-  }
-
-  console.log(`从订单中找到 ${orderItems.length} 个不同的产品型号`);
-  orderItems.forEach((item, index) => {
-    const productTypeName = item.productType === 2 ? 'B类品' : item.productType === 3 ? 'C类品' : 'A类品';
-    console.log(`${index + 1}. 型号: ${item.model}, 产品类型: ${productTypeName}(${item.productType || 1}), 件数单位: "${item.unit}", 重量: ${item.estimatedWeight}, 标签重量: ${item.labelWeight}, 安全系数: "${item.safetyFactor}", 清洁度: "${item.cleanliness}", 标签批号: "${item.labelBatchNo || ''}", 标签说明: "${item.label || ''}"`);
-  });
-
-  let added = 0;
-  let updated = 0;
-
-  // 为每个产品型号创建或更新产品记录
-  for (const item of orderItems) {
-    const { model, estimatedWeight, labelWeight, safetyFactor, cleanliness, unit, labelBatchNo, label, productType, extras } = item;
-
-    // 从extras中提取marks字段（C类品的唛头）
-    let marks = '';
-    try {
-      if (extras) {
-        const parsedExtras = typeof extras === 'string' ? JSON.parse(extras) : extras;
-        marks = parsedExtras.marks || '';
-      }
-    } catch (e) {
-      console.warn(`解析产品 ${model} 的extras失败:`, e);
-    }
-
-    const finalProductType = productType || 1; // 默认为A类品
-    const productTypeName = finalProductType === 2 ? 'B类品' : finalProductType === 3 ? 'C类品' : 'A类品';
-    console.log(`\n处理产品: ${model}, 产品类型: ${productTypeName}(${finalProductType})`);
-
-    // 根据产品类型决定同步哪些字段
-    // A类品: estimatedWeight, labelWeight, safetyFactor, cleanliness, unit
-    // B类品: estimatedWeight, labelWeight, cleanliness, unit, labelBatchNo, label
-    // C类品: estimatedWeight, labelWeight, cleanliness, unit, marks, label
-    
-    // 准备同步的字段值（如果字段未输入，则同步为空）
-    const syncData = {
-      productType: finalProductType,
-      estimatedWeight: estimatedWeight || null,
-      labelWeight: labelWeight || null,
-      cleanliness: cleanliness || null,
-      unit: unit || '',
-      // A类品特有字段
-      safetyFactor: (finalProductType === 1) ? (safetyFactor || null) : null,
-      // B类品特有字段
-      labelBatchNo: (finalProductType === 2) ? (labelBatchNo || '') : null,
-      label: (finalProductType === 2 || finalProductType === 3) ? (label || '') : null,
-      // C类品特有字段
-      marks: (finalProductType === 3) ? (marks || '') : null
-    };
-
-    // 检查产品是否已存在
-    const existingProduct = await new Promise((resolve, reject) => {
-      sqlite.get('SELECT * FROM products WHERE model = ?', [model], (err, row) => {
-        if (err) reject(err);
-        else resolve(row);
-      });
-    });
-
-    if (existingProduct) {
-      console.log(`产品 ${model} 已存在，更新产品类型和字段...`);
-      
-      // 构建更新字段和值
-      const updateFields = [];
-      const updateValues = [];
-
-      // 始终更新productType（直接使用订单的产品类型）
-      updateFields.push('productType = ?');
-      updateValues.push(syncData.productType);
-
-      // 根据产品类型更新对应字段（所有字段都同步，即使为空）
-      // 通用字段（所有类型都有）
-      updateFields.push('estimatedWeight = ?');
-      updateValues.push(syncData.estimatedWeight);
-      updateFields.push('labelWeight = ?');
-      updateValues.push(syncData.labelWeight);
-      updateFields.push('cleanliness = ?');
-      updateValues.push(syncData.cleanliness);
-      updateFields.push('unit = ?');
-      updateValues.push(syncData.unit);
-
-      // A类品特有字段
-      if (finalProductType === 1) {
-        updateFields.push('safetyFactor = ?');
-        updateValues.push(syncData.safetyFactor);
-        // 清空B类品和C类品字段
-        updateFields.push('labelBatchNo = NULL', 'label = NULL', 'marks = NULL');
-      }
-      // B类品特有字段
-      else if (finalProductType === 2) {
-        updateFields.push('labelBatchNo = ?');
-        updateValues.push(syncData.labelBatchNo);
-        updateFields.push('label = ?');
-        updateValues.push(syncData.label);
-        // 清空A类品和C类品字段
-        updateFields.push('safetyFactor = NULL', 'marks = NULL');
-      }
-      // C类品特有字段
-      else if (finalProductType === 3) {
-        updateFields.push('marks = ?');
-        updateValues.push(syncData.marks);
-        updateFields.push('label = ?');
-        updateValues.push(syncData.label);
-        // 清空A类品和B类品字段
-        updateFields.push('safetyFactor = NULL', 'labelBatchNo = NULL');
-      }
-
-      updateFields.push('source = ?', 'updatedAt = datetime("now")');
-      updateValues.push('order', model);
-
-      await new Promise((resolve, reject) => {
-        sqlite.run(
-          `UPDATE products SET ${updateFields.join(', ')} WHERE model = ?`,
-          updateValues,
-          function(err) {
-            if (err) reject(err);
-            else resolve();
-          }
-        );
-      });
-      console.log(`更新了产品 ${model} 的产品类型为${productTypeName}，并同步了相关字段`);
-      updated++;
-    } else {
-      console.log(`创建新产品: ${model}, 产品类型: ${productTypeName}(${finalProductType})`);
-      
-      // 创建新产品记录，根据产品类型同步对应字段
-      await new Promise((resolve, reject) => {
-        sqlite.run(
-          'INSERT INTO products (model, productType, estimatedWeight, labelWeight, safetyFactor, cleanliness, unit, labelBatchNo, label, marks, source, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime("now"), datetime("now"))',
-          [
-            model,
-            syncData.productType,
-            syncData.estimatedWeight,
-            syncData.labelWeight,
-            syncData.safetyFactor,
-            syncData.cleanliness,
-            syncData.unit,
-            syncData.labelBatchNo,
-            syncData.label,
-            syncData.marks,
-            'order'
-          ],
-          function(err) {
-            if (err) reject(err);
-            else resolve();
-          }
-        );
-      });
-      console.log(`成功创建产品 ${model}`);
-      added++;
-    }
-  }
-
-  // 获取总产品数
-  const totalProducts = await new Promise((resolve, reject) => {
-    sqlite.get('SELECT COUNT(*) as count FROM products', (err, row) => {
-      if (err) reject(err);
-      else resolve(row.count);
-    });
-  });
-
-  console.log(`同步完成: 新增 ${added} 个产品，更新 ${updated} 个产品，总计 ${totalProducts} 个产品`);
-
-  await LogService.logOperation(req, '同步产品', '产品库管理', '', `同步完成：新增 ${added} 个产品，更新 ${updated} 个产品`);
-
+  const result = await ProductSyncService.syncFromOrders(sqlite, { req });
+  await ProductSyncService.setLastRunNow(sqlite);
   res.json({
     success: true,
-    message: `同步完成：新增 ${added} 个产品，更新 ${updated} 个产品`,
-    data: { added, updated, total: totalProducts }
+    message: result.message,
+    data: { added: result.added, updated: result.updated, total: result.total }
   });
 }));
 

@@ -48,6 +48,101 @@ function ensureColumns(table, defs, cb) {
 }
 
 /**
+ * 历史库：products 仅 model UNIQUE → 改为 UNIQUE(model, productType)
+ */
+function migrateProductsCompositeUnique(cb) {
+  db.get(`SELECT sql FROM sqlite_master WHERE type='table' AND name='products'`, (err, row) => {
+    if (err) return cb && cb(err);
+    if (!row || !row.sql) return cb && cb(null);
+    const s = row.sql;
+    if (/\bUNIQUE\s*\(\s*model\s*,\s*productType\s*\)/i.test(s)) {
+      return cb && cb(null);
+    }
+    const looksLegacy =
+      /model\s+TEXT\s+NOT\s+NULL\s+UNIQUE/i.test(s) || /\bUNIQUE\s*\(\s*model\s*\)/i.test(s);
+    if (!looksLegacy) {
+      return cb && cb(null);
+    }
+
+    console.log('[DB] Migrating products table to UNIQUE(model, productType)...');
+    db.serialize(() => {
+      db.run('BEGIN IMMEDIATE', (e0) => {
+        if (e0) return cb && cb(e0);
+      });
+      db.run(
+        `CREATE TABLE products_migrate (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        model TEXT NOT NULL,
+        description TEXT,
+        estimatedWeight REAL,
+        labelWeight REAL,
+        safetyFactor TEXT,
+        cleanliness TEXT,
+        unit TEXT,
+        createdAt TEXT,
+        updatedAt TEXT,
+        source TEXT DEFAULT 'manual',
+        actualWeight REAL,
+        labelBatchNo TEXT,
+        label TEXT,
+        marks TEXT,
+        template TEXT,
+        productType INTEGER DEFAULT 1,
+        UNIQUE(model, productType)
+      )`,
+        (e1) => {
+          if (e1) {
+            db.run('ROLLBACK', () => cb && cb(e1));
+            return;
+          }
+          db.run(
+            `INSERT INTO products_migrate (
+          model, description, estimatedWeight, labelWeight, safetyFactor, cleanliness, unit,
+          createdAt, updatedAt, source, actualWeight, labelBatchNo, label, marks, template, productType
+        )
+        SELECT
+          trim(model), description, estimatedWeight, labelWeight, safetyFactor, cleanliness, unit,
+          createdAt, updatedAt, source, actualWeight, labelBatchNo, label, marks, template,
+          COALESCE(productType, 1)
+        FROM (
+          SELECT *, ROW_NUMBER() OVER (
+            PARTITION BY trim(model), COALESCE(productType, 1)
+            ORDER BY COALESCE(NULLIF(trim(updatedAt), ''), createdAt) DESC, id DESC
+          ) AS rn
+          FROM products
+        ) WHERE rn = 1`,
+            (e2) => {
+              if (e2) {
+                db.run('ROLLBACK', () => cb && cb(e2));
+                return;
+              }
+              db.run('DROP TABLE products', (e3) => {
+                if (e3) {
+                  db.run('ROLLBACK', () => cb && cb(e3));
+                  return;
+                }
+                db.run('ALTER TABLE products_migrate RENAME TO products', (e4) => {
+                  if (e4) {
+                    db.run('ROLLBACK', () => cb && cb(e4));
+                    return;
+                  }
+                  db.run('CREATE INDEX IF NOT EXISTS idx_products_model ON products(model)');
+                  db.run('CREATE INDEX IF NOT EXISTS idx_products_description ON products(description)');
+                  db.run('CREATE INDEX IF NOT EXISTS idx_products_model_type ON products(model, productType)');
+                  db.run('COMMIT', (e5) => {
+                    if (e5) return cb && cb(e5);
+                    console.log('[DB] products UNIQUE(model, productType) migration completed');
+                    cb && cb(null);
+                  });
+                });
+              });
+            });
+        });
+    });
+  });
+}
+
+/**
  * 数据库初始化函数
  * 创建所有必要的表，并执行数据迁移和默认数据创建
  */
@@ -171,10 +266,10 @@ function init(cb) {
       FOREIGN KEY(orderId) REFERENCES orders(id) ON DELETE CASCADE
     );`);
 
-    // 创建产品表
+    // 创建产品表（型号 + 产品类型 联合唯一）
     db.run(`CREATE TABLE IF NOT EXISTS products (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
-      model TEXT NOT NULL UNIQUE,
+      model TEXT NOT NULL,
       description TEXT,
       estimatedWeight REAL,
       labelWeight REAL,
@@ -188,7 +283,9 @@ function init(cb) {
       labelBatchNo TEXT,
       label TEXT,
       marks TEXT,
-      template TEXT
+      template TEXT,
+      productType INTEGER DEFAULT 1,
+      UNIQUE(model, productType)
     );`);
 
     // 创建用户表
@@ -265,6 +362,7 @@ function init(cb) {
     db.run(`CREATE INDEX IF NOT EXISTS idx_forwarders_name ON forwarders(name);`);
     db.run(`CREATE INDEX IF NOT EXISTS idx_products_model ON products(model);`);
     db.run(`CREATE INDEX IF NOT EXISTS idx_products_description ON products(description);`);
+    db.run(`CREATE INDEX IF NOT EXISTS idx_products_model_type ON products(model, productType);`);
     db.run(`CREATE INDEX IF NOT EXISTS idx_orders_customer ON orders(customerId);`);
     db.run(`CREATE INDEX IF NOT EXISTS idx_orders_created ON orders(createdAt);`);
     db.run(`CREATE INDEX IF NOT EXISTS idx_orders_contract ON orders(contractNo);`);
@@ -282,16 +380,42 @@ function init(cb) {
     // 所有订单参数配置内容只存储在数据库中，不保存在软件代码中
     // 初始化时会一起删除，备份时会一起备份，导入时会一并导入
 
-    // 轻量级迁移：为已有数据库添加缺失列
-    ensureColumns('products', {
-      actualWeight: 'REAL',
-      labelBatchNo: 'TEXT',
-      label: 'TEXT',
-      marks: 'TEXT',
-      source: 'TEXT DEFAULT "manual"',
-      productType: 'INTEGER DEFAULT 1',
-      template: 'TEXT'
-    });
+    // 轻量级迁移：为已有数据库添加缺失列；完成后将 products 迁到 UNIQUE(model, productType)
+    ensureColumns(
+      'products',
+      {
+        actualWeight: 'REAL',
+        labelBatchNo: 'TEXT',
+        label: 'TEXT',
+        marks: 'TEXT',
+        source: 'TEXT DEFAULT "manual"',
+        productType: 'INTEGER DEFAULT 1',
+        template: 'TEXT'
+      },
+      (pcErr) => {
+        if (pcErr) console.warn('[DB] ensureColumns products:', pcErr.message);
+        const finishInit = (mErr) => {
+          db.run('UPDATE customers SET id = rowid WHERE id IS NULL', function (e) {
+            if (e) console.warn('Fix null customer id failed', e);
+          });
+          db.run('UPDATE products SET id = rowid WHERE id IS NULL', function (e) {
+            if (e) console.warn('Fix null product id failed', e);
+          });
+          db.run('SELECT 1', [], function (err) {
+            if (err) console.error('[DB] Init completion check failed:', err);
+            cb && cb(pcErr || mErr || err || null);
+          });
+        };
+        if (pcErr) {
+          finishInit(null);
+          return;
+        }
+        migrateProductsCompositeUnique((mErr) => {
+          if (mErr) console.error('[DB] migrateProductsCompositeUnique:', mErr.message || mErr);
+          finishInit(mErr);
+        });
+      }
+    );
     ensureColumns('orders', {
       productType: 'INTEGER DEFAULT 1',
       extras: 'TEXT',
@@ -337,18 +461,7 @@ function init(cb) {
       createdAt: 'TEXT'
     });
 
-    // 移除 Node.js 后端的默认管理员创建/重置逻辑
-    // 管理员账户完全由 init.sql 和 Tauri 业务逻辑管理
-    // 仅保留回调以通知初始化完成
-    db.run('SELECT 1', [], function (err) {
-      if (err) console.error('[DB] Init completion check failed:', err);
-      cb && cb(null);
-    });
-
-    // 一次性修复：为历史数据填充缺失的客户 id（使用 rowid），避免前端与后端出现 null id
-    db.run('UPDATE customers SET id = rowid WHERE id IS NULL', function (e) { if (e) console.warn('Fix null customer id failed', e); });
-    // 一次性修复：为历史数据填充缺失的产品 id（使用 rowid），避免前端与后端出现 null id
-    db.run('UPDATE products SET id = rowid WHERE id IS NULL', function (e) { if (e) console.warn('Fix null product id failed', e); });
+    // 初始化完成回调在 ensureColumns('products') → migrateProductsCompositeUnique 链末尾触发
   });
 }
 

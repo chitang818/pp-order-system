@@ -110,7 +110,7 @@ export async function loadNextContractNo(contractNoInput, updateContractNoDispla
         // If input is empty, set it
         if (!contractNoInput.value.trim()) {
           contractNoInput.value = result.nextContractNo;
-          console.log('自动填充合同编号:', result.data.nextContractNo);
+          console.log('自动填充合同编号:', result.nextContractNo);
           if (updateContractNoDisplay) {
             updateContractNoDisplay(); // 更新表头显示
           }

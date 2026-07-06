@@ -2,6 +2,8 @@
  * 订单快速预览功能
  * ES6 模块化版本
  */
+import { isOrderPreviewNewDocsButtonEnabled } from '../../utils/ui-preferences.js';
+import { formatOrderQuickPreviewMarksCellInnerHtml, normalizeOrderItem } from './order-item-marks.js';
 /**
    * 显示订单预览弹窗
    * @param {number} orderIndex - 订单在state.orders数组中的索引
@@ -50,50 +52,47 @@ async function showOrderPreview(orderOrIndex) {
 
     // 准备标题和footer（提前准备，不等待数据加载）
     const orderTitle = escapeHtml(order.contractNo || order.orderNo || '未命名订单');
+    const newDocsBtnHtml = isOrderPreviewNewDocsButtonEnabled()
+      ? '<button class="btn-success" id="btnDocsFromPreview" type="button">📄 生成单据（new）</button>'
+      : '';
     const footerHTML = `
       <div class="footer-left">
       <button class="btn-secondary" id="btnClosePreview" data-action="cancel" type="button">关闭</button>
           </div>
           <div class="footer-right">
       <button class="btn-primary" id="btnEditFromPreview" type="button">✏️ 编辑订单</button>
-      <button class="btn-success" id="btnDocsOldFromPreview" type="button">📄 生成单据（旧版）</button>
-      <button class="btn-success" id="btnDocsFromPreview" type="button">📄 生成单据（new）</button>
+      <button class="btn-success" id="btnDocsOldFromPreview" type="button">📄 生成单据</button>
+      ${newDocsBtnHtml}
           </div>
   `;
 
-    // 如果订单没有产品明细，从API获取完整订单数据
-    if (!order.items || !Array.isArray(order.items) || order.items.length === 0) {
-        // 使用统一弹窗模块的加载对话框
-        const loading = window.ModalDialog.loading('正在加载订单详情...');
-
-        try {
-            // 使用 ApiService 获取订单详情，兼容 Tauri 环境
-            // ApiService.orders.get 会直接返回 JSON 数据，若失败则抛出异常
-            console.log('[Preview] Fetching details for ID:', orderId);
-            const fullOrder = await window.ApiService.orders.get(orderId);
-
-            if (fullOrder) {
-                order = fullOrder;
-                // 更新state中的订单数据 (如果是通过索引调用的，更新对应索引；否则尝试按ID更新)
-                if (typeof orderOrIndex === 'number' && window.state?.orders?.[orderOrIndex]) {
-                    window.state.orders[orderOrIndex] = fullOrder;
-                } else if (window.state?.orders) {
-                    const idx = window.state.orders.findIndex(o => o.id == orderId);
-                    if (idx !== -1) window.state.orders[idx] = fullOrder;
-                }
-
-                // 关闭 loading 弹窗（不等待动画，立即开始生成HTML）
-                loading.close();
-            } else {
-                throw new Error('获取到的订单数据为空');
-            }
-        } catch (error) {
-            console.error('获取订单详情异常:', error);
+    // 始终拉取详情，避免列表缓存/不完整 items 与编辑页 orders.get 不一致
+    const loading =
+      window.ModalDialog && typeof window.ModalDialog.loading === 'function'
+        ? window.ModalDialog.loading('正在加载订单详情...')
+        : null;
+    try {
+        console.log('[Preview] Fetching fresh order details for ID:', orderId);
+        const fullOrder = await window.ApiService.orders.get(orderId);
+        if (!fullOrder) {
+            throw new Error('获取到的订单数据为空');
+        }
+        order = fullOrder;
+        if (typeof orderOrIndex === 'number' && window.state?.orders?.[orderOrIndex]) {
+            window.state.orders[orderOrIndex] = fullOrder;
+        } else if (window.state?.orders) {
+            const idx = window.state.orders.findIndex((o) => o.id == orderId);
+            if (idx !== -1) window.state.orders[idx] = fullOrder;
+        }
+    } catch (error) {
+        console.error('获取订单详情异常:', error);
+        if (typeof window.NotificationSystem?.toast === 'function') {
+            window.NotificationSystem.toast('获取订单详情失败: ' + (error.message || '未知错误'), 'error');
+        }
+        return;
+    } finally {
+        if (loading && typeof loading.close === 'function') {
             loading.close();
-            if (typeof window.NotificationSystem?.toast === "function") {
-                window.NotificationSystem?.toast('获取订单详情失败: ' + (error.message || '未知错误'), 'error');
-            }
-            return;
         }
     }
 
@@ -554,7 +553,7 @@ function generatePickupInfoNew(order, extras) {
 function generatePreviewHTML(order) {
     const items = order.items || [];
     const extras = order.extras || {};
-    const productType = order.productType || 1; // 1=A类品, 2=B类品, 3=C类品
+    const productType = (order.productType ?? order.product_type) || 1; // 1=A类品, 2=B类品, 3=C类品
     const productTypeText = productType === 2 ? 'B类品' : productType === 3 ? 'C类品' : 'A类品';
     const totalQuantity = items.reduce((sum, item) => sum + (parseFloat(item.quantity) || 0), 0);
     // 修复订单金额计算：使用 calculatedAmount (quantity * unitPrice) 或 item.amount
@@ -761,21 +760,11 @@ function generatePreviewHTML(order) {
                                           <td class="col-label-desc">${escapeHtml(item.label || '-')}</td>
                                       `;
         } else if (productType === 3) {
-            // C类品：包皮布、标签说明、唛头
-            // 若包皮布为"要"，则唛头列第一行显示产品型号，第二行显示唛头信息
-            // 从 item.wrappingCloth 或 item.extras?.wrappingCloth 读取包皮布
-            const wrappingCloth = item.wrappingCloth || (item.extras && item.extras.wrappingCloth) || '';
-            // 从 item.marks 或 item.extras?.marks 读取唛头
-            const marks = item.marks || (item.extras && item.extras.marks) || '';
-            let marksDisplay = marks;
-            if (wrappingCloth === '要' && item.model) {
-                marksDisplay = `${escapeHtml(item.model)}${marks ? '<br/>' + escapeHtml(marks) : ''}`;
-            } else {
-                marksDisplay = escapeHtml(marks || '-');
-            }
-
+            // C类品：包皮布、标签说明、唛头（与编辑页、单据共用 order-item-marks 规则）
+            const n = normalizeOrderItem(item);
+            const marksDisplay = formatOrderQuickPreviewMarksCellInnerHtml(item, order.contractNo || '', escapeHtml);
             rowHTML += `
-                                          <td class="col-wrapping-cloth">${escapeHtml(wrappingCloth || '-')}</td>
+                                          <td class="col-wrapping-cloth">${escapeHtml(n.wrappingCloth || '-')}</td>
                                           <td class="col-label-desc">${escapeHtml(item.label || '-')}</td>
                                           <td class="col-marks">${marksDisplay}</td>
                                       `;

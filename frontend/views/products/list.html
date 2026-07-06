@@ -219,6 +219,24 @@
         </div>
       </div>
 
+      <!-- 从订单定时同步（与 product-list-page.js 中 loadProductSyncSettings / saveProductSyncSettings 对应） -->
+      <div id="productSyncSettingsBar" style="flex-shrink: 0; margin-top: 12px; padding: 12px 14px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px;">
+        <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px;">
+          <span style="font-weight: 600; color: #334155; font-size: 13px;">从订单自动同步</span>
+          <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 13px; color: #475569;">
+            <input type="checkbox" id="productSyncAutoEnabled" />
+            启用定时同步
+          </label>
+          <label style="display: flex; align-items: center; gap: 6px; font-size: 13px; color: #475569;">
+            间隔（天）
+            <input type="number" id="productSyncIntervalDays" min="1" max="365" value="3" style="width: 64px; padding: 4px 8px; border: 1px solid #cbd5e1; border-radius: 6px;" />
+          </label>
+          <span id="productSyncLastRun" style="font-size: 12px; color: #64748b;">上次同步：—</span>
+          <button type="button" class="products-btn primary small" id="btnSaveProductSyncSettings">保存设置</button>
+        </div>
+        <p style="margin: 8px 0 0 0; font-size: 11px; color: #94a3b8; line-height: 1.4;">依赖本机后台服务运行；每小时检查一次是否到达间隔。手动点「同步」也会更新「上次同步」时间。</p>
+      </div>
+
       <!-- 产品列表卡片 -->
       <div class="products-card" style="display: flex; flex-direction: column; flex: 1; min-height: 0; margin-top: 16px;">
         <div class="list-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px; flex-shrink: 0;">
@@ -259,7 +277,7 @@
         <div style="display: flex; align-items: center; gap: 8px;">
           <div class="products-help-icon" style="width: 20px; height: 20px; font-size: 12px; flex-shrink: 0;">?</div>
           <span style="font-size: 12px; font-weight: 600; white-space: nowrap;">使用说明：</span>
-          <span style="font-size: 11px; line-height: 1.4; color: #5a6c7d;">产品库支持手动添加和订单自动同步两种方式。手动添加的产品可以编辑和删除，订单同步的产品会自动更新重量信息。清空操作将删除所有产品数据，请谨慎使用。新增产品请前往"新增产品"页面。</span>
+          <span style="font-size: 11px; line-height: 1.4; color: #5a6c7d;">产品按「型号+产品类型」区分；上方可开启定时从订单同步。手动添加可编辑删除；「同步」为立即执行。清空将删除全部产品。新增产品请前往「新增产品」页面。</span>
         </div>
       </div>
     </div>

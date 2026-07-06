@@ -663,6 +663,7 @@ export function createEventHandler(dependencies) {
               value="${existingOrderNo || ''}"
               style="width: 100%; padding: 10px; font-size: 14px; border: 1px solid #ddd; border-radius: 4px;"
               autocomplete="off"
+              autofocus
             />
             <div style="margin-top: 12px; font-size: 12px; color: #666;">
               <div>💡 提示：订单号将添加到合同编号中，格式为：合同编号(NO.订单号)</div>
@@ -752,114 +753,71 @@ export function createEventHandler(dependencies) {
         //   return null;
         // };
 
-        // 使用统一弹窗模块的custom方法
-        // 设置 preventDuplicate: true 防止重复弹窗
-        // 使用统一弹窗模块的custom方法
-        // 设置 preventDuplicate: true 防止重复弹窗
-        await window.ModalDialog.custom(bodyHTML, {
+        // ModalDialog.custom 的 Promise 在弹窗关闭后才 resolve，聚焦逻辑必须在 await 之前执行
+        const modalPromise = window.ModalDialog.custom(bodyHTML, {
           title: '添加订单号',
           footer: footerHTML,
           size: 'small',
           closable: true,
           clickOutsideToClose: true,
-          preventDuplicate: true, // 防止重复弹窗
+          preventDuplicate: true,
           onConfirm: handleConfirm,
-          onClose: () => {
-            // onClose回调：当用户点击取消按钮、关闭按钮或点击背景关闭时调用
-            // console.log('[NO.按钮] onClose回调被调用');
-            // 返回null表示关闭弹窗，不需要其他操作
-            return null;
-          }
+          onClose: () => null
         });
 
-        // console.log('[NO.按钮] 弹窗已关闭，返回结果:', result);
-
-        // 弹窗显示后，聚焦到输入框并绑定回车键
-        setTimeout(() => {
-          // 通过查找包含特定 inputId 的弹窗来确认弹窗是否仍然存在
+        // 与 showModal 中双次 rAF 对齐，再短延迟确保已加上 .show，避免焦点仍留在 NO. 按钮上
+        const scheduleFocusAndEnter = () => {
           const input = document.getElementById(inputId);
           if (!input) {
-            // console.log('[NO.按钮] 输入框不存在，弹窗可能已关闭，跳过后续处理');
-            btnAddOrderNo.disabled = false;
             return;
           }
-
           const modal = input.closest('.modal-dialog-overlay');
-          if (!modal) {
-            // console.log('[NO.按钮] 弹窗已关闭，跳过后续处理');
-            btnAddOrderNo.disabled = false;
+          if (!modal || !modal.classList.contains('show')) {
             return;
           }
-
-          // 检查弹窗是否正在关闭（通过检查是否有 show 类）
-          if (!modal.classList.contains('show')) {
-            // console.log('[NO.按钮] 弹窗正在关闭，跳过后续处理');
-            btnAddOrderNo.disabled = false;
-            return;
-          }
-          // console.log('[NO.按钮] 弹窗已显示，准备聚焦输入框');
-
-          // 聚焦到输入框
-          if (input) {
-            input.focus();
+          input.focus({ preventScroll: true });
+          if (input.value) {
             input.select();
-
-            // 回车键确认
-            const handleEnter = (e) => {
-              if (e.key === 'Enter') {
-                e.preventDefault();
-                const confirmBtn = modal.querySelector('[data-action="confirm"]');
-                if (confirmBtn) {
-                  confirmBtn.click();
-                }
-              }
-            };
-            input.addEventListener('keydown', handleEnter);
-
-            // 弹窗关闭时移除事件监听器
-            const observer = new MutationObserver((mutations) => {
-              mutations.forEach((mutation) => {
-                mutation.removedNodes.forEach((node) => {
-                  if (
-                    node === modal ||
-                    (node.nodeType === 1 && node.contains && node.contains(modal))
-                  ) {
-                    input.removeEventListener('keydown', handleEnter);
-                    observer.disconnect();
-                  }
-                });
-              });
-            });
-            observer.observe(document.body, { childList: true, subtree: true });
           }
 
-          // 弹窗关闭后恢复按钮状态
-          const closeObserver = new MutationObserver((mutations) => {
+          const handleEnter = (e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              const confirmBtn = modal.querySelector('[data-action="confirm"]');
+              if (confirmBtn) {
+                confirmBtn.click();
+              }
+            }
+          };
+          input.addEventListener('keydown', handleEnter);
+
+          const observer = new MutationObserver((mutations) => {
             mutations.forEach((mutation) => {
               mutation.removedNodes.forEach((node) => {
                 if (
                   node === modal ||
                   (node.nodeType === 1 && node.contains && node.contains(modal))
                 ) {
-                  btnAddOrderNo.disabled = false;
-                  closeObserver.disconnect();
+                  input.removeEventListener('keydown', handleEnter);
+                  observer.disconnect();
                 }
               });
             });
           });
-          closeObserver.observe(document.body, { childList: true, subtree: true });
-        }, 150);
+          observer.observe(document.body, { childList: true, subtree: true });
+        };
+
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            setTimeout(scheduleFocusAndEnter, 50);
+          });
+        });
+
+        await modalPromise;
       } catch (error) {
         console.error('[NO.按钮] 弹窗处理异常:', error); // eslint-disable-line no-console
-        btnAddOrderNo.disabled = false;
       } finally {
-        // 如果弹窗创建失败，确保按钮恢复可用
-        setTimeout(() => {
-          const modalExists = document.querySelector('.modal-dialog-overlay');
-          if (!modalExists) {
-            btnAddOrderNo.disabled = false;
-          }
-        }, 500);
+        btnAddOrderNo.disabled = false;
       }
     });
   }

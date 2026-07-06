@@ -1056,15 +1056,11 @@ export class ExportStatisticsView {
         <td class="payment-amount-cell" 
             data-order-id="${order.id || ''}" 
             style="text-align: center; padding: 10px; word-wrap: break-word; overflow-wrap: break-word; white-space: nowrap; position: relative; cursor: pointer; transition: all 0.2s ease; line-height: 1.5; vertical-align: middle;" 
-            onmouseover="this.style.textDecoration='underline'; this.style.opacity='0.8'; const btn = this.querySelector('.quick-mark-paid-btn'); if(btn) { btn.style.opacity='1'; btn.style.visibility='visible'; }" 
-            onmouseout="this.style.textDecoration='none'; this.style.opacity='1'; const btn = this.querySelector('.quick-mark-paid-btn'); if(btn) { btn.style.opacity='0'; btn.style.visibility='hidden'; }"
             title="点击设置货款状态">
           <span style="display: inline-block; color: ${amountColor}; font-weight: ${fontWeight}; line-height: 1.5; vertical-align: baseline;">$${fmtMoney(order.totalUSD || 0)}</span>
           ${showQuickButton ? `<button class="quick-mark-paid-btn" 
             data-order-id="${order.id || ''}" 
             style="position: absolute; right: 5px; top: 50%; transform: translateY(-50%); padding: 2px 6px; background: #dc2626; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: 600; opacity: 0; visibility: hidden; transition: all 0.2s ease; line-height: 1.2; z-index: 10;"
-            onmouseover="this.style.background='#b91c1c'; this.style.transform='translateY(-50%) scale(1.1)';"
-            onmouseout="this.style.background='#dc2626'; this.style.transform='translateY(-50%) scale(1)';"
             title="快速标记为已到账">✓</button>` : ''}
         </td>
         <td style="text-align: center; padding: 10px; word-wrap: break-word; overflow-wrap: break-word; white-space: normal;">${paymentDueDate ? fmtDateYMD(paymentDueDate) : '-'}</td>

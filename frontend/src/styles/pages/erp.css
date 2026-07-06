@@ -555,6 +555,8 @@ body {
   overflow-y: auto;
   overflow-x: hidden;
   z-index: 100;
+  /* 主内容区路由切换会大量改 DOM，限制重排向上传播，利于侧栏过渡独立合成 */
+  contain: layout style;
   transition:
     transform 0.3s ease,
     width 0.3s ease;
@@ -593,7 +595,11 @@ body {
   width: 100%;
   font-size: 14px;
   font-weight: 500;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
   cursor: pointer;
   margin-bottom: 2px;
 }
@@ -620,6 +626,23 @@ body {
 
 .nav-submenu {
   position: relative;
+  display: grid;
+  grid-template-rows: 0fr;
+  width: 100%;
+  margin-top: 4px;
+  padding-left: 0;
+  padding-right: 0;
+  overflow: hidden;
+  transition: grid-template-rows 0.24s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.nav-submenu.open {
+  grid-template-rows: 1fr;
+}
+
+.nav-submenu-inner {
+  min-height: 0;
+  overflow: hidden;
 }
 
 .nav-submenu::before {
@@ -658,29 +681,6 @@ body {
   transform: rotate(180deg);
 }
 
-.nav-submenu {
-  display: block;
-  width: 100%;
-  margin-top: 4px;
-  padding-left: 0;
-  padding-right: 0;
-  text-align: center;
-  overflow: visible;
-  max-height: 0;
-  opacity: 0;
-  transform: translateY(-4px);
-  transition:
-    max-height 0.25s ease,
-    opacity 0.25s ease,
-    transform 0.18s ease;
-}
-
-.nav-submenu.open {
-  max-height: 320px;
-  opacity: 1;
-  transform: translateY(0);
-}
-
 .nav-submenu a {
   display: flex;
   align-items: center;
@@ -696,7 +696,12 @@ body {
   margin: 1px 2px;
   font-size: 13px;
   background: transparent;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
   box-sizing: border-box;
 }
 

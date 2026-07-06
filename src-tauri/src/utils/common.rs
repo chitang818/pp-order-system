@@ -28,7 +28,12 @@ pub fn now_iso_utc() -> String {
 pub fn parse_json_safe(raw: Option<String>) -> Option<serde_json::Value> {
     match raw {
         Some(s) if !s.trim().is_empty() => {
-            serde_json::from_str(&s).ok()
+            let t = s.trim();
+            // 兼容历史数据：extras 可能直接存为纯文本“要/不要”
+            if t == "要" || t == "不要" {
+                return Some(serde_json::json!({ "wrappingCloth": t }));
+            }
+            serde_json::from_str(t).ok()
         }
         _ => None
     }

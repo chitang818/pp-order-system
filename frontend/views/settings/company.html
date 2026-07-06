@@ -94,6 +94,43 @@
       </div>
     </div>
 
+    <!-- 界面显示 -->
+    <div class="settings-card">
+      <div class="settings-card-header">
+        <div class="settings-card-icon info">🧭</div>
+        <div class="settings-card-title-group">
+          <h3 class="settings-card-title">界面显示</h3>
+          <p class="settings-card-subtitle">控制左侧功能模块是否显示</p>
+        </div>
+      </div>
+      <div class="settings-card-body">
+        <div class="settings-control-row" style="justify-content: space-between; width: 100%;">
+          <span class="settings-toggle-label">显示单据中心</span>
+          <label class="switch" title="关闭后隐藏侧栏「单据中心」及相关入口">
+            <input type="checkbox" id="uiShowDocumentCenter" checked />
+            <span class="slider round"></span>
+          </label>
+        </div>
+        <span class="settings-input-help" style="display: block; margin-top: 10px;">关闭后，侧栏与首页快捷入口中的「单据中心」将隐藏；直接访问对应地址会跳转到首页。</span>
+        <div class="settings-control-row" style="justify-content: space-between; width: 100%; margin-top: 16px;">
+          <span class="settings-toggle-label">显示统计概览</span>
+          <label class="switch" title="关闭后隐藏「交易统计」下的统计概览，默认进入出口统计">
+            <input type="checkbox" id="uiShowAnalyticsSummary" checked />
+            <span class="slider round"></span>
+          </label>
+        </div>
+        <span class="settings-input-help" style="display: block; margin-top: 8px;">关闭后，侧栏不再显示「统计概览」；点击「交易统计」或访问原地址时将进入「出口统计」。订单分析等其它子页不受影响。</span>
+        <div class="settings-control-row" style="justify-content: space-between; width: 100%; margin-top: 16px;">
+          <span class="settings-toggle-label">订单预览显示「生成单据（new）」</span>
+          <label class="switch" title="关闭后，订单预览弹窗底部不显示新版单据入口">
+            <input type="checkbox" id="uiShowOrderPreviewNewDocs" checked />
+            <span class="slider round"></span>
+          </label>
+        </div>
+        <span class="settings-input-help" style="display: block; margin-top: 8px;">关闭后仅隐藏订单预览中的灰色「生成单据（new）」按钮，不影响绿色「生成单据」与其它入口。</span>
+      </div>
+    </div>
+
     <!-- 其他信息卡片 -->
     <div class="settings-card">
       <div class="settings-card-header">

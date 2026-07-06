@@ -14,16 +14,18 @@
  * const data = await apiGateway.call('/api/orders', 'GET');
  */
 
+import { getHttpApiBase, isRealTauriEnvironment } from '../utils/tauri-env.js';
+
 class APIGateway {
   constructor() {
-    // 检测Tauri环境
-    this.isTauri = typeof window !== 'undefined' && window.__TAURI__ !== undefined;
+    // 使用与 api-client.js 一致的环境检测方式，避免 polyfill 误判
+    this.isTauri = isRealTauriEnvironment();
     
     // API版本
     this.apiVersion = 'v1';
     
-    // 基础URL
-    this.baseURL = 'http://127.0.0.1:3000';
+    // 基础URL（浏览器 Vite 开发为 ''，桌面/打包为 Node 绝对地址）
+    this.baseURL = getHttpApiBase();
     
     // 请求拦截器列表
     this.requestInterceptors = [];
@@ -49,7 +51,7 @@ class APIGateway {
       maxSize: 100
     };
     
-    // Tauri Command映射表
+    // Tauri Command 映射表（命令名须与 src-tauri/src/commands/ 中 #[tauri::command] 名称一致）
     this.commandMap = {
       // 认证相关
       'POST /api/auth/login': 'auth_login',
@@ -57,37 +59,34 @@ class APIGateway {
       'GET /api/auth/check': 'auth_check',
       
       // 用户相关
-      'GET /api/users': 'get_users',
-      'GET /api/users/:id': 'get_user',
-      'POST /api/users': 'create_user',
-      'PUT /api/users/:id': 'update_user',
-      'DELETE /api/users/:id': 'delete_user',
+      'GET /api/users': 'users_list',
+      'POST /api/users': 'users_create',
+      'PUT /api/users/:id': 'users_update',
+      'DELETE /api/users/:id': 'users_delete',
       
       // 客户相关
-      'GET /api/customers': 'get_customers',
-      'GET /api/customers/:id': 'get_customer',
-      'POST /api/customers': 'create_customer',
-      'PUT /api/customers/:id': 'update_customer',
-      'DELETE /api/customers/:id': 'delete_customer',
+      'GET /api/customers': 'customers_list',
+      'POST /api/customers': 'customers_create',
+      'PUT /api/customers/:id': 'customers_update',
+      'DELETE /api/customers/:id': 'customers_delete',
       
       // 产品相关
-      'GET /api/products': 'get_products',
-      'GET /api/products/:id': 'get_product',
-      'POST /api/products': 'create_product',
-      'PUT /api/products/:id': 'update_product',
-      'DELETE /api/products/:id': 'delete_product',
+      'GET /api/products': 'products_list',
+      'POST /api/products': 'products_create',
+      'PUT /api/products/:id': 'products_update',
+      'DELETE /api/products/:id': 'products_delete',
       
       // 订单相关（查询）
-      'GET /api/orders': 'get_orders',
-      'GET /api/orders/:id': 'get_order',
+      'GET /api/orders': 'orders_list',
+      'GET /api/orders/:id': 'orders_get',
       
       // 公司配置
-      'GET /api/company': 'get_company',
-      'PUT /api/company': 'update_company',
+      'GET /api/company': 'company_get',
+      'PUT /api/company': 'company_update',
       
       // 订单配置
-      'GET /api/order-configs': 'get_order_configs',
-      'PUT /api/order-configs': 'update_order_configs'
+      'GET /api/order-configs': 'order_configs_get',
+      'PUT /api/order-configs': 'order_configs_update'
     };
     
     console.log(`[APIGateway] 初始化完成，运行环境: ${this.isTauri ? 'Tauri' : '浏览器'}`);
@@ -195,8 +194,9 @@ class APIGateway {
         ...data
       };
       
-      // 调用Tauri命令
-      const response = await window.__TAURI__.invoke(commandName, commandArgs);
+      // 使用 @tauri-apps/api 调用 Tauri 命令（与 api-client.js 一致）
+      const { invoke } = await import('@tauri-apps/api/core');
+      const response = await invoke(commandName, commandArgs);
       
       return response;
       

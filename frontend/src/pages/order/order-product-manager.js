@@ -7,40 +7,110 @@
 
 // 导入依赖
 import { extractOrderNoFromContractNo } from './order-utils.js';
+import { normalizeOrderItem, resolveCClassMarksSecondLine } from './order-item-marks.js';
 import {
   calculateEstimatedWeight,
   calculatePacking,
   updateTotalRow,
   calculateTotalAmount
 } from './order-calculator.js';
+import { mountOrderProductTableHeader } from './order-product-table-header.js';
+import { resolveOrderEditRoot } from '../../utils/dom-utils.js';
 
 /**
  * 创建产品明细管理器
  * @param {Object} dependencies - 依赖对象
  * @param {HTMLElement} dependencies.prodTbody - 产品明细表格tbody元素
  * @param {Object} dependencies.currentProductTypeRef - 当前产品类型的引用对象（{current: number}）
- * @param {Function} dependencies.scheduleSaveDraft - 草稿保存调度函数
- * @param {Function} dependencies.updateProductTypeDisplay - 更新产品类型显示函数
+ * @param {Function} [dependencies.scheduleSaveDraft] - 草稿保存调度函数（可延迟，也可用 getScheduleSaveDraft）
+ * @param {Function} [dependencies.getScheduleSaveDraft] - 返回草稿保存函数的 getter（支持延迟绑定）
+ * @param {Function} [dependencies.updateProductTypeDisplay] - 更新产品类型显示函数（可延迟，也可用 getUpdateProductTypeDisplay）
+ * @param {Function} [dependencies.getUpdateProductTypeDisplay] - 返回该函数的 getter（支持延迟绑定）
  * @param {Object} dependencies.packingDecimalWarningShown - 包装数量小数校验提醒标志对象
- * @param {Function} dependencies.calculateTotalAmountWrapper - 计算总金额包装函数
- * @param {Function} dependencies.updateTotalRowWrapper - 更新合计行包装函数
+ * @param {Function} [dependencies.calculateTotalAmountWrapper] - 计算总金额包装函数（可延迟，也可用 getCalculateTotalAmount）
+ * @param {Function} [dependencies.getCalculateTotalAmount] - 返回该函数的 getter（支持延迟绑定）
+ * @param {Function} [dependencies.updateTotalRowWrapper] - 更新合计行包装函数（可延迟，也可用 getUpdateTotalRow）
+ * @param {Function} [dependencies.getUpdateTotalRow] - 返回该函数的 getter（支持延迟绑定）
  * @returns {Object} 产品明细管理函数集合
  */
 export function createProductManager(dependencies) {
   const {
     prodTbody,
     currentProductTypeRef,
-    scheduleSaveDraft,
-    updateProductTypeDisplay,
+    scheduleSaveDraft: _scheduleSaveDraft,
+    getScheduleSaveDraft,
+    updateProductTypeDisplay: _updateProductTypeDisplay,
+    getUpdateProductTypeDisplay,
     packingDecimalWarningShown,
-    calculateTotalAmountWrapper,
-    updateTotalRowWrapper,
-    configs = {} // 新增配置项依赖
+    calculateTotalAmountWrapper: _calculateTotalAmountWrapper,
+    getCalculateTotalAmount,
+    updateTotalRowWrapper: _updateTotalRowWrapper,
+    getUpdateTotalRow,
+    configs: _configs = {},
+    getConfigs
   } = dependencies;
 
-  // 获取当前产品类型的辅助函数
+  // getter 辅助：优先用 getter（延迟绑定），否则用直接传入的值
+  function scheduleSaveDraft(...args) {
+    const fn = getScheduleSaveDraft ? getScheduleSaveDraft() : _scheduleSaveDraft;
+    if (typeof fn === 'function') fn(...args);
+  }
+  function updateProductTypeDisplay(...args) {
+    const fn = getUpdateProductTypeDisplay ? getUpdateProductTypeDisplay() : _updateProductTypeDisplay;
+    if (typeof fn === 'function') fn(...args);
+  }
+  function calculateTotalAmountWrapper(...args) {
+    const fn = getCalculateTotalAmount ? getCalculateTotalAmount() : _calculateTotalAmountWrapper;
+    if (typeof fn === 'function') fn(...args);
+  }
+  function updateTotalRowWrapper(...args) {
+    const fn = getUpdateTotalRow ? getUpdateTotalRow() : _updateTotalRowWrapper;
+    if (typeof fn === 'function') fn(...args);
+  }
+
+  // configs 通过 getter 延迟获取，支持 orderConfigs 异步加载后才就绪
+  function getResolvedConfigs() {
+    return (getConfigs ? getConfigs() : null) || _configs || {};
+  }
+
+  // 获取当前产品类型的辅助函数（唯一真源：currentProductTypeRef，与表头、switchTemplate 一致）
   function getCurrentProductType() {
     return currentProductTypeRef.current;
+  }
+
+  /** @returns {1|2|3} */
+  function normalizeLineTemplateType(raw) {
+    const t = Number(raw);
+    if (t === 2 || t === 3) return t;
+    return 1;
+  }
+
+  /**
+   * 从 DOM 读取当前可见的产品类型（供调试/紧急兜底使用）。
+   * 优先级与 getEffectiveOrderProductType 保持一致：先看 .btn-template.active，再看 #section-products class。
+   * 注意：正常流程中 currentProductTypeRef 是唯一真值，此函数不应在 addProdRow 中修改 ref。
+   * @returns {1|2|3|null}
+   */
+  function resolveProductTypeFromDom() {
+    let root =
+      prodTbody && typeof prodTbody.closest === 'function'
+        ? prodTbody.closest('#view-orders-edit')
+        : null;
+    if (!root) root = document.querySelector('#view-orders-edit.view-active');
+    if (!root) root = document.getElementById('view-orders-edit');
+    const scope = root || document;
+    // 与 getEffectiveOrderProductType 保持相同优先级：先看 Tab active，再看 section class
+    const activeBtn = scope.querySelector('.btn-template.active[data-template]');
+    if (activeBtn) {
+      return normalizeLineTemplateType(activeBtn.getAttribute('data-template'));
+    }
+    const section = root ? root.querySelector('#section-products') : document.getElementById('section-products');
+    if (section) {
+      if (section.classList.contains('template-3')) return 3;
+      if (section.classList.contains('template-2')) return 2;
+      if (section.classList.contains('template-1')) return 1;
+    }
+    return null;
   }
 
   // 拖拽排序相关状态
@@ -134,6 +204,7 @@ export function createProductManager(dependencies) {
   // 渲染 select 选项的辅助函数
   // 核心原则：无论配置列表中是否包含已保存的值，都应该显示已保存的内容
   function renderOptions(category, selectedValue, placeholder = '请选择') {
+    const configs = getResolvedConfigs();
     let categoryConfigs = configs[category] || [];
     
     // 如果有已保存的值，且该值不在配置列表中，将其添加到选项列表中
@@ -211,20 +282,23 @@ export function createProductManager(dependencies) {
     if (!data) {
       data = {};
     }
+    data = normalizeOrderItem(data);
 
-    // 从 extras 中提取 marks 和 wrappingCloth 字段（如果主字段中没有）
-    // 这些字段存储在数据库的 extras JSON 字段中，需要在渲染前提取到主数据对象
-    const itemExtras = normalizeExtrasObj((data && data.extras) || {});
-    if (!data.marks && itemExtras.marks) {
-      data = { ...data, marks: itemExtras.marks };
-    }
-    // 包皮布字段也存储在 extras 中，需要提取（修复编辑订单时包皮布不显示的BUG）
-    if (!data.wrappingCloth && itemExtras.wrappingCloth) {
-      data = { ...data, wrappingCloth: itemExtras.wrappingCloth };
-    }
+    // ref 是唯一可信来源（由 switchTemplate 唯一写入）
+    const currentType = normalizeLineTemplateType(getCurrentProductType());
 
-    // 根据当前产品类型生成不同的HTML
-    const currentType = getCurrentProductType();
+    const contractNoForMarks =
+      typeof document !== 'undefined' && document.getElementById('contractNo')
+        ? String(document.getElementById('contractNo').value || '').trim()
+        : '';
+    let cMarksInitial = data.marks && String(data.marks).trim() ? String(data.marks).trim() : '';
+    if (!isNewRow && currentType === 3 && !cMarksInitial) {
+      cMarksInitial = resolveCClassMarksSecondLine(data, contractNoForMarks) || '';
+    }
+    const cMarksAttr = String(cMarksInitial)
+      .replace(/&/g, '&amp;')
+      .replace(/"/g, '&quot;')
+      .replace(/</g, '&lt;');
     if (currentType === 1) {
       // A类品：标签重量、安全系数
       tr.innerHTML = `
@@ -312,7 +386,7 @@ export function createProductManager(dependencies) {
         </td>
       `;
     } else if (currentType === 3) {
-      // C类品：唛头、标签说明
+      // C类品：标签说明、唛头
       tr.innerHTML = `
         <td class="checkbox-col">
           <span class="drag-handle" title="拖拽排序" aria-label="拖拽排序" draggable="true"></span>
@@ -344,7 +418,7 @@ export function createProductManager(dependencies) {
             ${renderOptions('label_c', data && data.label)}
           </select>
         </td>
-        <td class="variable-section"><input class="input" data-field="marks" type="text" placeholder="唛头" value="${(data && (data.marks || (data.extras && data.extras.marks))) || ''}" /></td>
+        <td class="variable-section"><input class="input" data-field="marks" type="text" placeholder="唛头" value="${cMarksAttr}" /></td>
         <td class="calc-section" style="background-color: #e8f5e8;"><input class="input" data-field="packing" type="text" placeholder="包装" readonly /></td>
         <td class="calc-section" style="background-color: #e8f5e8;"><input class="input" data-field="estimatedWeight" type="number" step="0.01" placeholder="预估重量" readonly /></td>
         <td class="calc-section">
@@ -363,10 +437,12 @@ export function createProductManager(dependencies) {
       tr.dataset.itemExtras = '{}';
     }
 
+    tr.setAttribute('data-line-template', String(currentType));
+
     prodTbody.appendChild(tr);
 
     // C类品：包皮布选择变化时，自动填充或清空唛头
-    if (getCurrentProductType() === 3) {
+    if (currentType === 3) {
       const wrappingClothSelect = tr.querySelector('select[data-field="wrappingCloth"]');
       const marksInput = tr.querySelector('input[data-field="marks"]');
 
@@ -411,11 +487,11 @@ export function createProductManager(dependencies) {
 
         wrappingClothSelect.addEventListener('change', handleWrappingClothChange);
 
-        // 如果是新行且包皮布已选择，立即填充唛头
-        if (
-          isNewRow &&
-          (wrappingClothSelect.value === '要' || wrappingClothSelect.value === '不要')
-        ) {
+        // 包皮布已选且唛头仍为空时初始化（新行、或编辑加载未带出持久化 marks 时）
+        const shouldAutoMarksOnInit =
+          (wrappingClothSelect.value === '要' || wrappingClothSelect.value === '不要') &&
+          !String(marksInput.value || '').trim();
+        if (shouldAutoMarksOnInit) {
           requestAnimationFrame(() => {
             handleWrappingClothChange();
           });
@@ -667,82 +743,44 @@ export function createProductManager(dependencies) {
     }
   }
 
-  // 更新表头
+  // 更新表头（与 order-new-page 占位逻辑共用 mountOrderProductTableHeader）
   function updateTableHeader() {
-    const thead = document.getElementById('prodTableHead');
-    const table = document.getElementById('prodTable');
-    if (!thead || !table) return;
-
-    table.classList.remove('template-2', 'template-3');
-
-    const commonSectionFields = `
-      <th class="checkbox-col"><input type="checkbox" id="checkAllRows" title="全选/取消全选" /></th>
-      <th class="common-section">产品型号</th>
-      <th class="common-section">数量</th>
-      <th class="common-section">件数</th>
-      <th class="common-section">件数<br/>单位</th>
-      <th class="common-section">单价<br/>(USD)</th>
-      <th class="common-section">实际<br/>重量</th>
-      <th class="common-section">预估<br/>重量</th>
-      <th class="common-section">清洁度</th>
-      <th class="common-section">包皮布</th>
-    `;
-
-    const calcSectionFields = `
-      <th class="calc-section">包装</th>
-      <th class="calc-section">预估<br/>总净重</th>
-      <th class="calc-section">启用</th>
-    `;
-
-    let variableSectionFields;
-    if (getCurrentProductType() === 1) {
-      variableSectionFields = `
-        <th class="variable-section">标签<br/>重量</th>
-        <th class="variable-section">安全<br/>系数</th>
-      `;
-    } else if (getCurrentProductType() === 2) {
-      table.classList.add('template-2');
-      variableSectionFields = `
-        <th class="variable-section">标签<br/>批号</th>
-        <th class="variable-section">标签<br/>说明</th>
-      `;
-    } else if (getCurrentProductType() === 3) {
-      table.classList.add('template-3');
-      variableSectionFields = `
-        <th class="variable-section">标签<br/>说明</th>
-        <th class="variable-section">唛头</th>
-      `;
-    }
-
-    thead.innerHTML = `
-      <tr>
-        ${commonSectionFields}
-        ${variableSectionFields}
-        ${calcSectionFields}
-      </tr>
-    `;
-
-    // 重新绑定全选事件
-    const headCk = document.getElementById('checkAllRows');
-    if (headCk) {
-      headCk.addEventListener('change', function () {
-        const rows = Array.from(prodTbody.querySelectorAll('.row-check'));
-        rows.forEach((ck) => {
-          ck.checked = headCk.checked;
-        });
-      });
-    }
+    mountOrderProductTableHeader({
+      getProductType: getCurrentProductType,
+      prodTbody
+    });
   }
 
   // 切换产品类型模板
   function switchTemplate(templateNum) {
+    templateNum = normalizeLineTemplateType(templateNum);
     // 注意：updateProductTypeDisplay 参数已通过依赖注入，无需再传递
-    if (currentProductTypeRef.current === templateNum) {
+    if (normalizeLineTemplateType(currentProductTypeRef.current) === templateNum) {
       console.log(
         '[产品类型切换] 已经是' +
           (templateNum === 1 ? 'A类品' : templateNum === 2 ? 'B类品' : 'C类品') +
           '，无需切换'
       );
+      // ref 已一致但顶部 Tab / section class 可能未同步，仍刷新（与主路径保持相同写入顺序：先 section 后 Tab）
+      const orderEditRoot = resolveOrderEditRoot(prodTbody);
+      const sectionProducts = orderEditRoot
+        ? orderEditRoot.querySelector('#section-products')
+        : document.getElementById('section-products');
+      if (sectionProducts) {
+        sectionProducts.classList.remove('template-1', 'template-2', 'template-3');
+        sectionProducts.classList.add('template-' + templateNum);
+      }
+      const templateBarScope =
+        (orderEditRoot && orderEditRoot.querySelector('.template-switch-container')) || orderEditRoot;
+      if (templateBarScope) {
+        templateBarScope.querySelectorAll('.btn-template[data-template]').forEach((btn) => {
+          btn.classList.remove('active');
+        });
+        const activeBtn = templateBarScope.querySelector(
+          `.btn-template[data-template="${templateNum}"]`
+        );
+        if (activeBtn) activeBtn.classList.add('active');
+      }
       return;
     }
 
@@ -757,7 +795,7 @@ export function createProductManager(dependencies) {
         (templateNum === 1 ? 'A类品' : templateNum === 2 ? 'B类品' : 'C类品')
     );
 
-    const tbody = document.getElementById('prodTbody');
+    const tbody = prodTbody;
     if (!tbody) {
       console.error('[产品类型切换] prodTbody元素不存在，无法切换');
       return;
@@ -772,15 +810,31 @@ export function createProductManager(dependencies) {
     console.log('[产品类型切换] currentProductType 已更新为:', currentProductTypeRef.current);
 
     // 更新产品类型显示
-    if (updateProductTypeDisplay) {
-      updateProductTypeDisplay();
-    }
+    updateProductTypeDisplay();
 
     // 更新产品明细标题区域背景色
-    const sectionProducts = document.getElementById('section-products');
+    const orderEditRoot = resolveOrderEditRoot(prodTbody);
+    const sectionProducts = orderEditRoot
+      ? orderEditRoot.querySelector('#section-products')
+      : document.getElementById('section-products');
     if (sectionProducts) {
       sectionProducts.classList.remove('template-1', 'template-2', 'template-3');
       sectionProducts.classList.add('template-' + templateNum);
+    }
+
+    // 更新顶部 A/B/C 标签（与 section class 同步，保持 DOM 一致）
+    const templateBarScope =
+      (orderEditRoot && orderEditRoot.querySelector('.template-switch-container')) || orderEditRoot;
+    if (templateBarScope) {
+      templateBarScope.querySelectorAll('.btn-template[data-template]').forEach((btn) => {
+        btn.classList.remove('active');
+      });
+      const activeBtn = templateBarScope.querySelector(
+        `.btn-template[data-template="${templateNum}"]`
+      );
+      if (activeBtn) {
+        activeBtn.classList.add('active');
+      }
     }
 
     // 更新表头
@@ -797,15 +851,6 @@ export function createProductManager(dependencies) {
     // 更新合计行
     updateTotalRowColumns();
 
-    // 更新按钮状态
-    document.querySelectorAll('.btn-template').forEach((btn) => {
-      btn.classList.remove('active');
-    });
-    const activeBtn = document.querySelector(`.btn-template[data-template="${templateNum}"]`);
-    if (activeBtn) {
-      activeBtn.classList.add('active');
-    }
-
     console.log('[产品类型切换] 切换完成！当前产品类型:', currentProductTypeRef.current);
 
     // 重新渲染行号
@@ -820,6 +865,27 @@ export function createProductManager(dependencies) {
     if (prodTbody) prodTbody.innerHTML = '';
     itemsToFill.forEach((it) => addProdRow(it));
     updateTotalRowWrapper(); // 编辑模式下渲染完成后更新合计
+  }
+
+  // 绑定容器级拖拽事件（拖拽经过时动态重排行）
+  if (prodTbody) {
+    prodTbody.addEventListener('dragover', function (e) {
+      if (!draggingRow) return;
+      e.preventDefault();
+      const targetRow = e.target && e.target.closest ? e.target.closest('tr') : null;
+      if (!targetRow || targetRow === draggingRow) return;
+      const rect = targetRow.getBoundingClientRect();
+      const before = e.clientY < (rect.top + rect.height / 2);
+      if (before) prodTbody.insertBefore(draggingRow, targetRow);
+      else prodTbody.insertBefore(draggingRow, targetRow.nextSibling);
+      try { renderRowIndices(); } catch (_) { }
+      try { scheduleSaveDraft(); } catch (_) { }
+      applyDragOverIndicator(targetRow, before);
+    });
+    prodTbody.addEventListener('drop', function (e) {
+      if (draggingRow) { e.preventDefault(); clearDragOverIndicator(); }
+    });
+    prodTbody.addEventListener('dragleave', function () { clearDragOverIndicator(); });
   }
 
   // 返回导出的函数集合

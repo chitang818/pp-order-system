@@ -49,6 +49,13 @@ pub struct OrderItemRow {
     pub label_batch_no: Option<String>,
     pub label: Option<String>,
     pub extras: Option<serde_json::Value>,
+    /// 从 extras 展开，便于前端与预览、编辑共用同一字段（数据库仍仅存于 extras）
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub marks: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub wrapping_cloth: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub enabled: Option<String>,
 }
 
 #[derive(Debug, Clone, Deserialize)]

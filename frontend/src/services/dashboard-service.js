@@ -210,7 +210,9 @@ export class DashboardService {
     }
     if (command === 'reminders_save_shipment_settings') {
       // 后端 POST body 期望：{ advanceDays }
-      const advanceDays = payload?.advance_days ?? payload?.advanceDays ?? 5;
+      // Tauri 侧参数名为 payload 时，invoke 体为 { payload: { advance_days } }
+      const inner = payload?.payload ?? payload;
+      const advanceDays = inner?.advance_days ?? inner?.advanceDays ?? 5;
       return {
         fallbackToHttp: true,
         httpPath: '/api/reminders/shipment-reminder-settings',
@@ -219,15 +221,17 @@ export class DashboardService {
       };
     }
     if (command === 'reminders_get_shipment_list') {
-      const advanceDays = payload?.advance_days ?? 5;
-      const limit = payload?.limit ?? 5;
+      const inner = payload?.payload ?? payload;
+      const advanceDays = inner?.advance_days ?? inner?.advanceDays ?? 5;
+      const limit = inner?.limit ?? 5;
       return {
         ...base,
         httpPath: `/api/reminders/shipment-reminders?advanceDays=${encodeURIComponent(advanceDays)}&limit=${encodeURIComponent(limit)}`
       };
     }
     if (command === 'reminders_get_payment_list') {
-      const limit = payload?.limit ?? 5;
+      const inner = payload?.payload ?? payload;
+      const limit = inner?.limit ?? 5;
       return { ...base, httpPath: `/api/reminders/payment-reminders?limit=${encodeURIComponent(limit)}` };
     }
 
@@ -327,7 +331,14 @@ export class DashboardService {
   async getStats(useCache = true) {
     const cacheKey = this._getCacheKey('stats');
 
-    // 尝试从缓存获取
+    // 优先消费 main.js 启动时并行预取的 stats（零 IPC 开销）
+    if (useCache && window.__prefetchedStats) {
+      const prefetched = window.__prefetchedStats;
+      window.__prefetchedStats = null;
+      this._saveToCache(cacheKey, prefetched);
+      return prefetched;
+    }
+
     if (useCache) {
       const cached = this._getFromCache(cacheKey);
       if (cached) {
@@ -336,7 +347,6 @@ export class DashboardService {
     }
 
     try {
-      // Rust 后端不需要额外参数
       const response = await this._invokeWithRetry('dashboard_stats', {});
       // 保存到缓存
       this._saveToCache(cacheKey, response);
@@ -543,8 +553,7 @@ export class DashboardService {
 
     try {
       const response = await this._invokeWithRetry('reminders_get_shipment_list', {
-        advance_days: advanceDays,
-        limit
+        payload: { advance_days: advanceDays, limit }
       });
       // 提醒数据缓存时间较短（30秒）
       if (useCache) {
@@ -576,7 +585,9 @@ export class DashboardService {
     }
 
     try {
-      const response = await this._invokeWithRetry('reminders_get_payment_list', { limit });
+      const response = await this._invokeWithRetry('reminders_get_payment_list', {
+        payload: { limit }
+      });
       // 提醒数据缓存时间较短（30秒）
       if (useCache) {
         this._saveToCache(cacheKey, response);
@@ -599,7 +610,10 @@ export class DashboardService {
   async getShipmentReminderSettings() {
     try {
       const response = await this._invokeWithRetry('reminders_get_shipment_settings', {});
-      return response;
+      // Tauri/Rust 序列化为 snake_case 的 advance_days；Node HTTP 多为 advanceDays，需同时兼容
+      const advanceDays = response?.advanceDays ?? response?.advance_days;
+      const n = Number(advanceDays);
+      return { advanceDays: Number.isFinite(n) && n >= 0 ? n : 5 };
     } catch (error) {
       console.error('[DashboardService] 获取发货提醒设置失败:', error);
       // 返回默认值
@@ -615,7 +629,7 @@ export class DashboardService {
   async saveShipmentReminderSettings(advanceDays) {
     try {
       const response = await this._invokeWithRetry('reminders_save_shipment_settings', {
-        advance_days: advanceDays
+        payload: { advance_days: advanceDays }
       });
       return response;
     } catch (error) {

@@ -4,14 +4,14 @@
  */
 
 // Import utilities
-import { isRealTauriEnvironment, getTauriInvoke as getTauriInvokeUtil } from '../utils/tauri-env.js';
+import { isRealTauriEnvironment, getTauriInvoke as getTauriInvokeUtil, getHttpApiBase } from '../utils/tauri-env.js';
 
 // Import Tauri API for production (Vite will bundle this)
 // Note: This import may succeed in browser mode but won't be functional
 import { invoke } from '@tauri-apps/api/core';
 
-// API Base URL (fallback for browser mode)
-const API_BASE_URL = 'http://127.0.0.1:3000';
+// API Base URL：浏览器 + Vite 为 ''（走代理）；桌面为 Node 绝对地址
+const API_BASE_URL = getHttpApiBase();
 
 // Helper to get Tauri invoke function with fallback
 const getTauriInvoke = () => {

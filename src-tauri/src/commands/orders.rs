@@ -7,6 +7,47 @@ use crate::utils::common::*;
 use chrono::Datelike;
 use regex;
 
+/// 从 order_items.extras JSON 解析行级扩展字段，供 API 顶层返回（与 merge_item_extras 对称）
+fn extract_order_item_line_fields(extras: &Option<serde_json::Value>) -> (Option<String>, Option<String>, Option<String>) {
+    let mut marks = None;
+    let mut wrapping = None;
+    let mut enabled = None;
+    let Some(serde_json::Value::Object(map)) = extras else {
+        return (marks, wrapping, enabled);
+    };
+    if let Some(v) = map.get("marks") {
+        if let Some(s) = v.as_str() {
+            let t = s.trim();
+            if !t.is_empty() {
+                marks = Some(t.to_string());
+            }
+        }
+    }
+    if let Some(v) = map.get("wrappingCloth").or_else(|| map.get("wrapping_cloth")) {
+        if let Some(s) = v.as_str() {
+            let t = s.trim();
+            if !t.is_empty() {
+                wrapping = Some(t.to_string());
+            }
+        }
+    }
+    if let Some(v) = map.get("enabled") {
+        match v {
+            serde_json::Value::String(s) => {
+                let t = s.trim();
+                if !t.is_empty() {
+                    enabled = Some(t.to_string());
+                }
+            }
+            serde_json::Value::Bool(b) => {
+                enabled = Some(if *b { "true".into() } else { "false".into() });
+            }
+            _ => {}
+        }
+    }
+    (marks, wrapping, enabled)
+}
+
 #[tauri::command]
 pub fn orders_list(holder: State<DbPoolHolder>, payload: OrdersListPayload) -> Result<serde_json::Value, String> {
     let pool = holder.get()?;
@@ -173,6 +214,8 @@ pub fn orders_get(_app_handle: AppHandle, holder: State<DbPoolHolder>, token: St
     ).map_err(|e| format!("查询订单项失败：{:?}", e))?;
     
     let items = items_stmt.query_map([order.id], |r| {
+        let extras = parse_json_safe(r.get(17)?);
+        let (marks, wrapping_cloth, enabled) = extract_order_item_line_fields(&extras);
         Ok(OrderItemRow {
             id: r.get(0)?,
             order_id: r.get(1)?,
@@ -191,7 +234,10 @@ pub fn orders_get(_app_handle: AppHandle, holder: State<DbPoolHolder>, token: St
             amount: r.get(14)?,
             label_batch_no: r.get(15)?,
             label: r.get(16)?,
-            extras: parse_json_safe(r.get(17)?),
+            extras,
+            marks,
+            wrapping_cloth,
+            enabled,
         })
     }).map_err(|e| format!("读取订单项失败：{:?}", e))?;
     
@@ -395,7 +441,34 @@ fn merge_item_extras(item: &OrderItemPayload) -> Option<String> {
     }
     if let Some(ref marks) = item.marks { if !marks.is_empty() { extra_obj.insert("marks".to_string(), serde_json::Value::String(marks.clone())); } }
     if let Some(ref enabled) = item.enabled { if !enabled.is_empty() { extra_obj.insert("enabled".to_string(), serde_json::Value::String(enabled.clone())); } }
-    if let Some(ref wrapping_cloth) = item.wrapping_cloth { if !wrapping_cloth.is_empty() { extra_obj.insert("wrappingCloth".to_string(), serde_json::Value::String(wrapping_cloth.clone())); } }
+    // wrappingCloth（包皮布）兼容来源：
+    // 1) 顶层 item.wrappingCloth
+    // 2) item.extras.wrappingCloth
+    // 3) item.extras.wrapping_cloth
+    let mut wrapping_val: Option<String> = item.wrapping_cloth.clone().filter(|s| !s.trim().is_empty());
+    if wrapping_val.is_none() {
+        if let Some(serde_json::Value::Object(map)) = &item.extras {
+            // 优先 camelCase
+            if let Some(v) = map.get("wrappingCloth") {
+                if let Some(s) = v.as_str() {
+                    let s = s.trim();
+                    if !s.is_empty() { wrapping_val = Some(s.to_string()); }
+                }
+            }
+            // 再尝试 snake_case
+            if wrapping_val.is_none() {
+                if let Some(v) = map.get("wrapping_cloth") {
+                    if let Some(s) = v.as_str() {
+                        let s = s.trim();
+                        if !s.is_empty() { wrapping_val = Some(s.to_string()); }
+                    }
+                }
+            }
+        }
+    }
+    if let Some(wrapping_cloth) = wrapping_val {
+        extra_obj.insert("wrappingCloth".to_string(), serde_json::Value::String(wrapping_cloth));
+    }
     if extra_obj.is_empty() { None } else { serde_json::to_string(&extra_obj).ok() }
 }
 
