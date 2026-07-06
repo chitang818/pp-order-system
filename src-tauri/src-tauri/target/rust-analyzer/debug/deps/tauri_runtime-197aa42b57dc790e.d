@@ -1,0 +1,9 @@
+D:\003-AI_coding\pp-order-system\pp-order-system\src-tauri\src-tauri/target/rust-analyzer\debug\deps\tauri_runtime-197aa42b57dc790e.d: C:\Users\chitang\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\tauri-runtime-2.9.2\src\lib.rs C:\Users\chitang\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\tauri-runtime-2.9.2\src\dpi.rs C:\Users\chitang\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\tauri-runtime-2.9.2\src\monitor.rs C:\Users\chitang\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\tauri-runtime-2.9.2\src\webview.rs C:\Users\chitang\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\tauri-runtime-2.9.2\src\window.rs
+
+D:\003-AI_coding\pp-order-system\pp-order-system\src-tauri\src-tauri/target/rust-analyzer\debug\deps\libtauri_runtime-197aa42b57dc790e.rmeta: C:\Users\chitang\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\tauri-runtime-2.9.2\src\lib.rs C:\Users\chitang\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\tauri-runtime-2.9.2\src\dpi.rs C:\Users\chitang\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\tauri-runtime-2.9.2\src\monitor.rs C:\Users\chitang\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\tauri-runtime-2.9.2\src\webview.rs C:\Users\chitang\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\tauri-runtime-2.9.2\src\window.rs
+
+C:\Users\chitang\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\tauri-runtime-2.9.2\src\lib.rs:
+C:\Users\chitang\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\tauri-runtime-2.9.2\src\dpi.rs:
+C:\Users\chitang\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\tauri-runtime-2.9.2\src\monitor.rs:
+C:\Users\chitang\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\tauri-runtime-2.9.2\src\webview.rs:
+C:\Users\chitang\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\tauri-runtime-2.9.2\src\window.rs:

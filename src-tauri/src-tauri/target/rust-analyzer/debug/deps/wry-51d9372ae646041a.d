@@ -1,0 +1,11 @@
+D:\003-AI_coding\pp-order-system\pp-order-system\src-tauri\src-tauri/target/rust-analyzer\debug\deps\wry-51d9372ae646041a.d: C:\Users\chitang\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\wry-0.53.5\src\lib.rs C:\Users\chitang\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\wry-0.53.5\src\error.rs C:\Users\chitang\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\wry-0.53.5\src\proxy.rs C:\Users\chitang\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\wry-0.53.5\src\web_context.rs C:\Users\chitang\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\wry-0.53.5\src\webview2\mod.rs C:\Users\chitang\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\wry-0.53.5\src\webview2\drag_drop.rs C:\Users\chitang\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\wry-0.53.5\src\webview2\util.rs
+
+D:\003-AI_coding\pp-order-system\pp-order-system\src-tauri\src-tauri/target/rust-analyzer\debug\deps\libwry-51d9372ae646041a.rmeta: C:\Users\chitang\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\wry-0.53.5\src\lib.rs C:\Users\chitang\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\wry-0.53.5\src\error.rs C:\Users\chitang\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\wry-0.53.5\src\proxy.rs C:\Users\chitang\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\wry-0.53.5\src\web_context.rs C:\Users\chitang\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\wry-0.53.5\src\webview2\mod.rs C:\Users\chitang\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\wry-0.53.5\src\webview2\drag_drop.rs C:\Users\chitang\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\wry-0.53.5\src\webview2\util.rs
+
+C:\Users\chitang\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\wry-0.53.5\src\lib.rs:
+C:\Users\chitang\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\wry-0.53.5\src\error.rs:
+C:\Users\chitang\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\wry-0.53.5\src\proxy.rs:
+C:\Users\chitang\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\wry-0.53.5\src\web_context.rs:
+C:\Users\chitang\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\wry-0.53.5\src\webview2\mod.rs:
+C:\Users\chitang\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\wry-0.53.5\src\webview2\drag_drop.rs:
+C:\Users\chitang\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\wry-0.53.5\src\webview2\util.rs:
