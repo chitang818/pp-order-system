@@ -1059,7 +1059,7 @@ export function createEventHandler(dependencies) {
         
         let history = [];
         if (Array.isArray(orders)) {
-          // 提取最新的5个非空且不重复的发票号
+          // 提取最新的10个非空且不重复的发票号
           for (let i = 0; i < orders.length; i++) {
             const invoiceNo = orders[i].invoiceNo;
             if (invoiceNo && invoiceNo.trim() !== '') {
@@ -1067,7 +1067,7 @@ export function createEventHandler(dependencies) {
               if (!history.includes(val)) {
                 history.push(val);
               }
-              if (history.length >= 5) break;
+              if (history.length >= 10) break;
             }
           }
         }
