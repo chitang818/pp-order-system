@@ -1374,6 +1374,100 @@ export class OrdersListView {
       });
     }
 
+    // 绑定最近发票号按钮
+    const btnRecentInvoices = document.getElementById('btnRecentInvoices');
+    const recentInvoicesDropdown = document.getElementById('recentInvoicesDropdown');
+    const fltInvoiceNoInput = document.getElementById('fltInvoiceNo');
+    
+    if (btnRecentInvoices && recentInvoicesDropdown && fltInvoiceNoInput && !btnRecentInvoices.hasAttribute('data-filter-bound')) {
+      btnRecentInvoices.setAttribute('data-filter-bound', 'true');
+      
+      eventManager.on(btnRecentInvoices, 'click', (e) => {
+        e.stopPropagation(); // 阻止冒泡
+        
+        const filterBodyNode = document.getElementById('filterBody');
+        const filterSectionNode = filterBodyNode ? filterBodyNode.closest('.filter-section') : null;
+
+        if (recentInvoicesDropdown.style.display === 'block') {
+          recentInvoicesDropdown.style.display = 'none';
+          if (filterBodyNode) filterBodyNode.style.overflow = '';
+          if (filterSectionNode) filterSectionNode.style.overflow = '';
+          return;
+        }
+        
+        recentInvoicesDropdown.innerHTML = '<div style="padding: 8px 12px; color: #666; font-size: 13px; text-align: center;">正在读取...</div>';
+        recentInvoicesDropdown.style.display = 'block';
+        if (filterBodyNode) filterBodyNode.style.overflow = 'visible';
+        if (filterSectionNode) filterSectionNode.style.overflow = 'visible';
+        
+        try {
+          // 获取所有订单，并提取最近的10个不重复的发票号
+          let orders = [];
+          if (this.stateManager && typeof this.stateManager.getState === 'function') {
+            orders = this.stateManager.getState('orders') || [];
+          } else if (window.state && window.state.orders) {
+            orders = window.state.orders;
+          }
+          
+          let history = [];
+          
+          for (let i = 0; i < orders.length; i++) {
+            const invoiceNo = orders[i].invoiceNo;
+            if (invoiceNo && invoiceNo.trim() !== '') {
+              const val = invoiceNo.trim();
+              if (!history.includes(val)) {
+                history.push(val);
+              }
+              if (history.length >= 10) break;
+            }
+          }
+          
+          if (history.length === 0) {
+            recentInvoicesDropdown.innerHTML = '<div style="padding: 8px 12px; color: #999; font-size: 13px; text-align: center;">暂无历史记录</div>';
+          } else {
+            recentInvoicesDropdown.innerHTML = '';
+            history.forEach(item => {
+              const div = document.createElement('div');
+              div.textContent = item;
+              div.style.cssText = 'padding: 8px 12px; cursor: pointer; font-size: 13px; color: #333; border-bottom: 1px solid #f0f0f0;';
+              div.addEventListener('mouseenter', () => div.style.backgroundColor = '#f5f5f5');
+              div.addEventListener('mouseleave', () => div.style.backgroundColor = 'transparent');
+              div.addEventListener('click', () => {
+                fltInvoiceNoInput.value = item;
+                recentInvoicesDropdown.style.display = 'none';
+                
+                const filterBodyNode = document.getElementById('filterBody');
+                const filterSectionNode = filterBodyNode ? filterBodyNode.closest('.filter-section') : null;
+                if (filterBodyNode) filterBodyNode.style.overflow = '';
+                if (filterSectionNode) filterSectionNode.style.overflow = '';
+                
+                // 触发筛选
+                this._debounceFilter();
+              });
+              recentInvoicesDropdown.appendChild(div);
+            });
+          }
+        } catch (err) {
+          console.error('[OrdersListView] 获取最近发票号失败', err);
+          recentInvoicesDropdown.innerHTML = '<div style="padding: 8px 12px; color: #ef4444; font-size: 13px; text-align: center;">读取失败</div>';
+        }
+      });
+      
+      // 点击外部隐藏下拉菜单
+      eventManager.on(document, 'click', (e) => {
+        if (recentInvoicesDropdown.style.display === 'block' && 
+            !btnRecentInvoices.contains(e.target) && 
+            !recentInvoicesDropdown.contains(e.target)) {
+          recentInvoicesDropdown.style.display = 'none';
+          
+          const filterBodyNode = document.getElementById('filterBody');
+          const filterSectionNode = filterBodyNode ? filterBodyNode.closest('.filter-section') : null;
+          if (filterBodyNode) filterBodyNode.style.overflow = '';
+          if (filterSectionNode) filterSectionNode.style.overflow = '';
+        }
+      });
+    }
+
     // 下拉选择字段
     const selectFields = ['fltCustomer', 'fltStatus', 'fltProductType'];
     selectFields.forEach(fieldId => {
@@ -1454,17 +1548,36 @@ export class OrdersListView {
    * @private
    */
   _setupQuickFilters() {
-    const filterTags = document.querySelectorAll('.filter-tag');
+    const statCards = document.querySelectorAll('.stat-card[data-filter]');
     const fltStatus = document.getElementById('fltStatus');
 
-    if (!filterTags.length || !fltStatus) return;
+    if (!statCards.length || !fltStatus) return;
 
-    filterTags.forEach(tag => {
-      eventManager.on(tag, 'click', () => {
-        const filter = tag.getAttribute('data-filter');
+    // 监听高级筛选中状态的改变，同步高亮卡片
+    eventManager.on(fltStatus, 'change', () => {
+      const currentVal = fltStatus.value || 'all';
+      statCards.forEach(t => {
+        if (t.getAttribute('data-filter') === currentVal) {
+          t.style.borderColor = '#ffffff';
+          t.style.transform = 'scale(1.02)';
+        } else {
+          t.style.borderColor = 'transparent';
+          t.style.transform = 'scale(1)';
+        }
+      });
+    });
 
-        filterTags.forEach(t => t.classList.remove('active'));
-        tag.classList.add('active');
+    statCards.forEach(card => {
+      eventManager.on(card, 'click', () => {
+        const filter = card.getAttribute('data-filter');
+
+        statCards.forEach(t => {
+          t.style.borderColor = 'transparent';
+          t.style.transform = 'scale(1)';
+        });
+        
+        card.style.borderColor = '#ffffff';
+        card.style.transform = 'scale(1.02)';
 
         if (filter === 'all') {
           fltStatus.value = '';
@@ -1473,8 +1586,16 @@ export class OrdersListView {
         }
 
         this.render();
+        this._updateActiveFiltersCount();
       });
     });
+    
+    // 初始化默认全选高亮
+    const initialCard = document.querySelector('.stat-card[data-filter="all"]');
+    if (initialCard) {
+      initialCard.style.borderColor = '#ffffff';
+      initialCard.style.transform = 'scale(1.02)';
+    }
   }
 
   /**

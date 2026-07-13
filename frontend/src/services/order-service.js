@@ -464,6 +464,10 @@ export class OrderService {
       .filter((o) => {
         if (!fStatus) return true;
         const normalizedOrderStatus = this._normalizeStatus(o.status || '');
+        // 处理特殊的“待发货”复合状态
+        if (fStatus === '待发货') {
+          return normalizedOrderStatus === '已创建' || normalizedOrderStatus === '已排产';
+        }
         const normalizedFilterStatus = this._normalizeStatus(fStatus);
         return normalizedOrderStatus === normalizedFilterStatus;
       })

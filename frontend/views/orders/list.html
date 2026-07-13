@@ -1,5 +1,5 @@
 <section id="view-orders-list" class="panel" data-view>
-  <div class="panel-header">
+  <div class="panel-header" style="margin-bottom: 4px;">
     <div class="panel-title">订单列表</div>
     <div class="panel-actions">
       <button class="btn danger" id="btnDeleteSelectedOrders" style="display:none">
@@ -18,7 +18,7 @@
     <!-- 统计卡片区域 -->
     <div class="stats-overview" style="margin-bottom: 12px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; width: 100%;">
       <!-- 总订单数 -->
-      <div class="stat-card" style="background: linear-gradient(135deg, #7C9DFF 0%, #5B8FE8 100%); border-radius: 6px; padding: 8px 12px; color: white; box-shadow: 0 3px 10px rgba(124, 157, 255, 0.3); transition: transform 0.2s ease, box-shadow 0.2s ease; cursor: pointer; display: flex; align-items: center; justify-content: space-between; min-height: 42px; min-width: 0; overflow: hidden;">
+      <div class="stat-card" data-filter="all" style="background: linear-gradient(135deg, #7C9DFF 0%, #5B8FE8 100%); border-radius: 6px; padding: 8px 12px; color: white; box-shadow: 0 3px 10px rgba(124, 157, 255, 0.3); transition: transform 0.2s ease, box-shadow 0.2s ease, border 0.2s ease; cursor: pointer; display: flex; align-items: center; justify-content: space-between; min-height: 42px; min-width: 0; overflow: hidden; border: 2px solid transparent;">
         <div style="font-size: 20px; opacity: 0.4; line-height: 1; margin-right: 10px;">📝</div>
         <div style="flex: 1; display: flex; align-items: baseline; gap: 8px;">
           <span style="font-size: 13px; opacity: 0.95; font-weight: 500;">总订单数</span>
@@ -26,17 +26,17 @@
         </div>
       </div>
       
-      <!-- 已排产待发货订单 -->
-      <div class="stat-card" style="background: linear-gradient(135deg, #A78BFA 0%, #8B5CF6 100%); border-radius: 6px; padding: 8px 12px; color: white; box-shadow: 0 3px 10px rgba(167, 139, 250, 0.3); transition: transform 0.2s ease, box-shadow 0.2s ease; cursor: pointer; display: flex; align-items: center; justify-content: space-between; min-height: 42px; min-width: 0; overflow: hidden;">
+      <!-- 已核实待发货订单 -->
+      <div class="stat-card" data-filter="待发货" style="background: linear-gradient(135deg, #A78BFA 0%, #8B5CF6 100%); border-radius: 6px; padding: 8px 12px; color: white; box-shadow: 0 3px 10px rgba(167, 139, 250, 0.3); transition: transform 0.2s ease, box-shadow 0.2s ease, border 0.2s ease; cursor: pointer; display: flex; align-items: center; justify-content: space-between; min-height: 42px; min-width: 0; overflow: hidden; border: 2px solid transparent;">
         <div style="font-size: 20px; opacity: 0.4; line-height: 1; margin-right: 10px;">📦</div>
         <div style="flex: 1; display: flex; align-items: baseline; gap: 8px;">
-          <span style="font-size: 13px; opacity: 0.95; font-weight: 500;">已排产待发货订单</span>
+          <span style="font-size: 13px; opacity: 0.95; font-weight: 500;">已核实待发货订单</span>
           <span style="font-size: 24px; font-weight: 700; line-height: 1;" id="pendingShipmentCount">0</span>
         </div>
       </div>
       
       <!-- 已发货订单 -->
-      <div class="stat-card" style="background: linear-gradient(135deg, #818CF8 0%, #6366F1 100%); border-radius: 6px; padding: 8px 12px; color: white; box-shadow: 0 3px 10px rgba(129, 140, 248, 0.3); transition: transform 0.2s ease, box-shadow 0.2s ease; cursor: pointer; display: flex; align-items: center; justify-content: space-between; min-height: 42px; min-width: 0; overflow: hidden;">
+      <div class="stat-card" data-filter="已发货" style="background: linear-gradient(135deg, #818CF8 0%, #6366F1 100%); border-radius: 6px; padding: 8px 12px; color: white; box-shadow: 0 3px 10px rgba(129, 140, 248, 0.3); transition: transform 0.2s ease, box-shadow 0.2s ease, border 0.2s ease; cursor: pointer; display: flex; align-items: center; justify-content: space-between; min-height: 42px; min-width: 0; overflow: hidden; border: 2px solid transparent;">
         <div style="font-size: 20px; opacity: 0.4; line-height: 1; margin-right: 10px;">🚚</div>
         <div style="flex: 1; display: flex; align-items: baseline; gap: 8px;">
           <span style="font-size: 13px; opacity: 0.95; font-weight: 500;">已发货订单</span>
@@ -45,33 +45,13 @@
       </div>
       
       <!-- 已完成订单 -->
-      <div class="stat-card" style="background: linear-gradient(135deg, #6EE7B7 0%, #34D399 100%); border-radius: 6px; padding: 8px 12px; color: white; box-shadow: 0 3px 10px rgba(110, 231, 183, 0.3); transition: transform 0.2s ease, box-shadow 0.2s ease; cursor: pointer; display: flex; align-items: center; justify-content: space-between; min-height: 42px; min-width: 0; overflow: hidden;">
+      <div class="stat-card" data-filter="已完成" style="background: linear-gradient(135deg, #6EE7B7 0%, #34D399 100%); border-radius: 6px; padding: 8px 12px; color: white; box-shadow: 0 3px 10px rgba(110, 231, 183, 0.3); transition: transform 0.2s ease, box-shadow 0.2s ease, border 0.2s ease; cursor: pointer; display: flex; align-items: center; justify-content: space-between; min-height: 42px; min-width: 0; overflow: hidden; border: 2px solid transparent;">
         <div style="font-size: 20px; opacity: 0.4; line-height: 1; margin-right: 10px;">✅</div>
         <div style="flex: 1; display: flex; align-items: baseline; gap: 8px;">
           <span style="font-size: 13px; opacity: 0.95; font-weight: 500;">已完成订单</span>
           <span style="font-size: 24px; font-weight: 700; line-height: 1;" id="completedOrdersCount">0</span>
         </div>
       </div>
-    </div>
-
-    <!-- 快速筛选标签 -->
-    <div class="quick-filters" style="margin-bottom: 12px; display: flex; gap: 6px; flex-wrap: wrap; align-items: center;">
-      <span style="font-size: 13px; font-weight: 600; color: #495057; margin-right: 4px;">快速筛选：</span>
-      <button class="filter-tag active" data-filter="all" style="padding: 6px 14px; border-radius: 20px; border: 1px solid #3b82f6; background: #3b82f6; color: white; font-size: 13px; cursor: pointer; transition: all 0.2s ease; font-weight: 500;">
-        全部订单
-      </button>
-      <button class="filter-tag" data-filter="已创建" style="padding: 6px 14px; border-radius: 20px; border: 1px solid #cbd5e1; background: white; color: #64748b; font-size: 13px; cursor: pointer; transition: all 0.2s ease; font-weight: 500;">
-        已创建
-      </button>
-      <button class="filter-tag" data-filter="已排产" style="padding: 6px 14px; border-radius: 20px; border: 1px solid #cbd5e1; background: white; color: #64748b; font-size: 13px; cursor: pointer; transition: all 0.2s ease; font-weight: 500;">
-        已排产
-      </button>
-      <button class="filter-tag" data-filter="已发货" style="padding: 6px 14px; border-radius: 20px; border: 1px solid #cbd5e1; background: white; color: #64748b; font-size: 13px; cursor: pointer; transition: all 0.2s ease; font-weight: 500;">
-        已发货
-      </button>
-      <button class="filter-tag" data-filter="已完成" style="padding: 6px 14px; border-radius: 20px; border: 1px solid #cbd5e1; background: white; color: #64748b; font-size: 13px; cursor: pointer; transition: all 0.2s ease; font-weight: 500;">
-        已完成
-      </button>
     </div>
 
     <!-- 高级筛选区域（可折叠） -->
@@ -101,14 +81,18 @@
             <div style="position: relative; display: inline-block; width: 100%;">
               <input class="input" id="fltOrderNo" placeholder="按合同号筛选" style="width: 100%; padding-right: 40px; border: 1px solid #e2e8f0; border-radius: 6px; padding: 6px 10px; font-size: 13px; height: 32px;" autocomplete="off" />
               <button type="button" id="btnRecentOrders" title="最近编辑的合同号" style="position: absolute; right: 4px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; font-size: 12px; color: #007bff; padding: 0 4px; height: 22px; display: flex; align-items: center; justify-content: center;">最近</button>
-              <div id="recentOrdersDropdown" style="display: none; position: absolute; left: 0; top: 100%; background: #fff; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px rgba(0,0,0,0.1); z-index: 1000; width: 100%; max-height: 250px; overflow-y: auto; border-radius: 4px; margin-top: 4px;"></div>
+              <div id="recentOrdersDropdown" style="display: none; position: absolute; left: 0; top: 100%; background: #fff; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px rgba(0,0,0,0.1); z-index: 1000; width: 100%; border-radius: 4px; margin-top: 4px;"></div>
             </div>
           </div>
           <div class="form-item">
             <label style="display: flex; align-items: center; gap: 3px; font-size: 12px; font-weight: 600; color: #475569; margin-bottom: 4px;">
               <span>🧾</span> 发票号
             </label>
-            <input class="input" id="fltInvoiceNo" placeholder="按发票号筛选" style="border: 1px solid #e2e8f0; border-radius: 6px; padding: 6px 10px; font-size: 13px; height: 32px;" />
+            <div style="position: relative; display: inline-block; width: 100%;">
+              <input class="input" id="fltInvoiceNo" placeholder="按发票号筛选" style="width: 100%; padding-right: 40px; border: 1px solid #e2e8f0; border-radius: 6px; padding: 6px 10px; font-size: 13px; height: 32px;" autocomplete="off" />
+              <button type="button" id="btnRecentInvoices" title="最近编辑的发票号" style="position: absolute; right: 4px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; font-size: 12px; color: #007bff; padding: 0 4px; height: 22px; display: flex; align-items: center; justify-content: center;">最近</button>
+              <div id="recentInvoicesDropdown" style="display: none; position: absolute; left: 0; top: 100%; background: #fff; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px rgba(0,0,0,0.1); z-index: 1000; width: 100%; border-radius: 4px; margin-top: 4px;"></div>
+            </div>
           </div>
           <div class="form-item">
             <label style="display: flex; align-items: center; gap: 3px; font-size: 12px; font-weight: 600; color: #475569; margin-bottom: 4px;">
