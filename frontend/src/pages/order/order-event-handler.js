@@ -349,6 +349,8 @@ export function createEventHandler(dependencies) {
   // 绑定保存按钮事件
   function bindSaveButtonEvent() {
     const saveBtn = document.getElementById('btnSaveOrderNew');
+    const saveAndPrintBtn = document.getElementById('btnSaveAndPrintOrderNew');
+    
     if (!saveBtn) {
       console.warn('[事件处理] 保存按钮未找到，跳过保存按钮事件绑定'); // eslint-disable-line no-console
       return;
@@ -359,9 +361,8 @@ export function createEventHandler(dependencies) {
       return;
     }
 
-    // 使用 onclick 属性赋值而不是 addEventListener，
-    // 以防止在SPA切换/热重载过程中产生重复的事件绑定
-    saveBtn.onclick = async function (e) {
+    // 提取公共保存逻辑
+    async function handleSave(e, isPrint = false) {
       if (e) {
         e.preventDefault();
         e.stopPropagation();
@@ -383,7 +384,7 @@ export function createEventHandler(dependencies) {
           });
         });
 
-        await saveOrder({
+        const result = await saveOrder({
           isEdit,
           editId,
           serializeOrderForm,
@@ -395,9 +396,13 @@ export function createEventHandler(dependencies) {
 
         // SPA环境：使用hash路由跳转，无需页面刷新
         setTimeout(() => {
-          // 跳转到订单列表（路由切换会自动刷新数据）
-          // console.log('[Order Save] 保存成功，准备跳转到列表页');
-          location.hash = '#/orders/list';
+          if (isPrint) {
+            const targetId = isEdit ? editId : result.id;
+            window.location.href = `docs.html?id=${encodeURIComponent(targetId)}`;
+          } else {
+            // 跳转到订单列表（路由切换会自动刷新数据）
+            location.hash = '#/orders/list';
+          }
           // 如果refreshOrders函数可用，也调用一次确保数据刷新
           if (typeof window.refreshOrders === 'function') {
             setTimeout(() => window.refreshOrders(), 100);
@@ -488,7 +493,15 @@ export function createEventHandler(dependencies) {
           window.NotificationSystem?.toast(errorMsg, toastType, 3000);
         }
       }
-    };
+    }
+
+    // 使用 onclick 属性赋值而不是 addEventListener，
+    // 以防止在SPA切换/热重载过程中产生重复的事件绑定
+    saveBtn.onclick = (e) => handleSave(e, false);
+    
+    if (saveAndPrintBtn) {
+      saveAndPrintBtn.onclick = (e) => handleSave(e, true);
+    }
   }
 
   // 绑定备注一键插入功能

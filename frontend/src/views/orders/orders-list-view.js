@@ -1279,6 +1279,101 @@ export class OrdersListView {
       }
     });
 
+    // 绑定最近合同号按钮
+    const btnRecentOrders = document.getElementById('btnRecentOrders');
+    const recentOrdersDropdown = document.getElementById('recentOrdersDropdown');
+    const fltOrderNoInput = document.getElementById('fltOrderNo');
+    
+    if (btnRecentOrders && recentOrdersDropdown && fltOrderNoInput && !btnRecentOrders.hasAttribute('data-filter-bound')) {
+      btnRecentOrders.setAttribute('data-filter-bound', 'true');
+      
+      eventManager.on(btnRecentOrders, 'click', (e) => {
+        e.stopPropagation(); // 阻止冒泡
+        
+        const filterBodyNode = document.getElementById('filterBody');
+        const filterSectionNode = filterBodyNode ? filterBodyNode.closest('.filter-section') : null;
+
+        if (recentOrdersDropdown.style.display === 'block') {
+          recentOrdersDropdown.style.display = 'none';
+          if (filterBodyNode) filterBodyNode.style.overflow = '';
+          if (filterSectionNode) filterSectionNode.style.overflow = '';
+          return;
+        }
+        
+        recentOrdersDropdown.innerHTML = '<div style="padding: 8px 12px; color: #666; font-size: 13px; text-align: center;">正在读取...</div>';
+        recentOrdersDropdown.style.display = 'block';
+        if (filterBodyNode) filterBodyNode.style.overflow = 'visible';
+        if (filterSectionNode) filterSectionNode.style.overflow = 'visible';
+        
+        try {
+          // 获取所有订单，并提取最近的10个不重复的合同号
+          // state 中的 orders 已经是按照后端返回的顺序（通常是按编辑时间/创建时间倒序）
+          let orders = [];
+          if (this.stateManager && typeof this.stateManager.getState === 'function') {
+            orders = this.stateManager.getState('orders') || [];
+          } else if (window.state && window.state.orders) {
+            orders = window.state.orders;
+          }
+          
+          let history = [];
+          
+          for (let i = 0; i < orders.length; i++) {
+            const contractNo = orders[i].contractNo || orders[i].orderNo;
+            if (contractNo && contractNo.trim() !== '') {
+              const val = contractNo.trim();
+              if (!history.includes(val)) {
+                history.push(val);
+              }
+              if (history.length >= 10) break;
+            }
+          }
+          
+          if (history.length === 0) {
+            recentOrdersDropdown.innerHTML = '<div style="padding: 8px 12px; color: #999; font-size: 13px; text-align: center;">暂无历史记录</div>';
+          } else {
+            recentOrdersDropdown.innerHTML = '';
+            history.forEach(item => {
+              const div = document.createElement('div');
+              div.textContent = item;
+              div.style.cssText = 'padding: 8px 12px; cursor: pointer; font-size: 13px; color: #333; border-bottom: 1px solid #f0f0f0;';
+              div.addEventListener('mouseenter', () => div.style.backgroundColor = '#f5f5f5');
+              div.addEventListener('mouseleave', () => div.style.backgroundColor = 'transparent');
+              div.addEventListener('click', () => {
+                fltOrderNoInput.value = item;
+                recentOrdersDropdown.style.display = 'none';
+                
+                const filterBodyNode = document.getElementById('filterBody');
+                const filterSectionNode = filterBodyNode ? filterBodyNode.closest('.filter-section') : null;
+                if (filterBodyNode) filterBodyNode.style.overflow = '';
+                if (filterSectionNode) filterSectionNode.style.overflow = '';
+                
+                // 触发筛选
+                this._debounceFilter();
+              });
+              recentOrdersDropdown.appendChild(div);
+            });
+          }
+        } catch (err) {
+          console.error('[OrdersListView] 获取最近合同号失败', err);
+          recentOrdersDropdown.innerHTML = '<div style="padding: 8px 12px; color: #ef4444; font-size: 13px; text-align: center;">读取失败</div>';
+        }
+      });
+      
+      // 点击外部隐藏下拉菜单
+      eventManager.on(document, 'click', (e) => {
+        if (recentOrdersDropdown.style.display === 'block' && 
+            !btnRecentOrders.contains(e.target) && 
+            !recentOrdersDropdown.contains(e.target)) {
+          recentOrdersDropdown.style.display = 'none';
+          
+          const filterBodyNode = document.getElementById('filterBody');
+          const filterSectionNode = filterBodyNode ? filterBodyNode.closest('.filter-section') : null;
+          if (filterBodyNode) filterBodyNode.style.overflow = '';
+          if (filterSectionNode) filterSectionNode.style.overflow = '';
+        }
+      });
+    }
+
     // 下拉选择字段
     const selectFields = ['fltCustomer', 'fltStatus', 'fltProductType'];
     selectFields.forEach(fieldId => {
@@ -1321,10 +1416,13 @@ export class OrdersListView {
     if (this._filterTimer) {
       timerManager.clearTimeout(this._filterTimer);
     }
+    // 缩短防抖时间以提升响应速度，并使用 requestAnimationFrame 保证渲染流畅度
     this._filterTimer = timerManager.setTimeout(() => {
-      this.render();
-      this._updateActiveFiltersCount();
-    }, 300);
+      requestAnimationFrame(() => {
+        this.render();
+        this._updateActiveFiltersCount();
+      });
+    }, 150);
   }
 
   /**
@@ -1387,14 +1485,59 @@ export class OrdersListView {
     const filterToggleHeader = document.getElementById('filterToggleHeader');
     const filterBody = document.getElementById('filterBody');
     const filterToggleIcon = document.getElementById('filterToggleIcon');
+    const btnPinFilters = document.getElementById('btnPinFilters');
 
     if (!filterToggleHeader || !filterBody || !filterToggleIcon) return;
 
-    filterBody.classList.add('collapsed');
-    filterToggleIcon.classList.remove('rotated');
+    // 读取固定状态
+    const isPinned = localStorage.getItem('ordersListFilterPinned') === 'true';
+
+    if (isPinned) {
+      filterBody.classList.remove('collapsed');
+      filterToggleIcon.classList.add('rotated');
+      if (btnPinFilters) {
+        btnPinFilters.innerHTML = '<span style="margin-right: 4px;">📌</span>已固定';
+        btnPinFilters.style.background = '#EFF6FF';
+        btnPinFilters.style.color = '#3b82f6';
+        btnPinFilters.style.borderColor = '#93c5fd';
+      }
+    } else {
+      filterBody.classList.add('collapsed');
+      filterToggleIcon.classList.remove('rotated');
+    }
+
+    // 绑定固定按钮事件
+    if (btnPinFilters) {
+      eventManager.on(btnPinFilters, 'click', (e) => {
+        e.stopPropagation();
+        const currentlyPinned = localStorage.getItem('ordersListFilterPinned') === 'true';
+        const newState = !currentlyPinned;
+        localStorage.setItem('ordersListFilterPinned', newState.toString());
+
+        if (newState) {
+          btnPinFilters.innerHTML = '<span style="margin-right: 4px;">📌</span>已固定';
+          btnPinFilters.style.background = '#EFF6FF';
+          btnPinFilters.style.color = '#3b82f6';
+          btnPinFilters.style.borderColor = '#93c5fd';
+          // 强制展开
+          filterBody.classList.remove('collapsed');
+          filterToggleIcon.classList.add('rotated');
+        } else {
+          btnPinFilters.innerHTML = '<span style="margin-right: 4px;">📌</span>固定';
+          btnPinFilters.style.background = '#F8FAFC';
+          btnPinFilters.style.color = '#64748b';
+          btnPinFilters.style.borderColor = '#cbd5e1';
+        }
+      });
+    }
 
     eventManager.on(filterToggleHeader, 'click', (e) => {
-      if (e.target.closest('#btnClearFilters')) return;
+      if (e.target.closest('#btnClearFilters') || e.target.closest('#btnPinFilters')) return;
+
+      // 如果已固定，不允许点击折叠
+      if (localStorage.getItem('ordersListFilterPinned') === 'true') {
+        return;
+      }
 
       filterBody.classList.toggle('collapsed');
       filterToggleIcon.classList.toggle('rotated');
