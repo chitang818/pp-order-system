@@ -1,6 +1,6 @@
 [package]
 name = "pp-order-management"
-version = "2.2.5"
+version = "2.2.6"
 description = "PP订单管理系统"
 authors = ["Your Company"]
 license = "MIT"

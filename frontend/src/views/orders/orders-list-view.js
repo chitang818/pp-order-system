@@ -1306,8 +1306,7 @@ export class OrdersListView {
         if (filterSectionNode) filterSectionNode.style.overflow = 'visible';
         
         try {
-          // 获取所有订单，并提取最近的10个不重复的合同号
-          // state 中的 orders 已经是按照后端返回的顺序（通常是按编辑时间/创建时间倒序）
+          // 获取所有订单，并按最后修改时间降序排序，以提取最近的10个不重复的合同号
           let orders = [];
           if (this.stateManager && typeof this.stateManager.getState === 'function') {
             orders = this.stateManager.getState('orders') || [];
@@ -1315,10 +1314,17 @@ export class OrdersListView {
             orders = window.state.orders;
           }
           
+          // 按修改时间降序排序，优先使用 updatedAt，其次是 createdAt
+          const sortedOrders = [...orders].sort((a, b) => {
+            const timeA = new Date(a.updatedAt || a.createdAt || 0).getTime();
+            const timeB = new Date(b.updatedAt || b.createdAt || 0).getTime();
+            return timeB - timeA;
+          });
+          
           let history = [];
           
-          for (let i = 0; i < orders.length; i++) {
-            const contractNo = orders[i].contractNo || orders[i].orderNo;
+          for (let i = 0; i < sortedOrders.length; i++) {
+            const contractNo = sortedOrders[i].contractNo || sortedOrders[i].orderNo;
             if (contractNo && contractNo.trim() !== '') {
               const val = contractNo.trim();
               if (!history.includes(val)) {
@@ -1401,7 +1407,7 @@ export class OrdersListView {
         if (filterSectionNode) filterSectionNode.style.overflow = 'visible';
         
         try {
-          // 获取所有订单，并提取最近的10个不重复的发票号
+          // 获取所有订单，并按最后修改时间降序排序，以提取最近的10个不重复的发票号
           let orders = [];
           if (this.stateManager && typeof this.stateManager.getState === 'function') {
             orders = this.stateManager.getState('orders') || [];
@@ -1409,10 +1415,17 @@ export class OrdersListView {
             orders = window.state.orders;
           }
           
+          // 按修改时间降序排序，优先使用 updatedAt，其次是 createdAt
+          const sortedOrders = [...orders].sort((a, b) => {
+            const timeA = new Date(a.updatedAt || a.createdAt || 0).getTime();
+            const timeB = new Date(b.updatedAt || b.createdAt || 0).getTime();
+            return timeB - timeA;
+          });
+          
           let history = [];
           
-          for (let i = 0; i < orders.length; i++) {
-            const invoiceNo = orders[i].invoiceNo;
+          for (let i = 0; i < sortedOrders.length; i++) {
+            const invoiceNo = sortedOrders[i].invoiceNo;
             if (invoiceNo && invoiceNo.trim() !== '') {
               const val = invoiceNo.trim();
               if (!history.includes(val)) {
