@@ -494,7 +494,8 @@ export class OrderAnalysisView {
     if (!items || items.length === 0) {
       return {
         products: '<span style="color: #9ca3af;">-</span>',
-        quantities: '<span style="color: #9ca3af;">-</span>'
+        quantities: '<span style="color: #9ca3af;">-</span>',
+        packages: '<span style="color: #9ca3af;">-</span>'
       };
     }
     
@@ -504,13 +505,16 @@ export class OrderAnalysisView {
     items.forEach((item) => {
       const model = item.model || item.productModel || item.product || '';
       const quantity = Number(item.quantity || item.qty || 0);
+      const packages = Number(item.packages || item.pkg || 0);
       
       if (model && model.trim() && Number.isFinite(quantity) && quantity > 0) {
         const modelKey = model.trim();
         if (productMap.has(modelKey)) {
-          productMap.set(modelKey, productMap.get(modelKey) + quantity);
+          const entry = productMap.get(modelKey);
+          entry.quantity += quantity;
+          entry.packages += packages;
         } else {
-          productMap.set(modelKey, quantity);
+          productMap.set(modelKey, { quantity, packages });
         }
       }
     });
@@ -518,18 +522,21 @@ export class OrderAnalysisView {
     if (productMap.size === 0) {
       return {
         products: '<span style="color: #9ca3af;">-</span>',
-        quantities: '<span style="color: #9ca3af;">-</span>'
+        quantities: '<span style="color: #9ca3af;">-</span>',
+        packages: '<span style="color: #9ca3af;">-</span>'
       };
     }
     
-    // 格式化为多行显示，确保产品型号和数量行数一致
+    // 格式化为多行显示，确保产品型号、数量和件数行数一致
     const entries = Array.from(productMap.entries());
     const productsLines = entries.map(([model]) => escapeHtml(model));
-    const quantitiesLines = entries.map(([, totalQty]) => `${totalQty}条`);
+    const quantitiesLines = entries.map(([, data]) => `${data.quantity}条`);
+    const packagesLines = entries.map(([, data]) => `${data.packages}`);
     
     return {
       products: productsLines.join('<br>'),
-      quantities: quantitiesLines.join('<br>')
+      quantities: quantitiesLines.join('<br>'),
+      packages: packagesLines.join('<br>')
     };
   }
 
@@ -547,6 +554,14 @@ export class OrderAnalysisView {
   formatQuantities(order) {
     const result = this.formatProductsAndQuantities(order);
     return result.quantities;
+  }
+
+  /**
+   * 格式化产品件数（多行显示）
+   */
+  formatPackages(order) {
+    const result = this.formatProductsAndQuantities(order);
+    return result.packages;
   }
 
   /**
@@ -654,6 +669,10 @@ export class OrderAnalysisView {
           const statsB = this.calculateOrderStats(b, hasItemsB);
           aVal = statsA.quantityLoaded ? statsA.totalQuantity : 0;
           bVal = statsB.quantityLoaded ? statsB.totalQuantity : 0;
+          break;
+        case 'packages':
+          aVal = (a.items || []).reduce((sum, item) => sum + Number(item.packages || item.pkg || 0), 0);
+          bVal = (b.items || []).reduce((sum, item) => sum + Number(item.packages || item.pkg || 0), 0);
           break;
         case 'netWeight':
           const hasItemsA2 = !!(a.items && Array.isArray(a.items) && a.items.length > 0);
@@ -763,6 +782,7 @@ export class OrderAnalysisView {
         <td style="text-align: center; padding: 8px 6px;"><div class="skeleton-line short" style="margin: 0 auto;"></div></td>
         <td style="text-align: center; padding: 8px 6px;"><div class="skeleton-line short" style="margin: 0 auto;"></div></td>
         <td style="text-align: center; padding: 8px 6px;"><div class="skeleton-line short" style="margin: 0 auto;"></div></td>
+        <td style="text-align: center; padding: 8px 6px;"><div class="skeleton-line short" style="margin: 0 auto;"></div></td>
       </tr>
     `).join('');
     
@@ -811,18 +831,27 @@ export class OrderAnalysisView {
         }
       }
       
-      // 更新净重（第6列，索引5）
+      // 更新件数（第6列，索引5）
       if (cells[5]) {
+        const newPackagesDisplay = this.formatPackages(order);
+        const currentHTML = cells[5].innerHTML;
+        if (currentHTML !== newPackagesDisplay) {
+          cells[5].innerHTML = newPackagesDisplay;
+        }
+      }
+      
+      // 更新净重（第7列，索引6）
+      if (cells[6]) {
         const newValue = stats.weightLoaded 
           ? stats.totalNetWeight.toLocaleString() 
           : '<span style="color: #9ca3af;">-</span>';
-        const currentText = cells[5].textContent.trim();
+        const currentText = cells[6].textContent.trim();
         const expectedText = stats.weightLoaded 
           ? stats.totalNetWeight.toLocaleString() 
           : '-';
         
         if (currentText !== expectedText) {
-          cells[5].innerHTML = newValue;
+          cells[6].innerHTML = newValue;
         }
       }
     });
@@ -842,7 +871,7 @@ export class OrderAnalysisView {
       if (this.filteredOrders.length === 0) {
       const emptyRow = document.createElement('tr');
       emptyRow.innerHTML = `
-        <td colspan="11" style="text-align: center; padding: 30px; color: #6c757d;">
+        <td colspan="12" style="text-align: center; padding: 30px; color: #6c757d;">
           <div style="font-size: 14px; margin-bottom: 6px;">📊</div>
           <div style="font-size: 13px;">暂无数据</div>
         </td>
@@ -869,6 +898,7 @@ export class OrderAnalysisView {
       // 格式化产品型号和数量（分开显示）
       const productsDisplay = this.formatProducts(order);
       const quantitiesDisplay = this.formatQuantities(order);
+      const packagesDisplay = this.formatPackages(order);
       const pickupDate = extras.pickupDate ? fmtDateYMD(extras.pickupDate) : '-';
       const shipmentDateDisplay = order.shipmentDate ? fmtDateYMD(order.shipmentDate) : '-';
       
@@ -879,6 +909,7 @@ export class OrderAnalysisView {
         <td style="text-align: center; padding: 8px 6px; word-wrap: break-word; overflow-wrap: break-word; white-space: normal; font-size: 12px;">${escapeHtml(order.customerName || '-')}</td>
         <td style="text-align: center; padding: 8px 6px; word-wrap: break-word; overflow-wrap: break-word; white-space: normal; font-size: 11px; line-height: 1.4;">${productsDisplay}</td>
         <td style="text-align: center; padding: 8px 6px; word-wrap: break-word; overflow-wrap: break-word; white-space: normal; font-size: 11px; line-height: 1.5;">${quantitiesDisplay}</td>
+        <td style="text-align: center; padding: 8px 6px; word-wrap: break-word; overflow-wrap: break-word; white-space: normal; font-size: 11px; line-height: 1.5;">${packagesDisplay}</td>
         <td style="text-align: center; padding: 8px 6px; word-wrap: break-word; overflow-wrap: break-word; white-space: normal; font-size: 12px;" data-weight="${order.id || ''}">${weightDisplay}</td>
         <td style="text-align: center; padding: 8px 6px; word-wrap: break-word; overflow-wrap: break-word; white-space: normal; font-size: 12px;">${escapeHtml(order.shipTo || '-')}</td>
         <td style="text-align: center; padding: 8px 6px; word-wrap: break-word; overflow-wrap: break-word; white-space: normal; font-size: 12px;">${escapeHtml(stats.boxType || '-')}</td>
@@ -1272,7 +1303,7 @@ export class OrderAnalysisView {
 
   /**
    * 导出每月订单汇总表 Excel
-   * 列：客户名称、合同编号、数量（与出货内容行对应）、目的港、柜型、开船日期（同发货日期）、出货内容（产品型号多行汇总）
+   * 列：客户名称、订单号、件数（与出货内容行对应）、目的港、柜型、开船日期（同发货日期）、出货内容（产品型号多行汇总）
    */
   async exportMonthlyOrderSummaryExcel() {
     if (this.filteredOrders.length === 0) {
@@ -1310,7 +1341,7 @@ export class OrderAnalysisView {
 
       worksheet.columns = [
         { key: 'customerName', width: 30 },
-        { key: 'contractNo', width: 26 },
+        { key: 'orderNo', width: 26 },
         { key: 'quantity', width: 15 },
         { key: 'shipTo', width: 18 },
         { key: 'boxType', width: 12 },
@@ -1319,7 +1350,7 @@ export class OrderAnalysisView {
       ];
 
       const headerRow = worksheet.getRow(2);
-      headerRow.values = ['客户名称', '合同编号', '数量', '目的港', '柜型', '开船日期', '出货内容'];
+      headerRow.values = ['客户名称', '订单号', '件数', '目的港', '柜型', '开船日期', '出货内容'];
       headerRow.font = { bold: true, size: 12 };
       headerRow.alignment = { vertical: 'middle', horizontal: 'center' };
       headerRow.height = 18;
@@ -1344,15 +1375,19 @@ export class OrderAnalysisView {
         const productsText = entries.length > 0
           ? entries.map(([model]) => model).join('\n')
           : '';
-        const quantitiesText = entries.length > 0
-          ? entries.map(([, qty]) => `${qty}条`).join('\n')
-          : '';
+        const totalQuantity = entries.reduce((sum, [, qty]) => sum + qty, 0);
+        const quantitiesText = totalQuantity > 0 ? `${totalQuantity}条` : '';
+
+        let formattedShipTo = order.shipTo || '';
+        if (formattedShipTo.includes(',')) {
+          formattedShipTo = formattedShipTo.split(',')[0].trim();
+        }
 
         const row = worksheet.addRow({
           customerName: order.customerName || '',
-          contractNo: order.contractNo || '',
+          orderNo: order.orderNo || order.contractNo || '',
           quantity: quantitiesText,
-          shipTo: order.shipTo || '',
+          shipTo: formattedShipTo,
           boxType: stats.boxType || '',
           sailingDate,
           shipmentContent: productsText
